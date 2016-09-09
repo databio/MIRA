@@ -1,10 +1,20 @@
+# PACKAGE DOCUMENTATION
 #' Methylation-based Inference of Regulatory Activity (MIRA)
 #' MIRA is a score that measures the degree of dip in methylation
 #' level surrounding a regulatory site of interest, such as a 
 #' transcription factor binding sites.
 #' This script (an incipient R package) provides functions
 #' for aggregating methylation data across region sets, in bins
-
+#'
+#' @docType package
+#' @name MIRA
+#' @author Nathan Sheffield
+#'
+#' @references \url{http://github.com/sheffien}
+#' @importFrom GenomicRanges GRanges GRangesList elementMetadata strand
+#' @import BiocGenerics S4Vectors IRanges
+#' @importFrom data.table ":=" setDT data.table setkey fread setnames as.data.table setcolorder melt setkeyv
+NULL
 
 #' My dip scoring function - for MIRA scores;
 #' That's Methylation-based Inference of Regulatory Activity
