@@ -490,6 +490,3 @@ parseBiseq = function(DT) {
   DT = DT[ !grep("_",chr),]; #clean Chrs
   return(DT)
 }
-
-#test change
-#test change 2
