@@ -340,7 +340,7 @@ BSBinPlots = function(binnedBSDT, binCount, regionName="regions") {
 }
 
 
-#' Calcluate the median methylation in each bin, for all non-EWS samples, and
+#' Calculate the median methylation in each bin, for all non-EWS samples, and
 #' then divide methylation by this median value to get a relative increase/decrease
 #' in each bin.
 normalizeEwingsToNonEwings = function(binnedBSDT) {
@@ -357,6 +357,137 @@ normalizeEwingsToNonEwings = function(binnedBSDT) {
 	return(binnedBSDT)
 }
 
+#' helper function
+#' given a vector of colums, and the equally-sized vector of functions
+#' to apply to those columns, constructs a j-expression for use in
+#' a data.table.
+#' use it in a DT[,eval(parse(text=buildJ(cols,funcs)))]
+buildJ = function(cols, funcs) {
+  r = paste("list(", paste(paste0(cols, "=", funcs, "(", cols, ")"), collapse=","), ")")
+  return(r);
+}
+
+#Two utility functions for converting data.tables into GRanges objects
+#genes = dtToGR(gModels, "chr", "txStart", "txEnd", "strand", "geneId");
+dtToGrInternal = function(DT, chr, start, end=NA, strand=NA, name=NA, metaCols=NA) {
+  if (is.na(end)) {
+    if ("end" %in% colnames(DT)) {
+      end = "end"
+    } else {
+      end = start;
+    }
+  }
+  if (is.na(strand)) {
+    gr=GRanges(seqnames=DT[[`chr`]], ranges=IRanges(start=DT[[`start`]], end=DT[[`end`]]), strand="*")
+  } else {
+    # GRanges can only handle '*' for no strand, so replace any non-accepted
+    # characters with '*'
+    DT[,strand:=as.character(strand)]
+    DT[strand=="1", strand:="+"]
+    DT[strand=="-1", strand:="-"]
+    DT[[`strand`]] =  gsub("[^+-]", "*", DT[[`strand`]])
+    gr=GRanges(seqnames=DT[[`chr`]], ranges=IRanges(start=DT[[`start`]], end=DT[[`end`]]), strand=DT[[`strand`]])
+  }
+  if (! is.na(name) ) {
+    names(gr) = DT[[`name`]];
+  } else {
+    names(gr) = 1:length(gr);
+  }
+  if(! is.na(metaCols)) {
+    for(x in metaCols) {
+      elementMetadata(gr)[[`x`]]=DT[[`x`]]
+    }
+  }
+  gr;
+}
+
+dtToGr = function(DT, chr="chr", start="start", end=NA, strand=NA, name=NA, splitFactor=NA, metaCols=NA) {
+  if(is.na(splitFactor)) {
+    return(dtToGrInternal(DT, chr, start, end, strand, name,metaCols));
+  }
+  if ( length(splitFactor) == 1 ) { 
+    if( splitFactor %in% colnames(DT) ) {
+      splitFactor = DT[, get(splitFactor)];
+    }
+  }
+  lapply(split(1:nrow(DT), splitFactor), 
+         function(x) { 
+           dtToGrInternal(DT[x,], chr, start, end, strand, name,metaCols)
+         }
+  )
+  
+  
+}
+
+dtToGR = dtToGr;
+
+# This can run into memory problems if there are too many files...
+# because of the way parallel lacks long vector support. The solution is
+# to just use a single core; or to pass mc.preschedule=FALSE; This
+# makes it so that each file is processed as a separate job. Much better.
+#' Read in files from biseq meth caller
+#' @param files	a list of filenames (use parseInputArg if necessary)
+#' @param contrastList	a list of named character vectors, each with length equal to the number of items in files. These will translate into column names in the final table.
+#' @param sampleNames	a vector of length length(files), name for each file. You can also just use contrastList to implement the same thing so this is really unnecessary...
+#' @param cores	number of processors.
+BSreadBiSeq = function(files, contrastList=NULL, sampleNames=extractSampleName(files), cores=4) {
+  cores=min(length(files), cores); #not more cores than files!
+  setLapplyAlias(cores);
+  if (!is.null(contrastList)) {
+    if( any(sapply(contrastList, length) != length(files))) {
+      stop("contrastList must be a list, with each value having the same number of elements as files.");
+    }
+  }
+  message("Reading ", length(files), " files..");
+  freadList = lapplyAlias(files, fread, mc.preschedule=FALSE);
+  colNames = names(contrastList)
+  message("File reading finished (", length(files), " files). Parsing Biseq format...", appendLF=FALSE);
+  # TODO: This parsing takes awhile, and could be done in parallel.
+  freadListParsed = lapplyAlias(freadList, parseBiseq, mc.preschedule=FALSE)
+  
+  message("Parsing complete, building final tables and cleaning up...")
+  numberOfFiles = length(freadListParsed);
+  for (i in 1:numberOfFiles) {
+    if (numberOfFiles > 1) {
+      message(i, ": ", sampleNames[i], "; ", appendLF=FALSE)
+    }
+    DT = freadListParsed[[i]]; #convenience alias.
+    if(!is.null(contrastList)) {
+      DT[, get("colNames"):=as.list(sapply(contrastList, "[[", i))]
+    }
+    if (!is.null(sampleNames)) {
+      DT[,sampleName:=sampleNames[i]]
+    }
+    freadListParsed[[i]] = DT
+  }
+  
+  #filteredList = do.call(rbind, freadListParsed)
+  #gc(); #rbind call is memory inefficient; this helps.
+  # rbindlist supposedly does the same thing as do.call(rbind, list) but 
+  # faster
+  filteredList = 	rbindlist(freadListParsed)
+  return(filteredList);
+}
 
 
+#' Takes a data.table from BSreadBiSeq and parses the strange x/y format
+#' of methylation calls, splitting them into individual columns
+#' @param DT data.table to parse
+#' @return data.table with separate methylated and unmethylated columns
+parseBiseq = function(DT) {
+  message(".", appendLF=FALSE);
+  setnames(DT, paste0("V", 1:6), c("chr", "start", "end", "meth", "rate", "strand"))
+  DT[, meth:=gsub("'", "", meth)]
+  #split the '12/12' format of meth calls
+  ll = unlist(strsplit(DT$meth, "/", fixed=TRUE))
+  idx = seq(1, length(ll), by = 2)
+  DT[, `:=`(hitCount =  as.integer(ll[idx]), readCount =  as.integer(ll[idx+1]))]
+  DT[,start := as.integer(start+1)] #re-index
+  DT[, c("rate", "end", "meth" ):=NULL] #remove unnecessary columns
+  DT[, strand:=NULL]
+  DT=DT[,list(hitCount= sum(hitCount), readCount=sum(readCount)), by=list(chr, start)] #smash measurements
+  setcolorder(DT,c("chr", "start", "hitCount", "readCount"));
+  DT = DT[ !grep("_",chr),]; #clean Chrs
+  return(DT)
+}
 
