@@ -142,7 +142,7 @@ binRegion = function(start, end, bins, idDF=NULL) {
 #' @param binCount Number of bins across the region
 #' @param byRegionGroup Pass along to binCount (see ?binCount)
 #' @param minReads Filter out bins with fewer than X reads before returning.
-BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500, byRegionGroup=TRUE) {
+BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500, byRegionGroup=TRUE,splitFactor="id") {
 	if (! "data.table" %in% class(rangeDT)) {
 		stop("rangeDT must be a data.table")
 	}
@@ -161,7 +161,7 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500, byRegionGroup
 	binnedDT = rangeDT[, binRegion(start, end, binCount, get(seqnamesColName))]
 	binnedGR = sapply(split(binnedDT, binnedDT$binID), dtToGr)
 	message("Aggregating...")
-	binnedBSDT = BSAggregate(BSDT, regionsGRL=GRangesList(binnedGR), jCommand=buildJ(c("methyl", "readCount"), c("mean", "sum")), byRegionGroup=byRegionGroup, splitFactor="id")
+	binnedBSDT = BSAggregate(BSDT, regionsGRL=GRangesList(binnedGR), jCommand=buildJ(c("methyl", "readCount"), c("mean", "sum")), byRegionGroup=byRegionGroup, splitFactor=splitFactor)
 	# If we aren't aggregating by bin, then don't restrict to min reads!
 	if (byRegionGroup) {
 		binnedBSDT = binnedBSDT[readCount > minReads,]
@@ -490,6 +490,3 @@ parseBiseq = function(DT) {
   DT = DT[ !grep("_",chr),]; #clean Chrs
   return(DT)
 }
-
-#test change
-#test change 2
