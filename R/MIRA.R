@@ -22,6 +22,8 @@ NULL
 #'
 #' @param shoulderShift The number of bins away from the center to use as the
 #' shoulders. I have used 5 or 3.
+#' 
+#' @export
 scoreDip = function(values, binCount, shoulderShift = 5) {
 	centerSpot = ceiling(binCount/2)
 	leftSide = centerSpot - shoulderShift  # 3
@@ -41,6 +43,8 @@ scoreDip = function(values, binCount, shoulderShift = 5) {
 #' @param anno An annotation table (data.table), keyed with the same key as the
 #' BSDTs; also with a `cell_type` column, used to append cell_type to the binned
 #' result tables.
+#' 
+#' @export
 binProcess = function(rangeDTList, BSDTNames, anno, binCount=11) {
 	# aggregate in bins
 	if (! "list" %in% class(BSDTNames)) {
@@ -108,6 +112,7 @@ F
 #' 		id: region ID
 #' 		binID: repeating ID (this is the value to aggregate across)
 #' 		ubinID: unique bin IDs
+#' @export
 #' @examples
 #' loadCGData("hg19")
 #' cgIslandsDT = data.table(...)
@@ -142,6 +147,8 @@ binRegion = function(start, end, bins, idDF=NULL) {
 #' @param binCount Number of bins across the region
 #' @param byRegionGroup Pass along to binCount (see ?binCount)
 #' @param minReads Filter out bins with fewer than X reads before returning.
+#' 
+#' @export
 BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500, byRegionGroup=TRUE,splitFactor="id") {
 	if (! "data.table" %in% class(rangeDT)) {
 		stop("rangeDT must be a data.table")
@@ -421,6 +428,19 @@ dtToGr = function(DT, chr="chr", start="start", end=NA, strand=NA, name=NA, spli
 
 dtToGR = dtToGr;
 
+#Converts a list of data.tables (From BSreadbeds) into GRanges.
+BSdtToGRanges = function(dtList) {
+  gList = list();
+  for (i in 1:length(dtList)) {
+    #dt = dtList[[i]];
+    setkey(dtList[[i]], chr, start)
+    #convert the data into granges object
+    gList[[i]] = GRanges(seqnames=dtList[[i]]$chr, ranges=IRanges(start=dtList[[i]]$start, end=dtList[[i]]$start), strand=rep("*", nrow(dtList[[i]])), hitCount=dtList[[i]]$hitCount, readCount=dtList[[i]]$readCount)
+    #I used to use end=start+1, but this targets CG instead of just a C, and it's causing edge-effects problems when I assign Cs to tiled windows using (within). Aug 2014 I'm changing to start/end at the same coordinate.
+  }
+  return(gList);
+}
+
 # This can run into memory problems if there are too many files...
 # because of the way parallel lacks long vector support. The solution is
 # to just use a single core; or to pass mc.preschedule=FALSE; This
@@ -430,6 +450,7 @@ dtToGR = dtToGr;
 #' @param contrastList	a list of named character vectors, each with length equal to the number of items in files. These will translate into column names in the final table.
 #' @param sampleNames	a vector of length length(files), name for each file. You can also just use contrastList to implement the same thing so this is really unnecessary...
 #' @param cores	number of processors.
+#' @export
 BSreadBiSeq = function(files, contrastList=NULL, sampleNames=extractSampleName(files), cores=4) {
   cores=min(length(files), cores); #not more cores than files!
   setLapplyAlias(cores);
@@ -474,6 +495,8 @@ BSreadBiSeq = function(files, contrastList=NULL, sampleNames=extractSampleName(f
 #' of methylation calls, splitting them into individual columns
 #' @param DT data.table to parse
 #' @return data.table with separate methylated and unmethylated columns
+#' 
+#' @export
 parseBiseq = function(DT) {
   message(".", appendLF=FALSE);
   setnames(DT, paste0("V", 1:6), c("chr", "start", "end", "meth", "rate", "strand"))
