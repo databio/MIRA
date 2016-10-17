@@ -513,3 +513,43 @@ parseBiseq = function(DT) {
   DT = DT[ !grep("_",chr),]; #clean Chrs
   return(DT)
 }
+
+#' convert a GenomicRanges into a data.table
+#' 
+#' @param a GRanges object
+#' @return A data.table object.
+#' @export
+grToDt = function(GR) {
+  DF=as.data.frame(elementMetadata(GR))
+  if( ncol(DF) > 0) {
+    DT = data.table(chr=as.vector(seqnames(GR)), start=start(GR), end=end(GR), DF)
+  } else {
+    DT = data.table(chr=as.vector(seqnames(GR)), start=start(GR), end=end(GR))
+  }
+  return(DT)
+}
+
+#' This function is a drop-in replacement for the base list() function,
+#' which automatically names your list according to the names of the 
+#' variables used to construct it.
+#' It seemlessly handles lists with some names and others absent,
+#' not overwriting specified names while naming any unnamed parameters.
+#'
+#' @param ...	arguments passed to list()
+#' @return A named list object.
+#' @export
+#' @examples
+#' x=5
+#' y=10
+#' nlist(x,y) # returns list(x=5, y=10)
+#' list(x,y) # returns unnamed list(5, 10)
+nlist = function(...) {
+  fcall = match.call(expand.dots=FALSE)
+  l = list(...);
+  if(!is.null(names(list(...)))) { 
+    names(l)[names(l) == ""] = fcall[[2]][names(l) == ""]
+  } else {	
+    names(l) = fcall[[2]];
+  }
+  return(l)
+}
