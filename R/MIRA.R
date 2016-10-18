@@ -85,12 +85,55 @@ binProcess = function(rangeDTList, BSDTNames, anno, binCount=11) {
 
 		# Calculate Dipscores (MIRA)
 		dipScores = binnedBSDT[,list(cell_type=unique(cell_type), dipScore=unique(scoreDip(methyl, binCount, shoulderShift = 5))), by=id]
-F
+
 		binResults[[DTName]] = nlist(binnedBSDT, dipScores)
 
 	} # end for ranges
 	return(binResults)
 }
+
+#' Wrapper of BSBinAggregate to do multiple regions (ie multiple TFs) and/or multiple samples
+#' 
+#' @param BSDTList This should be a list of Bisulfite data.tables that contains a methyl column with
+#' chr, start, hitCount (number of reads methylated), readCount (number of reads total), and 
+#' methyl (percent methylation present) columns.
+#' @param rangeDTList This is a list of genomic ranges, each corresponding to a different feature; 
+#' it should be a list of data.tables but a GRangesList will be accepted.
+#' @param binNumber gives number of bins to divide each region into.
+#' 
+#' @export
+BSmultiScore <- function(BSDTList,rangeDTList,binNum=11){
+  if ("GRangesList" %in% class(rangeDTList)){
+    rangeDTList=lapply(X = rangeDTList,FUN = grToDt)
+  } 
+  
+  #if rangeDTList still does not contain data.tables, the function is stopped
+  if (!"data.table" %in% class(rangeDTList[[1]])){
+    stop("rangeDTList must be a list of data.tables")
+  }
+  
+  if (!"list" %in% class(BSDTList)){
+    BSDTList=list(BSDTList)
+  }
+  
+  BSDTResults=list()
+  
+  for (i in 1:length(BSDTList)){ #once for each bisulfite data table (this would sometimes be once per patient/sample)
+    
+    binned=list()
+    
+    for (j in 1:length(rangeDTList)){
+      binned[[j]]=BSBinAggregate(BSDT = BSDTList[[i]],rangeDT = rangeDTList[[j]], binCount = binNum, splitFactor=NULL)
+    }
+    
+    #function scoreDip with some specified parameters is applied to each list component's methyl column
+    BSDTResults[[i]]=sapply(binned,function(x) scoreDip(values=x$methyl,binCount=binNum,shoulderShift = 5))
+    
+  }  
+  return(BSDTResults)
+  
+}
+
 
 #' Aggregating signals in bins across a set of regions
 #'
