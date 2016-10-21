@@ -557,6 +557,11 @@ parseBiseq = function(DT) {
   return(DT)
 }
 
+#' extract sample names from file names as the first part of the file name (before any suffix)
+extractSampleName = function(fileNames, suffixSep="\\.", pathSep="/") {
+  sapply(strsplit(fileNames,pathSep),function(x) strsplit(rev(x)[1],suffixSep)[[1]][1])
+}
+
 #' convert a GenomicRanges into a data.table
 #' 
 #' @param a GRanges object
@@ -595,4 +600,48 @@ nlist = function(...) {
     names(l) = fcall[[2]];
   }
   return(l)
+}
+
+#' To make parallel processing a possibility but not required,
+#' I use an lapply alias which can point at either the base lapply
+#' (for no multicore), or it can point to mclapply,
+#' and set the options for the number of cores (what mclapply uses).
+#' With no argument given, returns intead the number of cpus currently selected.
+#'
+#' @param cores	Number of cpus
+#' @return None
+setLapplyAlias = function(cores=0) {
+  if (cores < 1) {
+    return(getOption("mc.cores"))
+  }
+  if(cores > 1) { #use multicore?
+    if (requireNamespace("parallel", quietly = TRUE)) {
+      options(mc.cores=cores)
+    } else {
+      warning("You don't have package parallel installed. Setting cores to 1.")
+      options(mc.cores=1) #reset cores option.
+    }
+  } else {
+    options(mc.cores=1) #reset cores option.
+  }
+}
+
+#' Function to run lapply or mclapply, depending on the option set in
+#' getOption("mc.cores"), which can be set with setLapplyAlias().
+#'
+#' @param ... Arguments passed lapply() or mclapply()
+#' @param mc.preschedule Argument passed to mclapply
+#' @return Result from lapply or parallel::mclapply
+lapplyAlias = function(..., mc.preschedule=TRUE) {
+  if (is.null(getOption("mc.cores"))) { setLapplyAlias(1) }
+  if(getOption("mc.cores") > 1) {
+    return(parallel::mclapply(..., mc.preschedule=mc.preschedule))
+  } else {
+    return(lapply(...))
+  }
+}
+
+# extract sample names from file names as the first part of the file name (before any suffix)
+extractSampleName = function(fileNames, suffixSep="\\.", pathSep="/") {
+  sapply(strsplit(fileNames,pathSep),function(x) strsplit(rev(x)[1],suffixSep)[[1]][1])
 }
