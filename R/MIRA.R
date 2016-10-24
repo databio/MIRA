@@ -407,6 +407,29 @@ normalizeEwingsToNonEwings = function(binnedBSDT) {
 	return(binnedBSDT)
 }
 
+#' adding methyl column that has proportion of reads that were methylated for each site
+#' @param Bisulfite datatable or list of datatables with a column for number of methylated 
+#' reads (hitCount) and a column for number of total reads (readCount) for each cytosine that 
+#' was measured.
+#' @export
+addMethCol <- function(BSDTList){
+  
+  #converting to a data.table list if it was a single data.table
+  if ("data.table" %in% class(BSDTList)){
+    BSDTList=list(BSDTList)
+  }
+  
+  #stopping the function if the input was not data.table originally
+  if (!"data.table" %in% class(BSDTList[[1]])){
+    stop('Input must be a single data.table object or list of data.table objects')
+  }
+  
+  #using anonymous function to apply operation that adds methyl column to each element of list
+  BSDTList=lapply(X = BSDTList,FUN = function(x) x[, methyl := round(hitCount/readCount, 3)])
+  
+  return(BSDTList)
+}
+
 #' helper function
 #' given a vector of colums, and the equally-sized vector of functions
 #' to apply to those columns, constructs a j-expression for use in
