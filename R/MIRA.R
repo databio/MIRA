@@ -430,6 +430,42 @@ addMethCol <- function(BSDTList){
   return(BSDTList)
 }
 
+#' Function to normalize case/experimental samples to the controls
+#' 
+#' It finds the median of the controls for each bin for each region set
+#' then takes the log(oldBinVal/medianBinVal) for each bin.
+#' @param binnedDT A datatable containing bins for each region set for each sample;bins contain
+#' aggregated methylation across regions for that sample; 
+#' it should have a column with sample annotation so cases and controls can be split up as
+#' well as annotation of the region sets (featureID column) and sampleType column (case/control).
+#' 
+#' @export
+normalizeMIRA = function(binnedDT){
+  if ("list" %in% class(binnedDT)){
+    binnedDT=rbindlist(binnedDT)
+  }
+  if (!"data.table" %in% class(binnedDT)){
+    stop("binnedDT must be a data.table (or list of data.tables)")
+  }
+  
+  features=unique(binnedDT[,featureID]) #get a set of all features
+  
+  setkey(binnedDT,featureID,sampleType)
+  
+  #getting regionGroupIDs for the loop
+  regGroupID=unique(binnedDT[,regionGroupID])
+  #normalize for each feature
+  for (i in 1:length(features)){ #get median methylation for each feature
+    medMeth=binnedDT[.(features[i],"control"), median(methyl),by= regionGroupID]
+    for (j in regGroupID){#divide each methylation values for each region group by the appropriate value
+      #do operation on the rows for this feature and only one regionGroupID at a time
+      binnedDT[featureID==features[i] & regionGroupID==j,methyl := methyl/medMeth[regionGroupID == j,V1] ]
+    }
+    
+  } 
+  return(binnedDT)
+}
+
 #' helper function
 #' given a vector of colums, and the equally-sized vector of functions
 #' to apply to those columns, constructs a j-expression for use in
