@@ -389,6 +389,38 @@ BSBinPlots = function(binnedBSDT, binCount, regionName="regions") {
 	return(nlist(inclassPlot, combinedPlot, facetPlot))
 }
 
+#' A function to plot the binned methylation of samples over a region.
+#' 
+#' @param binnedRegDT A datatable with specific column names containing the following:
+#' bin numbers(binnedRegionDT), aggregated methylation values (methyl), name of the region set
+#' (featureID), case/control column (sampleType), sample name (sampleName).
+#' @param featID Region set names in a single string or vector of strings.
+#' @param plotType Line or jitter (ggplot2). 
+#' @export
+plotMIRARegions <- function(binnedRegDT,featID=unique(binnedRegDT[,featureID]),plotType="line"){
+  setkey(binnedRegDT,featureID)
+  binPlot=ggplot(data=binnedRegDT[featID], mapping = aes(x=regionGroupID,y = methyl))
+  if (plotType=="line"){
+    binPlot=binPlot+geom_line(aes(col=sampleType,group=sampleName))+facet_wrap(~featureID)
+  }else if (plotType=="jitter"){
+    binPlot=binPlot+geom_jitter(aes(col=sampleType))+facet_wrap(~featureID)
+  }else {
+    stop('The only supported values for plotType are "line" and "jitter"')
+  }
+  return(binPlot)
+}
+
+#' A function to plot MIRA scores and compare case/control.
+#' 
+#' @param scoreDT A datatable with the following columns: score, featureID (names of regions),sampleType.
+#' @param featID Region set name/names in a single string or vector of strings.
+#' @export
+plotMIRAScores <- function(scoreDT,featID=unique(scoreDT[,featureID])){
+  setkey(scoreDT,featureID)
+  scorePlot=ggplot(data=scoreDT[featID], mapping = aes(x=sampleType,y=score))+
+    geom_boxplot()+geom_jitter()+facet_wrap(~featureID)  
+  return(scorePlot)
+}
 
 #' Calculate the median methylation in each bin, for all non-EWS samples, and
 #' then divide methylation by this median value to get a relative increase/decrease
@@ -407,8 +439,9 @@ normalizeEwingsToNonEwings = function(binnedBSDT) {
 	return(binnedBSDT)
 }
 
-#' adding methyl column that has proportion of reads that were methylated for each site
-#' @param Bisulfite datatable or list of datatables with a column for number of methylated 
+#' Adding methyl column that has proportion of reads that were methylated for each site.
+#' 
+#' @param BSDTList A bisulfite datatable or list of datatables with a column for number of methylated 
 #' reads (hitCount) and a column for number of total reads (readCount) for each cytosine that 
 #' was measured.
 #' @export
@@ -433,7 +466,7 @@ addMethCol <- function(BSDTList){
 #' Function to normalize case/experimental samples to the controls
 #' 
 #' It finds the median of the controls for each bin for each region set
-#' then takes the log(oldBinVal/medianBinVal) for each bin.
+#' then divides by the median (oldBinVal/medianBinVal) for each bin.
 #' @param binnedDT A datatable containing bins for each region set for each sample;bins contain
 #' aggregated methylation across regions for that sample; 
 #' it should have a column with sample annotation so cases and controls can be split up as
