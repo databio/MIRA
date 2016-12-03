@@ -71,7 +71,7 @@ binProcess = function(rangeDTList, BSDTNames, anno, binCount=11) {
 			binnedBSDTList[[i]] = simpleCache(cacheName , {
 				loadCaches(BSDTName)
 				BSDT = get(BSDTName)
-				BSBinAggregate(BSDT, rangeDT, binCount)
+				MIRA:::BSBinAggregate(BSDT, rangeDT, binCount)
 			},buildEnvir=nlist(BSDTName, rangeDT, binCount), cacheSubDir="binnedBSDT")
 		} # end for binned BSDT list	
 		binnedBSDT = rbindlist(binnedBSDTList)
