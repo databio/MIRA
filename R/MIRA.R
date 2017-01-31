@@ -24,14 +24,31 @@ NULL
 #' shoulders. I have used 5 or 3.
 #' 
 #' @export
-scoreDip = function(values, binCount, shoulderShift = 5) {
+scoreDip = function(values, binCount, shoulderShift = 5,method="logRatio") {
+  if (method=="logRatio"){
 	centerSpot = ceiling(binCount/2)
 	leftSide = centerSpot - shoulderShift  # 3
 	rightSide = centerSpot + shoulderShift  # 3
 	midpoint = (values[centerSpot] + values[centerSpot+1] + values[centerSpot-1] ) /3
 	# log ratio...
 	return ( log ( ((values[leftSide] + values[rightSide])/2) / midpoint ) )
+  }
+  
+	#alternate way of scoring by the area in the dip
+	if (method=="area"){
+	  maxMethyl=max(values)
+	  return( maxMethyl*binCount-sum(values) )
+	}
+  
+  #another alternate method
+  if (method=="parabola"){
+    #fit2 <- lm(y~poly(x,2,raw=TRUE))
+    #lines(xx, predict(fit2, data.frame(x=xx)), col="green")
+    
+  }
 }
+
+
 
 
 #' Convenience function to aggregate bisulfite scores across bins, across regions.
@@ -586,7 +603,7 @@ BSdtToGRanges = function(dtList) {
 #' @param sampleNames	a vector of length length(files), name for each file. You can also just use contrastList to implement the same thing so this is really unnecessary...
 #' @param cores	number of processors.
 #' @export
-BSreadBiSeq = function(files, contrastList=NULL, sampleNames=extractSampleName(files), cores=4) {
+BSreadBiSeq = function(files, contrastList=NULL, sampleNames=extractSampleName(files), cores=4, returnAsList=FALSE) {
   cores=min(length(files), cores); #not more cores than files!
   setLapplyAlias(cores);
   if (!is.null(contrastList)) {
@@ -607,6 +624,9 @@ BSreadBiSeq = function(files, contrastList=NULL, sampleNames=extractSampleName(f
     if (numberOfFiles > 1) {
       message(i, ": ", sampleNames[i], "; ", appendLF=FALSE)
     }
+    if (numberOfFiles > 1 && i == numberOfFiles){
+      message("", appendLF=TRUE)
+    }
     DT = freadListParsed[[i]]; #convenience alias.
     if(!is.null(contrastList)) {
       DT[, get("colNames"):=as.list(sapply(contrastList, "[[", i))]
@@ -621,10 +641,14 @@ BSreadBiSeq = function(files, contrastList=NULL, sampleNames=extractSampleName(f
   #gc(); #rbind call is memory inefficient; this helps.
   # rbindlist supposedly does the same thing as do.call(rbind, list) but 
   # faster
-  filteredList = 	rbindlist(freadListParsed)
+  if (!returnAsList){ #default (returnAsList=FALSE) is to return as one combined data.table/data.frame
+    filteredList = 	rbindlist(freadListParsed)
+  }else{
+    filteredList = freadListParsed
+  }
+  
   return(filteredList);
 }
-
 
 #' Takes a data.table from BSreadBiSeq and parses the strange x/y format
 #' of methylation calls, splitting them into individual columns
@@ -649,10 +673,6 @@ parseBiseq = function(DT) {
   return(DT)
 }
 
-#' extract sample names from file names as the first part of the file name (before any suffix)
-extractSampleName = function(fileNames, suffixSep="\\.", pathSep="/") {
-  sapply(strsplit(fileNames,pathSep),function(x) strsplit(rev(x)[1],suffixSep)[[1]][1])
-}
 
 #' convert a GenomicRanges into a data.table
 #' 
