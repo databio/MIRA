@@ -3,8 +3,8 @@
 #' MIRA is a score that measures the degree of dip in methylation
 #' level surrounding a regulatory site of interest, such as a 
 #' transcription factor binding sites.
-#' This script (an incipient R package) provides functions
-#' for aggregating methylation data across region sets, in bins
+#' This script provides functions for aggregating methylation 
+#' data across region sets, in bins
 #'
 #' @docType package
 #' @name MIRA
@@ -31,13 +31,13 @@ scoreDip = function(values, binCount, shoulderShift = 5,method="logRatio") {
 	rightSide = centerSpot + shoulderShift  # 3
 	midpoint = (values[centerSpot] + values[centerSpot+1] + values[centerSpot-1] ) /3
 	# log ratio...
-	return ( log ( ((values[leftSide] + values[rightSide])/2) / midpoint ) )
+	score=log ( ((values[leftSide] + values[rightSide])/2) / midpoint )
   }
   
 	#alternate way of scoring by the area in the dip
 	if (method=="area"){
 	  maxMethyl=max(values)
-	  return( maxMethyl*binCount-sum(values) )
+	  score=maxMethyl*binCount-sum(values)
 	}
   
   #another alternate method
@@ -46,6 +46,7 @@ scoreDip = function(values, binCount, shoulderShift = 5,method="logRatio") {
     #lines(xx, predict(fit2, data.frame(x=xx)), col="green")
     
   }
+  return(score)
 }
 
 
