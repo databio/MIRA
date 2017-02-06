@@ -16,6 +16,59 @@
 #' @importFrom data.table ":=" setDT data.table setkey fread setnames as.data.table setcolorder melt setkeyv
 NULL
 
+#' Function to aggregate methylation data into bins over all regions in each region set;
+#' 
+#' 
+#'
+#' @param BSDT A single data table that has DNA methylation data including :.
+#' @param GRList A GRangesList object containing region sets, each set corresponding to a regulatory element;
+#' Each regionSet in the list should be named. 
+#' @param binNum How many bins each region should be split into for aggregation of the DNA methylation data
+#' @param sampleName
+#' @param sampleType could be case/control, tissue type, etc.
+#' 
+#' @export
+returnMIRABins = function(BSDT,GRList, binNum=11, sampleName=NULL,sampleType=NULL){
+  methylByBin=lapply(X = GRList, FUN = function(x) BSBinAggregate(BSDT = BSDT,rangeDT = x, binCount = binNum,splitFactor=NULL))
+  names(methylByBin)=names(GRList)#preserving names
+  #adding a feature ID column to each data.table that should identify what region set was used
+  for (i in 1:length(methylByBin)){
+    methylByBin[[i]][,featureID := rep(names(methylByBin)[i],nrow(methylByBin[[i]]))]
+  }
+  #screening out region sets that had incomplete binning
+  binNumScreen=sapply(X = methylByBin,FUN = nrow)
+  methylByBin=methylByBin[!(binNumScreen<binNum)]#taking out incomplete region sets
+  
+  bigMethylByBin=rbindlist(methylByBin)
+  #########################bigBin=bigMethylByBin[,sampleName := rep(BSDT[1,sampleName])]#putting everything in one list and adding back on the sample names
+  
+  return(bigMethylByBin)
+}
+
+#' Function to take DNA methylation and region data and return a MIRA score;
+#' a wrapper for returnMIRABins and scoreDip
+#' 
+#'
+#' @param BSDT A single data table that has DNA methylation data including :.
+#' @param GRList A GRangesList object containing region sets, each set corresponding to a regulatory element;
+#' Each regionSet in the list should be named. 
+#' @param binNum How many bins each region should be split into for aggregation of the DNA methylation data
+#' @param scoringMethod Method to calculate MIRA score after binning; includes logratio, area; see scoreDip function
+#' @param sampleName 
+#' @param sampleType could be case/control, tissue type, etc.
+#' 
+#' @export
+MIRAScore = function(BSDT,GRList, binNum=11, scoringMethod="logRatio",sampleName=NULL,sampleType=NULL){
+  
+  bigBin=returnMIRABins(BSDT,GRList, binNum,sampleName,sampleType)
+  
+  #using binned methylation data to calculate MIRA score
+  scoreDT=bigBin[,scoreDip(methyl,binNum,method=scoringMethod),by=.(featureID)]
+  names(scoreDT)[length(names(scoreDT))] <- "score" #last column named score
+  
+  return(scoreDT)
+}
+
 #' My dip scoring function - for MIRA scores;
 #' That's Methylation-based Inference of Regulatory Activity
 #' just calculates the ratio between the flank (shoulders) and midpoint
