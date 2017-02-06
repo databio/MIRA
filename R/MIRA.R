@@ -455,7 +455,14 @@ BSBinPlots = function(binnedBSDT, binCount, regionName="regions") {
 
 	bytype = binnedBSDT[, list(methyl= mean(methyl), methylNormRel=median(methylNormRel)), by=list(regionGroupID, cell_type)]	
 
-	facetPlot = ggplot(bytype, aes(y=log(methylNormRel), x=factor(regionGroupID), group=cell_type))  + theme_classic() + geom_hline(aes(yintercept=0), colour="#aaaaaa", linetype="dashed")  + geom_line(alpha=checkTransparency(.8), size=1)  + ylab("Methylation log ratio vs normal") + xlab(paste0("Genome bins surrounding ", regionName, " sites")) + theme(legend.position=c(1,0), legend.justification=c(1,0))+ labs(colour = "EWS") +scale_colour_brewer(palette="Set1")  + facet_wrap(~ cell_type) + geom_hline(aes(yintercept=0), colour="#999999", linetype="dashed") + scale_x_discrete(breaks=seq_len(binCount),labels=labelBinCenter(binCount))  + theme_blank_facet_label()
+	facetPlot = ggplot(bytype, aes(y=log(methylNormRel), x=factor(regionGroupID), group=cell_type))  +
+		theme_classic() + geom_hline(aes(yintercept=0), colour="#aaaaaa", linetype="dashed") + 
+		geom_line(alpha=checkTransparency(.8), size=1)  + ylab("Methylation log ratio vs normal") + 
+		xlab(paste0("Genome bins surrounding ", regionName, " sites")) + 
+		theme(legend.position=c(1,0), legend.justification=c(1,0)) + labs(colour = "EWS") + 
+		scale_colour_brewer(palette="Set1") + facet_wrap(~ cell_type) + 
+		geom_hline(aes(yintercept=0), colour="#999999", linetype="dashed") + 
+		scale_x_discrete(breaks=seq_len(binCount),labels=labelBinCenter(binCount)) + theme_blank_facet_label()
 
 	return(nlist(inclassPlot, combinedPlot, facetPlot))
 }
