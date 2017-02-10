@@ -14,7 +14,7 @@
 #' @importFrom GenomicRanges GRanges GRangesList elementMetadata strand
 #' @importFrom ggplot2 ggplot
 #' @import BiocGenerics S4Vectors IRanges
-#' @importFrom data.table ":=" setDT data.table setkey fread setnames as.data.table setcolorder melt setkeyv
+#' @importFrom data.table ":=" setDT data.table setkey fread setnames as.data.table setcolorder melt setkeyv rbindlist
 NULL
 
 #' Function to aggregate methylation data into bins over all regions in each region set;
@@ -27,6 +27,11 @@ NULL
 #' @param binNum How many bins each region should be split into for aggregation of the DNA methylation data
 #' @param sampleName
 #' @param sampleType could be case/control, tissue type, etc.
+#' 
+#' @return a data.table with binNum rows for each region set containing aggregated methylation data
+#' Each region was split into bins; methylation was put in these bins; 
+#' Output contains sum of the all corresponding bins for the regions of each region set 
+#' ie for all regions in each region set: first bins summed, second bins summed, etc
 #' 
 #' @export
 returnMIRABins = function(BSDT,GRList, binNum=11, sampleNameInBSDT=TRUE,sampleType=NULL){
@@ -125,7 +130,6 @@ scoreDip = function(values, binCount, shoulderShift = 5,method="logRatio") {
 #' BSDTs; also with a `cell_type` column, used to append cell_type to the binned
 #' result tables.
 #' 
-#' @export
 binProcess = function(rangeDTList, BSDTNames, anno, binCount=11) {
 	# aggregate in bins
 	if (! "list" %in% class(BSDTNames)) {
@@ -182,7 +186,6 @@ binProcess = function(rangeDTList, BSDTNames, anno, binCount=11) {
 #' it should be a list of data.tables but a GRangesList will be accepted.
 #' @param binNumber gives number of bins to divide each region into.
 #' 
-#' @export
 BSmultiScore <- function(BSDTList,rangeDTList,binNum=11){
   if ("GRangesList" %in% class(rangeDTList)){
     rangeDTList=lapply(X = rangeDTList,FUN = grToDt)
@@ -288,7 +291,9 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500, byRegionGroup
 		}
 	}
 
-	message("Binning...")
+	#if(!silent){
+	  message("Binning...")
+	#}
 	binnedDT = rangeDT[, binRegion(start, end, binCount, get(seqnamesColName))]
 	binnedGR = sapply(split(binnedDT, binnedDT$binID), dtToGr)
 	message("Aggregating...")
@@ -328,7 +333,6 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500, byRegionGroup
 #' Turn on this flag to aggregate across all region groups, making the result
 #' uncontiguous, and resulting in 1 row per *region group*.
 #'
-#' @export
 BSAggregate = function(BSDT, regionsGRL, excludeGR=NULL, regionsGRL.length = NULL, splitFactor=NULL, keepCols=NULL, sumCols=NULL, jCommand=NULL, byRegionGroup=FALSE, keep.na=FALSE) {
 
 	# Assert that regionsGRL is a GRL.
@@ -730,7 +734,7 @@ BSreadBiSeq = function(files, contrastList=NULL, sampleNames=extractSampleName(f
 #' @param DT data.table to parse
 #' @return data.table with separate methylated and unmethylated columns
 #' 
-#' @export
+#' 
 parseBiseq = function(DT) {
   message(".", appendLF=FALSE);
   setnames(DT, paste0("V", 1:6), c("chr", "start", "end", "meth", "rate", "strand"))
@@ -753,7 +757,6 @@ parseBiseq = function(DT) {
 #' 
 #' @param a GRanges object
 #' @return A data.table object.
-#' @export
 grToDt = function(GR) {
   DF=as.data.frame(elementMetadata(GR))
   if( ncol(DF) > 0) {
