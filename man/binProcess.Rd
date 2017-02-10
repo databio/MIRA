@@ -21,4 +21,3 @@ Convenience function to aggregate bisulfite scores across bins, across regions.
 You need a list of ranges (a bed file as a data.table, in a list)
 and a list of BSDTs.
 }
-

@@ -16,4 +16,3 @@ well as annotation of the region sets (featureID column) and sampleType column (
 It finds the median of the controls for each bin for each region set
 then divides by the median (oldBinVal/medianBinVal) for each bin.
 }
-

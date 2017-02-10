@@ -14,4 +14,3 @@ plotMIRAScores(scoreDT, featID = unique(scoreDT[, featureID]))
 \description{
 A function to plot MIRA scores and compare case/control.
 }
-

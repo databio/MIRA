@@ -17,4 +17,3 @@ data.table with separate methylated and unmethylated columns
 Takes a data.table from BSreadBiSeq and parses the strange x/y format
 of methylation calls, splitting them into individual columns
 }
-

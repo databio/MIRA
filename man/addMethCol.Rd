@@ -14,4 +14,3 @@ was measured.}
 \description{
 Adding methyl column that has proportion of reads that were methylated for each site.
 }
-

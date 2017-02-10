@@ -13,4 +13,3 @@ Calculate the median methylation in each bin, for all non-EWS samples, and
 then divide methylation by this median value to get a relative increase/decrease
 in each bin.
 }
-

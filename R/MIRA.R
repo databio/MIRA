@@ -12,6 +12,7 @@
 #'
 #' @references \url{http://github.com/sheffien}
 #' @importFrom GenomicRanges GRanges GRangesList elementMetadata strand
+#' @importFrom ggplot2 ggplot
 #' @import BiocGenerics S4Vectors IRanges
 #' @importFrom data.table ":=" setDT data.table setkey fread setnames as.data.table setcolorder melt setkeyv
 NULL
@@ -21,15 +22,22 @@ NULL
 #' 
 #'
 #' @param BSDT A single data table that has DNA methylation data including :.
-#' @param GRList A GRangesList object containing region sets, each set corresponding to a regulatory element;
+#' @param GRDTList A GRangesList object containing region sets, each set corresponding to a regulatory element;
 #' Each regionSet in the list should be named. 
 #' @param binNum How many bins each region should be split into for aggregation of the DNA methylation data
 #' @param sampleName
 #' @param sampleType could be case/control, tissue type, etc.
 #' 
 #' @export
-returnMIRABins = function(BSDT,GRList, binNum=11, sampleName=NULL,sampleType=NULL){
-  methylByBin=lapply(X = GRList, FUN = function(x) BSBinAggregate(BSDT = BSDT,rangeDT = x, binCount = binNum,splitFactor=NULL))
+returnMIRABins = function(BSDT,GRList, binNum=11, sampleNameInBSDT=TRUE,sampleType=NULL){
+  
+  #changing GRList to list of data tables
+  if (!"data.table" %in% class(GRList[[1]])){
+    GRDTList=lapply(X = GRList,FUN = grToDt)#GRanges to data.tables
+  }
+  
+  
+  methylByBin=lapply(X = GRDTList, FUN = function(x) BSBinAggregate(BSDT = BSDT,rangeDT = x, binCount = binNum,splitFactor=NULL))
   names(methylByBin)=names(GRList)#preserving names
   #adding a feature ID column to each data.table that should identify what region set was used
   for (i in 1:length(methylByBin)){
@@ -40,7 +48,9 @@ returnMIRABins = function(BSDT,GRList, binNum=11, sampleName=NULL,sampleType=NUL
   methylByBin=methylByBin[!(binNumScreen<binNum)]#taking out incomplete region sets
   
   bigMethylByBin=rbindlist(methylByBin)
-  #########################bigBin=bigMethylByBin[,sampleName := rep(BSDT[1,sampleName])]#putting everything in one list and adding back on the sample names
+  if (sampleNameInBSDT){
+    bigMethylByBin[,sampleName := rep(BSDT[1,sampleName])] #creating new sampleName column
+  }
   
   return(bigMethylByBin)
 }
@@ -52,8 +62,8 @@ returnMIRABins = function(BSDT,GRList, binNum=11, sampleName=NULL,sampleType=NUL
 #' @param BSDT A single data table that has DNA methylation data including :.
 #' @param GRList A GRangesList object containing region sets, each set corresponding to a regulatory element;
 #' Each regionSet in the list should be named. 
-#' @param binNum How many bins each region should be split into for aggregation of the DNA methylation data
-#' @param scoringMethod Method to calculate MIRA score after binning; includes logratio, area; see scoreDip function
+#' @param binNum How many bins each region should be split into for aggregation of the DNA methylation data.
+#' @param scoringMethod Method to calculate MIRA score after binning; includes logratio, area; see scoreDip function.
 #' @param sampleName 
 #' @param sampleType could be case/control, tissue type, etc.
 #' 
@@ -478,6 +488,10 @@ BSBinPlots = function(binnedBSDT, binCount, regionName="regions") {
 plotMIRARegions <- function(binnedRegDT,featID=unique(binnedRegDT[,featureID]),plotType="line"){
   setkey(binnedRegDT,featureID)
   binPlot=ggplot(data=binnedRegDT[featID], mapping = aes(x=regionGroupID,y = methyl))
+  if (!("sampleType" %in% names(binnedRegDT))){
+    sampleType="All samples" #if no sampleType column then all lines/points will be black
+    warning("sampleType column must exist if it is desired to split up sample types by color")
+  }
   if (plotType=="line"){
     binPlot=binPlot+geom_line(aes(col=sampleType,group=sampleName))+facet_wrap(~featureID)
   }else if (plotType=="jitter"){

@@ -15,4 +15,3 @@ A data.table object.
 \description{
 convert a GenomicRanges into a data.table
 }
-

@@ -21,4 +21,3 @@ with columns named start, end}
 \description{
 Produced originally for binning Ewing RRBS data across various region sets
 }
-

@@ -12,4 +12,3 @@ BSBinPlots(binnedBSDT, binCount, regionName = "regions")
 \description{
 TODO: It's EWS-centric; needs to become parameterized.
 }
-

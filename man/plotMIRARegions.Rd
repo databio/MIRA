@@ -19,4 +19,3 @@ bin numbers(binnedRegionDT), aggregated methylation values (methyl), name of the
 \description{
 A function to plot the binned methylation of samples over a region.
 }
-

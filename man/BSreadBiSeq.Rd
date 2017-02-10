@@ -5,7 +5,7 @@
 \title{Read in files from biseq meth caller}
 \usage{
 BSreadBiSeq(files, contrastList = NULL,
-  sampleNames = extractSampleName(files), cores = 4)
+  sampleNames = extractSampleName(files), cores = 4, returnAsList = FALSE)
 }
 \arguments{
 \item{files}{a list of filenames (use parseInputArg if necessary)}
@@ -19,4 +19,3 @@ BSreadBiSeq(files, contrastList = NULL,
 \description{
 Read in files from biseq meth caller
 }
-

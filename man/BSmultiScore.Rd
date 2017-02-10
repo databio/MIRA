@@ -19,4 +19,3 @@ it should be a list of data.tables but a GRangesList will be accepted.}
 \description{
 Wrapper of BSBinAggregate to do multiple regions (ie multiple TFs) and/or multiple samples
 }
-

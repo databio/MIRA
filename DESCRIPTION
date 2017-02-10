@@ -25,4 +25,4 @@ biocViews: GeneRegulation, GenomeAnnotation, SystemsBiology,
     FunctionalGenomics, ChIPSeq, MethylSeq, Sequencing
 URL: http://databio.org/mira
 BugReports: http://github.com/nsheff/MIRA
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.0

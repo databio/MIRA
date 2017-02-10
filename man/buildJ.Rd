@@ -17,4 +17,3 @@ to apply to those columns, constructs a j-expression for use in
 a data.table.
 use it in a DT[,eval(parse(text=buildJ(cols,funcs)))]
 }
-

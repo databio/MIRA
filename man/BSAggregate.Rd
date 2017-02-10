@@ -48,4 +48,3 @@ you can use jCommand to do other functions.
 Given a bisulfite data table as input, with an identifier column for
 different samples; plus a GRanges objects with regions to aggregate.
 }
-

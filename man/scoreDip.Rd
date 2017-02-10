@@ -6,7 +6,7 @@
 That's Methylation-based Inference of Regulatory Activity
 just calculates the ratio between the flank (shoulders) and midpoint}
 \usage{
-scoreDip(values, binCount, shoulderShift = 5)
+scoreDip(values, binCount, shoulderShift = 5, method = "logRatio")
 }
 \arguments{
 \item{shoulderShift}{The number of bins away from the center to use as the
@@ -17,4 +17,3 @@ My dip scoring function - for MIRA scores;
 That's Methylation-based Inference of Regulatory Activity
 just calculates the ratio between the flank (shoulders) and midpoint
 }
-

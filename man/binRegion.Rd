@@ -34,4 +34,3 @@ loadCGData("hg19")
 cgIslandsDT = data.table(...)
 binnedCGI = cgIslandsDT[, binRegion(start,end, 50)]
 }
-
