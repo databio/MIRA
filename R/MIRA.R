@@ -118,107 +118,6 @@ scoreDip = function(values, binCount, shoulderShift = 5,method="logRatio") {
 }
 
 
-
-
-#' Convenience function to aggregate bisulfite scores across bins, across regions.
-#' You need a list of ranges (a bed file as a data.table, in a list)
-#' and a list of BSDTs.
-
-#' @param rangeDTList This is a list of data.tables, with each just having chr,
-#' start and end.
-#' @param anno An annotation table (data.table), keyed with the same key as the
-#' BSDTs; also with a `cell_type` column, used to append cell_type to the binned
-#' result tables.
-#' 
-binProcess = function(rangeDTList, BSDTNames, anno, binCount=11) {
-	# aggregate in bins
-	if (! "list" %in% class(BSDTNames)) {
-		BSDTNames = list(BSDTNames)
-	}
-	if (! "list" %in% class(rangeDTList)) {
-		rangeDTList = list(rangeDTList)
-	}
-
-	binResults = list()
-	# Aggregate each Range into bins.
-
-	for (DTName in names(rangeDTList)) {
-		if (! "data.table" %in% class(get(DTName)) ) { message("ranges must be a DT") }
-		message(DTName)
-
-		binnedBSDTList = list()
-		for (i in 1:length(BSDTNames)) { 
-			BSDTName = BSDTNames[[i]]
-			message("BSDT ", i, ": ", BSDTName)
-			
-			cacheName = paste0("binnedBSDT_", DTName, "_", BSDTName, "_", binCount)
-			rangeDT = rangeDTList[[DTName]]
-			binnedBSDTList[[i]] = simpleCache(cacheName , {
-				loadCaches(BSDTName)
-				BSDT = get(BSDTName)
-				MIRA:::BSBinAggregate(BSDT, rangeDT, binCount)
-			},buildEnvir=nlist(BSDTName, rangeDT, binCount), cacheSubDir="binnedBSDT")
-		} # end for binned BSDT list	
-		binnedBSDT = rbindlist(binnedBSDTList)
-		setkey(binnedBSDT, id)
-
-		# assign cell-type classes	
-		binnedBSDT[anno, cell_type:=cell_type, allow=TRUE]
-		# clear any NA cell_types
-		binnedBSDT = binnedBSDT[!is.na(cell_type),]
-		binnedBSDT = normalizeEwingsToNonEwings(binnedBSDT)
-
-		# Calculate Dipscores (MIRA)
-		dipScores = binnedBSDT[,list(cell_type=unique(cell_type), dipScore=unique(scoreDip(methyl, binCount, shoulderShift = 5))), by=id]
-
-		binResults[[DTName]] = nlist(binnedBSDT, dipScores)
-
-	} # end for ranges
-	return(binResults)
-}
-
-#' Wrapper of BSBinAggregate to do multiple regions (ie multiple TFs) and/or multiple samples
-#' 
-#' @param BSDTList This should be a list of Bisulfite data.tables that contains a methyl column with
-#' chr, start, hitCount (number of reads methylated), readCount (number of reads total), and 
-#' methyl (percent methylation present) columns.
-#' @param rangeDTList This is a list of genomic ranges, each corresponding to a different feature; 
-#' it should be a list of data.tables but a GRangesList will be accepted.
-#' @param binNumber gives number of bins to divide each region into.
-#' 
-BSmultiScore <- function(BSDTList,rangeDTList,binNum=11){
-  if ("GRangesList" %in% class(rangeDTList)){
-    rangeDTList=lapply(X = rangeDTList,FUN = grToDt)
-  } 
-  
-  #if rangeDTList still does not contain data.tables, the function is stopped
-  if (!"data.table" %in% class(rangeDTList[[1]])){
-    stop("rangeDTList must be a list of data.tables")
-  }
-  
-  if (!"list" %in% class(BSDTList)){
-    BSDTList=list(BSDTList)
-  }
-  
-  BSDTResults=list()
-  
-  for (i in 1:length(BSDTList)){ #once for each bisulfite data table (this would sometimes be once per patient/sample)
-    
-    binned=list()
-    
-    for (j in 1:length(rangeDTList)){
-      binned[[j]]=BSBinAggregate(BSDT = BSDTList[[i]],rangeDT = rangeDTList[[j]], binCount = binNum, splitFactor=NULL)
-    }
-    
-    #function scoreDip with some specified parameters is applied to each list component's methyl column
-    BSDTResults[[i]]=sapply(binned,function(x) scoreDip(values=x$methyl,binCount=binNum,shoulderShift = 5))
-    
-  }  
-  return(BSDTResults)
-  
-}
-
-
 #' Aggregating signals in bins across a set of regions
 #'
 #' given a start, end, and number of bins, to divide, 
@@ -454,32 +353,6 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR=NULL, regionsGRL.length = NUL
 	# doesn't give you a choice at this point. 
 }
 
-#' Given a binned BSDT (which is produced from BSBinAggregate), this plot will
-#' produce and return a few ggplots (which could then be printed).
-#' It produces a combined, and a faceted by cell-type plot, showing how signal
-#' varies across bins.
-#' 
-#' TODO: It's EWS-centric; needs to become parameterized.
-BSBinPlots = function(binnedBSDT, binCount, regionName="regions") {
-	byclass = binnedBSDT[, list(methyl= mean(methyl), methylNormRel=mean(methylNormRel)), by=list(regionGroupID, grepl("EWS", cell_type))]
-
-	combinedPlot = ggplot(binnedBSDT, aes(y=log2(methylNormRel), x=factor(regionGroupID), color=grepl("EWS", cell_type))) + ylim(c(-1,1.25)) + theme_ns() + geom_hline(aes(yintercept=0), alpha=.2) + geom_point(position="jitter", alpha=.3)  + geom_line(data=byclass, aes(y=log2(methylNormRel), x=regionGroupID, group=grepl, color=grepl), size=1) + ylab("Methylation log_2 ratio vs normal") + xlab(paste0("Genome bins surrounding ", regionName, " sites")) + theme(legend.position=c(1,0), legend.justification=c(1,0))+ labs(colour = "EWS") +scale_colour_brewer(palette="Set1") + scale_x_discrete(labels=labelBinCenter(binCount))
-
-	inclassPlot = ggplot(binnedBSDT[grepl("EWS", cell_type),], aes(y=log2(methylNormRel), x=factor(regionGroupID), color=grepl("EWS", cell_type))) + ylim(c(-1, 1)) + theme_ns() + geom_hline(aes(yintercept=0), alpha=checkTransparency(.2)) + geom_point(position="jitter", alpha=checkTransparency(.3))  + geom_smooth(data=byclass[grepl==TRUE,], aes(y=log2(methylNormRel), x=regionGroupID, group=grepl, color=grepl), size=1, fill="red") + ylab("Methylation log_2 ratio vs normal") + xlab(paste0("Genome bins surrounding ", regionName, " sites")) + theme(legend.position=c(1,0), legend.justification=c(1,0))+ labs(colour = "EWS") +scale_colour_brewer(palette="Set1") + scale_x_discrete(labels=labelBinCenter(binCount))
-
-	bytype = binnedBSDT[, list(methyl= mean(methyl), methylNormRel=median(methylNormRel)), by=list(regionGroupID, cell_type)]	
-
-	facetPlot = ggplot(bytype, aes(y=log(methylNormRel), x=factor(regionGroupID), group=cell_type))  +
-		theme_classic() + geom_hline(aes(yintercept=0), colour="#aaaaaa", linetype="dashed") + 
-		geom_line(alpha=checkTransparency(.8), size=1)  + ylab("Methylation log ratio vs normal") + 
-		xlab(paste0("Genome bins surrounding ", regionName, " sites")) + 
-		theme(legend.position=c(1,0), legend.justification=c(1,0)) + labs(colour = "EWS") + 
-		scale_colour_brewer(palette="Set1") + facet_wrap(~ cell_type) + 
-		geom_hline(aes(yintercept=0), colour="#999999", linetype="dashed") + 
-		scale_x_discrete(breaks=seq_len(binCount),labels=labelBinCenter(binCount)) + theme_blank_facet_label()
-
-	return(nlist(inclassPlot, combinedPlot, facetPlot))
-}
 
 #' A function to plot the binned methylation of samples over a region.
 #' 
@@ -518,22 +391,6 @@ plotMIRAScores <- function(scoreDT,featID=unique(scoreDT[,featureID])){
   return(scorePlot)
 }
 
-#' Calculate the median methylation in each bin, for all non-EWS samples, and
-#' then divide methylation by this median value to get a relative increase/decrease
-#' in each bin.
-normalizeEwingsToNonEwings = function(binnedBSDT) {
-	 medMethyl = binnedBSDT[!grepl("EWS", cell_type) & !grepl("ESC", cell_type), list(medMethyl= median(methyl)), by=list(regionGroupID)]
-
-	# Normalize to MSCs: 
-	#medMethyl = binnedBSDT[grepl("MSC", cell_type), list(medMethyl= mean(methyl)), by=list(regionGroupID)]
-
-	binnedBSDT = merge(binnedBSDT, medMethyl, by.x="regionGroupID", by.y="regionGroupID")
-
-	binnedBSDT[, methylNormRel:=methyl/medMethyl]
-#	binnedBSDT[, methylNormRel:=methyl/binnedBSDT[,median(methyl)]]
-	print(binnedBSDT) # data.table quirk requires print to print on 2nd call.
-	return(binnedBSDT)
-}
 
 #' Adding methyl column that has proportion of reads that were methylated for each site.
 #' 
