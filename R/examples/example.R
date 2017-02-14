@@ -1,9 +1,15 @@
 #loading necessary libraries
 library(data.table)
 library(ggplot2)
+library(GenomicRanges)
+library(MIRA)
+
+#setting initial parameter
+binNum=11
 
 #reading in annotation
-
+annoDF=read.csv("C:/cygwin64/Comp_Epigenetics/Bcell_epithelialAnno.csv")
+annoDF=as.data.table(annoDF)
 
 #reading in region data
 #reading in bisulfite data
@@ -11,7 +17,7 @@ library(ggplot2)
 load("C:/cygwin64/Comp_Epigenetics/dump/BSDTListBcellEpithelial.RData")
 load("C:/cygwin64/Comp_Epigenetics/dump/encodeRegionSampling.RData")
 BSDTList=BSDTList[c(1:3,11:13)]
-save(BSDTList,file="C:/cygwin64/Comp_Epigenetics/MIRA_Projects/BSDTListBcellepithelial3_3.RData")
+#save(BSDTList,file="C:/cygwin64/Comp_Epigenetics/MIRA_Projects/BSDTListBcellepithelial3_3.RData")
 someFeatures=someFeatures[1:6]
 
 #converting to proper format
@@ -24,12 +30,22 @@ bigBin=lapply(X = BSDTList,FUN = returnMIRABins,GRList=someFeatures,binNum=11,sa
 bigBinDT=rbindlist(bigBin)#need to make sure that sample names have a column in here
 
 #adding sampleType from annotation object
+setkey(bigBinDT,sampleName)
+setkey(annoDF,sampleName)
+bigBinDT=merge(bigBinDT,annoDF, all.x=TRUE)
+
+#scoring samples
+sampleScores=bigBinDT[,.(score = scoreDip(methyl,binNum)),by=.(featureID,sampleName)]
+setkey(sampleScores,sampleName)
+setkey(annoDF,sampleName)
+sampleScores=merge(sampleScores,annoDF,all.x=TRUE)
+
 
 
 #visualizing MIRA signatures
-plotMIRARegions(bigBinDT)
+plotMIRARegions(binnedRegDT = bigBinDT)
 
 #visualizing MIRA scores
-
+plotMIRAScores(scoreDT=sampleScores)
 
 

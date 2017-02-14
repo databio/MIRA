@@ -17,6 +17,12 @@ returnMIRABins(BSDT, GRList, binNum = 11, sampleNameInBSDT = TRUE,
 \item{GRDTList}{A GRangesList object containing region sets, each set corresponding to a regulatory element;
 Each regionSet in the list should be named.}
 }
+\value{
+a data.table with binNum rows for each region set containing aggregated methylation data
+Each region was split into bins; methylation was put in these bins; 
+Output contains sum of the all corresponding bins for the regions of each region set 
+ie for all regions in each region set: first bins summed, second bins summed, etc
+}
 \description{
 Function to aggregate methylation data into bins over all regions in each region set;
 }

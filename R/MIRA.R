@@ -74,12 +74,13 @@ returnMIRABins = function(BSDT,GRList, binNum=11, sampleNameInBSDT=TRUE,sampleTy
 #' 
 #' @export
 MIRAScore = function(BSDT,GRList, binNum=11, scoringMethod="logRatio",sampleName=NULL,sampleType=NULL){
+  MIRAresults=list()
+  
   
   bigBin=returnMIRABins(BSDT,GRList, binNum,sampleName,sampleType)
   
   #using binned methylation data to calculate MIRA score
-  scoreDT=bigBin[,scoreDip(methyl,binNum,method=scoringMethod),by=.(featureID)]
-  names(scoreDT)[length(names(scoreDT))] <- "score" #last column named score
+  scoreDT=bigBin[,.(score=scoreDip(methyl,binNum,method=scoringMethod)),by=.(featureID,sampleName)]
   
   return(scoreDT)
 }

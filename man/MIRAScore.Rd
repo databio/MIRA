@@ -14,9 +14,9 @@ MIRAScore(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
 \item{GRList}{A GRangesList object containing region sets, each set corresponding to a regulatory element;
 Each regionSet in the list should be named.}
 
-\item{binNum}{How many bins each region should be split into for aggregation of the DNA methylation data}
+\item{binNum}{How many bins each region should be split into for aggregation of the DNA methylation data.}
 
-\item{scoringMethod}{Method to calculate MIRA score after binning; includes logratio, area; see scoreDip function}
+\item{scoringMethod}{Method to calculate MIRA score after binning; includes logratio, area; see scoreDip function.}
 
 \item{sampleName}{}
 
