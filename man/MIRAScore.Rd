@@ -6,7 +6,7 @@
 a wrapper for returnMIRABins and scoreDip}
 \usage{
 MIRAScore(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
-  sampleName = NULL, sampleType = NULL)
+  sampleNameInBSDT = TRUE, sampleType = NULL)
 }
 \arguments{
 \item{BSDT}{A single data table that has DNA methylation data including :.}
@@ -18,7 +18,7 @@ Each regionSet in the list should be named.}
 
 \item{scoringMethod}{Method to calculate MIRA score after binning; includes logratio, area; see scoreDip function.}
 
-\item{sampleName}{}
+\item{sampleNameInBSDT}{boolean for whether the BSDT has a sampleName column}
 
 \item{sampleType}{could be case/control, tissue type, etc.}
 }

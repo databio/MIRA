@@ -12,6 +12,8 @@ returnMIRABins(BSDT, GRList, binNum = 11, sampleNameInBSDT = TRUE,
 
 \item{binNum}{How many bins each region should be split into for aggregation of the DNA methylation data}
 
+\item{sampleNameInBSDT}{boolean for whether the BSDT has a sampleName column}
+
 \item{sampleType}{could be case/control, tissue type, etc.}
 
 \item{GRDTList}{A GRangesList object containing region sets, each set corresponding to a regulatory element;

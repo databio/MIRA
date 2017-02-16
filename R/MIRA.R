@@ -25,7 +25,7 @@ NULL
 #' @param GRDTList A GRangesList object containing region sets, each set corresponding to a regulatory element;
 #' Each regionSet in the list should be named. 
 #' @param binNum How many bins each region should be split into for aggregation of the DNA methylation data
-#' @param sampleName
+#' @param sampleNameInBSDT boolean for whether the BSDT has a sampleName column
 #' @param sampleType could be case/control, tissue type, etc.
 #' 
 #' @return a data.table with binNum rows for each region set containing aggregated methylation data
@@ -34,6 +34,8 @@ NULL
 #' ie for all regions in each region set: first bins summed, second bins summed, etc
 #' 
 #' @export
+#' @example
+#' R/examples/example.R
 returnMIRABins = function(BSDT,GRList, binNum=11, sampleNameInBSDT=TRUE,sampleType=NULL){
   
   #changing GRList to list of data tables
@@ -69,7 +71,7 @@ returnMIRABins = function(BSDT,GRList, binNum=11, sampleNameInBSDT=TRUE,sampleTy
 #' Each regionSet in the list should be named. 
 #' @param binNum How many bins each region should be split into for aggregation of the DNA methylation data.
 #' @param scoringMethod Method to calculate MIRA score after binning; includes logratio, area; see scoreDip function.
-#' @param sampleName 
+#' @param sampleNameInBSDT boolean for whether the BSDT has a sampleName column
 #' @param sampleType could be case/control, tissue type, etc.
 #' 
 #' @export
@@ -77,7 +79,7 @@ MIRAScore = function(BSDT,GRList, binNum=11, scoringMethod="logRatio",sampleName
   MIRAresults=list()
   
   
-  bigBin=returnMIRABins(BSDT,GRList, binNum,sampleName,sampleType)
+  bigBin=returnMIRABins(BSDT,GRList, binNum,sampleNameInBSDT,sampleType)
   
   #using binned methylation data to calculate MIRA score
   scoreDT=bigBin[,.(score=scoreDip(methyl,binNum,method=scoringMethod)),by=.(featureID,sampleName)]
@@ -141,7 +143,7 @@ scoreDip = function(values, binCount, shoulderShift = 5,method="logRatio") {
 #' 		ubinID: unique bin IDs
 #' @export
 #' @examples
-#' loadCGData("hg19")
+#' #load example region set
 #' cgIslandsDT = data.table(...)
 #' binnedCGI = cgIslandsDT[, binRegion(start,end, 50)]
 binRegion = function(start, end, bins, idDF=NULL) {
