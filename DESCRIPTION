@@ -6,14 +6,16 @@ Description: measures the degree of "dip" in methylation
     level surrounding a regulatory site of interest, such as a 
     transcription factor binding sites.
 Author: Nathan Sheffield <http://www.databio.org> [aut, cre],
-    Christoph Bock [cre]
+    Christoph Bock [cre],
+    John Lawson [aut]
 Maintainer: Nathan Sheffield <nathan@code.databio.org>
 Imports:
     BiocGenerics,
     S4Vectors,
     IRanges,
     GenomicRanges,
-    data.table
+    data.table,
+    ggplot2
 Suggests:
     knitr,
     parallel,

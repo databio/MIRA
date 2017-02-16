@@ -73,7 +73,7 @@ returnMIRABins = function(BSDT,GRList, binNum=11, sampleNameInBSDT=TRUE,sampleTy
 #' @param sampleType could be case/control, tissue type, etc.
 #' 
 #' @export
-MIRAScore = function(BSDT,GRList, binNum=11, scoringMethod="logRatio",sampleName=NULL,sampleType=NULL){
+MIRAScore = function(BSDT,GRList, binNum=11, scoringMethod="logRatio",sampleNameInBSDT=TRUE,sampleType=NULL){
   MIRAresults=list()
   
   
