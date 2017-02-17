@@ -14,7 +14,7 @@
 #' @importFrom GenomicRanges GRanges GRangesList elementMetadata strand
 #' @importFrom ggplot2 ggplot
 #' @import BiocGenerics S4Vectors IRanges
-#' @importFrom data.table ":=" setDT data.table setkey fread setnames as.data.table setcolorder melt setkeyv rbindlist
+#' @importFrom data.table ":=" setDT data.table setkey fread setnames as.data.table setcolorder melt setkeyv rbindlist as.data.table
 NULL
 
 #' Function to aggregate methylation data into bins over all regions in each region set;
@@ -25,6 +25,7 @@ NULL
 #' @param GRDTList A GRangesList object containing region sets, each set corresponding to a regulatory element;
 #' Each regionSet in the list should be named. 
 #' @param binNum How many bins each region should be split into for aggregation of the DNA methylation data
+#' @param minReads Filter out bins with fewer than X reads before returning.
 #' @param sampleNameInBSDT boolean for whether the BSDT has a sampleName column
 #' @param sampleType could be case/control, tissue type, etc.
 #' 
@@ -36,7 +37,7 @@ NULL
 #' @export
 #' @example
 #' R/examples/example.R
-returnMIRABins = function(BSDT,GRList, binNum=11, sampleNameInBSDT=TRUE,sampleType=NULL){
+returnMIRABins = function(BSDT,GRList, binNum=11, minReads = 500, sampleNameInBSDT=TRUE,sampleType=NULL){
   
   #changing GRList to list of data tables
   if (!"data.table" %in% class(GRList[[1]])){
@@ -44,7 +45,7 @@ returnMIRABins = function(BSDT,GRList, binNum=11, sampleNameInBSDT=TRUE,sampleTy
   }
   
   
-  methylByBin=lapply(X = GRDTList, FUN = function(x) BSBinAggregate(BSDT = BSDT,rangeDT = x, binCount = binNum,splitFactor=NULL))
+  methylByBin=lapply(X = GRDTList, FUN = function(x) BSBinAggregate(BSDT = BSDT,rangeDT = x, binCount = binNum,splitFactor=NULL,minReads = minReads))
   names(methylByBin)=names(GRList)#preserving names
   #adding a feature ID column to each data.table that should identify what region set was used
   for (i in 1:length(methylByBin)){
@@ -202,7 +203,7 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500, byRegionGroup
 	binnedBSDT = BSAggregate(BSDT, regionsGRL=GRangesList(binnedGR), jCommand=buildJ(c("methyl", "readCount"), c("mean", "sum")), byRegionGroup=byRegionGroup, splitFactor=splitFactor)
 	# If we aren't aggregating by bin, then don't restrict to min reads!
 	if (byRegionGroup) {
-		binnedBSDT = binnedBSDT[readCount > minReads,]
+		binnedBSDT = binnedBSDT[readCount >= minReads,]
 	}
 	return(binnedBSDT)
 }
@@ -333,7 +334,7 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR=NULL, regionsGRL.length = NUL
 	setkey(bsCombined, regionID)
 	# Now aggregate across groups.
 	# I do this in 2 steps to avoid assigning regions to groups,
-	# which takes awhile. I think this preserve memory and is faster.
+	# which takes awhile. I think this preserves memory and is faster.
 
 	# Define aggregation column. aggregate by region or by region group?
 	if (byRegionGroup) {
