@@ -39,9 +39,26 @@ NULL
 #' R/examples/example.R
 returnMIRABins = function(BSDT,GRList, binNum=11, minReads = 500, sampleNameInBSDT=TRUE,sampleType=NULL){
   
-  #changing GRList to list of data tables
-  if (!"data.table" %in% class(GRList[[1]])){
+  #checking that input is in list format and converting
+  if (!class(GRList) %in% c("list","GRangesList")){
+    warning("GRList should be a list.")
+    if (class(GRList) %in% "GRanges"){
+      GRList=GRangesList(GRList)
+      message("Converting...")
+    }
+    if (class(GRList) %in% data.table){
+      GRList=list(GRList)
+      message("Converting...")
+    }
+  }
+  
+  #checking that all objects in GRList are the same type 
+  if (all(sapply(X = GRList,FUN = class) %in% "GRanges")){
     GRDTList=lapply(X = GRList,FUN = grToDt)#GRanges to data.tables
+  }else if (all(sapply(X = GRList,FUN = class) %in% "data.table"){
+    GRDTList=GRList #this case is okay
+  }else{
+    error("GRList should be a GRangesList or a list of data.tables")
   }
   
   
