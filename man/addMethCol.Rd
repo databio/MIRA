@@ -2,7 +2,8 @@
 % Please edit documentation in R/MIRA.R
 \name{addMethCol}
 \alias{addMethCol}
-\title{Adding methyl column that has proportion of reads that were methylated for each site.}
+\title{Adding methyl column that has proportion of reads that were methylated for each site.
+Note: Assigns methyl column by reference with ":="}
 \usage{
 addMethCol(BSDTList)
 }
@@ -13,4 +14,5 @@ was measured.}
 }
 \description{
 Adding methyl column that has proportion of reads that were methylated for each site.
+Note: Assigns methyl column by reference with ":="
 }

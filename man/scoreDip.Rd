@@ -17,3 +17,56 @@ My dip scoring function - for MIRA scores;
 That's Methylation-based Inference of Regulatory Activity
 just calculates the ratio between the flank (shoulders) and midpoint
 }
+\examples{
+#loading necessary libraries
+library(data.table)
+library(ggplot2)
+library(GenomicRanges)
+library(MIRA)
+
+#setting initial parameter
+binNum=11
+
+#reading in annotation
+annoDF=read.csv("C:/cygwin64/Comp_Epigenetics/Bcell_epithelialAnno.csv")
+annoDF=as.data.table(annoDF)
+
+#reading in region data
+#reading in bisulfite data
+#will generalize/replace these later
+load("C:/cygwin64/Comp_Epigenetics/dump/BSDTListBcellEpithelial.RData")
+load("C:/cygwin64/Comp_Epigenetics/dump/encodeRegionSampling.RData")
+BSDTList=BSDTList[c(1:3,11:13)]
+#save(BSDTList,file="C:/cygwin64/Comp_Epigenetics/MIRA_Projects/BSDTListBcellepithelial3_3.RData")
+someFeatures=someFeatures[1:6]
+
+#converting to proper format
+BSDTList=addMethCol(BSDTList = BSDTList)
+
+
+#doing MIRA analysis
+bigBin=lapply(X = BSDTList,FUN = returnMIRABins,GRList=someFeatures,binNum=11,sampleNameInBSDT=TRUE)
+
+bigBinDT=rbindlist(bigBin)#need to make sure that sample names have a column in here
+
+#adding sampleType from annotation object
+setkey(bigBinDT,sampleName)
+setkey(annoDF,sampleName)
+bigBinDT=merge(bigBinDT,annoDF, all.x=TRUE)
+
+#scoring samples
+sampleScores=bigBinDT[,.(score = scoreDip(methyl,binNum)),by=.(featureID,sampleName)]
+setkey(sampleScores,sampleName)
+setkey(annoDF,sampleName)
+sampleScores=merge(sampleScores,annoDF,all.x=TRUE)
+
+
+
+#visualizing MIRA signatures
+plotMIRARegions(binnedRegDT = bigBinDT)
+
+#visualizing MIRA scores
+plotMIRAScores(scoreDT=sampleScores)
+
+
+}

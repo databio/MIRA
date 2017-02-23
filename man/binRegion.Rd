@@ -30,7 +30,7 @@ In theory, this just runs on 3 values, but you can run it inside a
 data.table j expression to divide a bunch of regions in the same way.
 }
 \examples{
-loadCGData("hg19")
+#load example region set
 cgIslandsDT = data.table(...)
 binnedCGI = cgIslandsDT[, binRegion(start,end, 50)]
 }

@@ -11,8 +11,8 @@
 #' @author Nathan Sheffield
 #'
 #' @references \url{http://github.com/sheffien}
-#' @importFrom GenomicRanges GRanges GRangesList elementMetadata strand
-#' @importFrom ggplot2 ggplot
+#' @importFrom GenomicRanges GRanges GRangesList elementMetadata strand seqnames
+#' @importFrom ggplot2 ggplot aes
 #' @import BiocGenerics S4Vectors IRanges
 #' @importFrom data.table ":=" setDT data.table setkey fread setnames as.data.table setcolorder melt setkeyv rbindlist as.data.table
 NULL
@@ -22,8 +22,8 @@ NULL
 #' 
 #'
 #' @param BSDT A single data table that has DNA methylation data including :.
-#' @param GRDTList A GRangesList object containing region sets, each set corresponding to a regulatory element;
-#' Each regionSet in the list should be named. 
+#' @param GRList A GRangesList object containing region sets, each set corresponding to a regulatory element;
+#' Each regionSet in the list should be named; A named list of data.tables also works. 
 #' @param binNum How many bins each region should be split into for aggregation of the DNA methylation data
 #' @param minReads Filter out bins with fewer than X reads before returning.
 #' @param sampleNameInBSDT boolean for whether the BSDT has a sampleName column
@@ -41,21 +41,25 @@ returnMIRABins = function(BSDT,GRList, binNum=11, minReads = 500, sampleNameInBS
   
   #checking that input is in list format and converting
   if (!class(GRList) %in% c("list","GRangesList")){
-    warning("GRList should be a list.")
-    if (class(GRList) %in% "GRanges"){
-      GRList=GRangesList(GRList)
-      message("Converting...")
-    }
-    if (class(GRList) %in% data.table){
-      GRList=list(GRList)
-      message("Converting...")
-    }
+    error("GRList should be a named list/GRangesList.")
+    # if (class(GRList) %in% "GRanges"){
+    #   GRList=GRangesList(GRList)
+    #   message("Converting...")
+    # }
+    # if (class(GRList) %in% "data.table"){
+    #   GRList=list(GRList)
+    #   message("Converting...")
+    # }
+  }
+  
+  if (is.null(names(GRList))){
+    error("GRList should be a named list/GRangesList.")
   }
   
   #checking that all objects in GRList are the same type 
   if (all(sapply(X = GRList,FUN = class) %in% "GRanges")){
     GRDTList=lapply(X = GRList,FUN = grToDt)#GRanges to data.tables
-  }else if (all(sapply(X = GRList,FUN = class) %in% "data.table"){
+  }else if (all(sapply(X = GRList,FUN = class) %in% "data.table")){
     GRDTList=GRList #this case is okay
   }else{
     error("GRList should be a GRangesList or a list of data.tables")
@@ -76,6 +80,7 @@ returnMIRABins = function(BSDT,GRList, binNum=11, minReads = 500, sampleNameInBS
   if (sampleNameInBSDT){
     bigMethylByBin[,sampleName := rep(BSDT[1,sampleName])] #creating new sampleName column
   }
+  
   
   return(bigMethylByBin)
 }
@@ -113,6 +118,8 @@ MIRAScore = function(BSDT,GRList, binNum=11, scoringMethod="logRatio",sampleName
 #' shoulders. I have used 5 or 3.
 #' 
 #' @export
+#' @example
+#' R/examples/example.R
 scoreDip = function(values, binCount, shoulderShift = 5,method="logRatio") {
   if (method=="logRatio"){
 	centerSpot = ceiling(binCount/2)
@@ -222,6 +229,8 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500, byRegionGroup
 	if (byRegionGroup) {
 		binnedBSDT = binnedBSDT[readCount >= minReads,]
 	}
+	
+	
 	return(binnedBSDT)
 }
 
@@ -363,8 +372,17 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR=NULL, regionsGRL.length = NUL
 			byStringGroup = "list(regionGroupID)"
 		}
 		bsCombined=bsCombined[,eval(parse(text=jCommand)), by=eval(parse(text=byStringGroup))]
+		
+		#if no strand information was given, averaging the signatures about the center...
+		#...to account for unknown strand orientation, also averaging readCount about center
+		if (!strand(rangeDT)@values %in% c("+","-")){
+		  bsCombined[,methyl := (methyl+rev(methyl))/2]
+		  bsCombined[,readCount := (readCount+rev(readCount))/2]
+		}
+		
 		return(bsCombined);
 	} else {
+	  warning("Using byRegionGroup=FALSE may result in missing functionalities such as symmetrical averaging")
 		e = region2group[bsCombined,]
 		setkey(e, regionID);
 		return(e);
@@ -414,6 +432,7 @@ plotMIRAScores <- function(scoreDT,featID=unique(scoreDT[,featureID])){
 
 
 #' Adding methyl column that has proportion of reads that were methylated for each site.
+#' Note: Assigns methyl column by reference with ":="
 #' 
 #' @param BSDTList A bisulfite datatable or list of datatables with a column for number of methylated 
 #' reads (hitCount) and a column for number of total reads (readCount) for each cytosine that 
@@ -432,7 +451,8 @@ addMethCol <- function(BSDTList){
   }
   
   #using anonymous function to apply operation that adds methyl column to each element of list
-  BSDTList=lapply(X = BSDTList,FUN = function(x) x[, methyl := round(hitCount/readCount, 3)])
+  #extra [] on the end is necessary for proper display/printing of the object
+  BSDTList=lapply(X = BSDTList,FUN = function(x) x[, methyl := round(hitCount/readCount, 3)][])
   
   return(BSDTList)
 }
