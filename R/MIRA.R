@@ -14,16 +14,18 @@
 #' @importFrom GenomicRanges GRanges GRangesList elementMetadata strand seqnames
 #' @importFrom ggplot2 ggplot aes
 #' @import BiocGenerics S4Vectors IRanges
-#' @importFrom data.table ":=" setDT data.table setkey fread setnames as.data.table setcolorder melt setkeyv rbindlist as.data.table
+#' @importFrom data.table ":=" setDT data.table setkey fread setnames as.data.table setcolorder melt setkeyv rbindlist
 NULL
 
 #' Function to aggregate methylation data into bins over all regions in each region set;
 #' 
 #' 
 #'
-#' @param BSDT A single data table that has DNA methylation data including :.
-#' @param GRList A GRangesList object containing region sets, each set corresponding to a regulatory element;
-#' Each regionSet in the list should be named; A named list of data.tables also works. 
+#' @param BSDT A single data table that has DNA methylation data on individual sites including a "chr" column with chromosome, 
+#'  a "start" column with the coordinate number for the cytosine, a "methyl" column with proportion of methylation (0 to 1),
+#'  a "hitCount" column with number of methylated reads for each site, and a "readCount" column with total number of reads for each site. A "sampleName" column is preferred.
+#' @param GRList A GRangesList object containing region sets, each set corresponding to a regulatory element.
+#' Each regionSet in the list should be named. A named list of data.tables also works. 
 #' @param binNum How many bins each region should be split into for aggregation of the DNA methylation data
 #' @param minReads Filter out bins with fewer than X reads before returning.
 #' @param sampleNameInBSDT boolean for whether the BSDT has a sampleName column
@@ -41,7 +43,7 @@ returnMIRABins = function(BSDT,GRList, binNum=11, minReads = 500, sampleNameInBS
   
   #checking that input is in list format and converting
   if (!class(GRList) %in% c("list","GRangesList")){
-    error("GRList should be a named list/GRangesList.")
+    stop("GRList should be a named list/GRangesList.")
     # if (class(GRList) %in% "GRanges"){
     #   GRList=GRangesList(GRList)
     #   message("Converting...")
@@ -53,7 +55,7 @@ returnMIRABins = function(BSDT,GRList, binNum=11, minReads = 500, sampleNameInBS
   }
   
   if (is.null(names(GRList))){
-    error("GRList should be a named list/GRangesList.")
+    stop("GRList should be a named list/GRangesList.")
   }
   
   #checking that all objects in GRList are the same type 
@@ -62,7 +64,7 @@ returnMIRABins = function(BSDT,GRList, binNum=11, minReads = 500, sampleNameInBS
   }else if (all(sapply(X = GRList,FUN = class) %in% "data.table")){
     GRDTList=GRList #this case is okay
   }else{
-    error("GRList should be a GRangesList or a list of data.tables")
+    stop("GRList should be a GRangesList or a list of data.tables")
   }
   
   
@@ -89,11 +91,13 @@ returnMIRABins = function(BSDT,GRList, binNum=11, minReads = 500, sampleNameInBS
 #' a wrapper for returnMIRABins and scoreDip
 #' 
 #'
-#' @param BSDT A single data table that has DNA methylation data including :.
+#' @param BSDT A single data table that has DNA methylation data on individual sites including a "chr" column with chromosome, 
+#'  a "start" column with the coordinate number for the cytosine, a "methyl" column with proportion of methylation (0 to 1),
+#'  a "hitCount" column with number of methylated reads for each site, and a "readCount" column with total number of reads for each site. A "sampleName" column is preferred.
 #' @param GRList A GRangesList object containing region sets, each set corresponding to a regulatory element;
 #' Each regionSet in the list should be named. 
 #' @param binNum How many bins each region should be split into for aggregation of the DNA methylation data.
-#' @param scoringMethod Method to calculate MIRA score after binning; includes logratio, area; see scoreDip function.
+#' @param scoringMethod Method to calculate MIRA score after binning, includes "logRatio", "area". See scoreDip function.
 #' @param sampleNameInBSDT boolean for whether the BSDT has a sampleName column
 #' @param sampleType could be case/control, tissue type, etc.
 #' 
@@ -375,7 +379,7 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR=NULL, regionsGRL.length = NUL
 		
 		#if no strand information was given, averaging the signatures about the center...
 		#...to account for unknown strand orientation, also averaging readCount about center
-		if (!strand(rangeDT)@values %in% c("+","-")){
+		if (!strand(regionsGR)@values %in% c("+","-")){
 		  bsCombined[,methyl := (methyl+rev(methyl))/2]
 		  bsCombined[,readCount := (readCount+rev(readCount))/2]
 		}
