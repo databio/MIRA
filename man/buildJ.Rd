@@ -3,17 +3,28 @@
 \name{buildJ}
 \alias{buildJ}
 \title{helper function
-given a vector of colums, and the equally-sized vector of functions
+given a vector of columns, and the equally-sized vector of functions
 to apply to those columns, constructs a j-expression for use in
-a data.table.
+a data.table (functions applied to columns in corresponding spot in "cols" string).
+One function may be given to be applied to multiple columns.
 use it in a DT[,eval(parse(text=buildJ(cols,funcs)))]}
 \usage{
 buildJ(cols, funcs)
 }
+\arguments{
+\item{cols}{A string/vector of strings containing columns on which to use functions.}
+
+\item{funcs}{Functions to use on columns.}
+}
+\value{
+A jcommand string. After performing function on column, column 
+is reassigned the same name.
+}
 \description{
 helper function
-given a vector of colums, and the equally-sized vector of functions
+given a vector of columns, and the equally-sized vector of functions
 to apply to those columns, constructs a j-expression for use in
-a data.table.
+a data.table (functions applied to columns in corresponding spot in "cols" string).
+One function may be given to be applied to multiple columns.
 use it in a DT[,eval(parse(text=buildJ(cols,funcs)))]
 }

@@ -19,13 +19,22 @@ BSAggregate(BSDT, regionsGRL, excludeGR = NULL, regionsGRL.length = NULL,
 \item{BSDT}{The bisulfite data.table (output from one of the parsing
 functions for methylation calls) that you wish to aggregate. It can
 be a combined table, with individual samples identified by column passed
-to splitFactor.}
+to splitFactor. To be safe, "chr", "start", "hitCount", "readCount", and 
+"methyl" columns should be in BSDT.}
 
 \item{regionsGRL}{Regions across which you want to aggregate.}
 
 \item{excludeGR}{A GenomicRanges object with regions you want to 
 exclude from the aggregation function. These regions will be eliminated
 from the input table and not counted.}
+
+\item{regionsGRL.length}{UPDATE}
+
+\item{splitFactor}{UPDATE}
+
+\item{keepCols}{UPDATE}
+
+\item{sumCols}{UPDATE}
 
 \item{jCommand}{You can pass a custom command in the j slot to data.table
 specifying which columns to aggregate, and which functions to use. You
@@ -37,6 +46,11 @@ aggregate each region individually -- scores will then be contiguous, and
 the output is 1 row per region.
 Turn on this flag to aggregate across all region groups, making the result
 uncontiguous, and resulting in 1 row per *region group*.}
+
+\item{keep.na}{UPDATE}
+}
+\value{
+UPDATE: take out unnecessary arguments and embed them in code so returned value will be straightforward
 }
 \description{
 BSaggregate -- Aggregate a BSDT across regions or region groups,

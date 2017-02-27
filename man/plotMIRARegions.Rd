@@ -16,6 +16,9 @@ bin numbers(binnedRegionDT), aggregated methylation values (methyl), name of the
 
 \item{plotType}{Line or jitter (ggplot2).}
 }
+\value{
+A plot of class "gg"/ "ggplot" that shows MIRA signatures
+}
 \description{
 A function to plot the binned methylation of samples over a region.
 }

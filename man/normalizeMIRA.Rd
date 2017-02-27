@@ -12,6 +12,9 @@ aggregated methylation across regions for that sample;
 it should have a column with sample annotation so cases and controls can be split up as
 well as annotation of the region sets (featureID column) and sampleType column (case/control).}
 }
+\value{
+UPDATE
+}
 \description{
 It finds the median of the controls for each bin for each region set
 then divides by the median (oldBinVal/medianBinVal) for each bin.

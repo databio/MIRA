@@ -9,14 +9,28 @@ BSBinAggregate(BSDT, rangeDT, binCount, minReads = 500,
   byRegionGroup = TRUE, splitFactor = "id")
 }
 \arguments{
-\item{rangeDT}{A data table with the sets of regions to be binned, 
-with columns named start, end}
+\item{BSDT}{A single data table that has DNA methylation data on individual sites including a "chr" column with chromosome, 
+a "start" column with the coordinate number for the cytosine, a "methyl" column with proportion of methylation (0 to 1),
+a "hitCount" column with number of methylated reads for each site, and a "readCount" column with total number of reads for each site.}
 
-\item{binCount}{Number of bins across the region}
+\item{rangeDT}{A data table with the sets of regions to be binned, 
+with columns named "start", "end".}
+
+\item{binCount}{Number of bins across the region.}
 
 \item{minReads}{Filter out bins with fewer than X reads before returning.}
 
-\item{byRegionGroup}{Pass along to binCount (see ?binCount)}
+\item{byRegionGroup}{Pass along to binCount (see ?binCount).}
+
+\item{splitFactor}{UPDATE}
+}
+\value{
+With splitFactor=NULL, it will return a data.table with binCount rows, 
+containing aggregated methylation data over regions in region set "rangeDT".
+Each region was split into bins; methylation was put in these bins; 
+Output contains sum of the all corresponding bins for the regions of each region set 
+ie for all regions in each region set: first bins summed, second bins summed, etc
+Columns of the output should be "regionGroupID", "methyl", and "readCount"
 }
 \description{
 Produced originally for binning Ewing RRBS data across various region sets

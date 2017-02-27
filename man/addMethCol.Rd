@@ -12,6 +12,9 @@ addMethCol(BSDTList)
 reads (hitCount) and a column for number of total reads (readCount) for each cytosine that 
 was measured.}
 }
+\value{
+The BSDTList but with extra methyl column on each data.table in list.
+}
 \description{
 Adding methyl column that has proportion of reads that were methylated for each site.
 Note: Assigns methyl column by reference with ":="

@@ -12,11 +12,23 @@
 #'
 #' @references \url{http://github.com/sheffien}
 #' @importFrom GenomicRanges GRanges GRangesList elementMetadata strand seqnames
-#' @importFrom ggplot2 ggplot aes
+#' @importFrom ggplot2 ggplot aes facet_wrap geom_boxplot geom_jitter geom_line
 #' @import BiocGenerics S4Vectors IRanges
 #' @importFrom data.table ":=" setDT data.table setkey fread setnames as.data.table setcolorder melt setkeyv rbindlist
 NULL
 
+
+# Because of some issues with CRAN submission,
+#(see here: http://stackoverflow.com/questions/9439256/)
+# I have to register stuff used in data.table as non-standard evaluation,
+# in order to pass some R CMD check NOTES.
+if(getRversion() >= "2.15.1") {
+  utils::globalVariables(c(
+    ".","V1", "chr", "featureID", "hitCount", "meth", "methyl", "readCount", 
+    "regionGroupID", "regionID", "sampleName", "sampleType"))
+}
+
+  
 #' Function to aggregate methylation data into bins over all regions in each region set;
 #' 
 #' 
@@ -35,6 +47,8 @@ NULL
 #' Each region was split into bins; methylation was put in these bins; 
 #' Output contains sum of the all corresponding bins for the regions of each region set 
 #' ie for all regions in each region set: first bins summed, second bins summed, etc
+#' Columns of the output should be "regionGroupID", "methyl", "readCount", "featureID", and 
+#' possibly "sampleName".
 #' 
 #' @export
 #' @example
@@ -101,12 +115,24 @@ returnMIRABins = function(BSDT,GRList, binNum=11, minReads = 500, sampleNameInBS
 #' @param sampleNameInBSDT boolean for whether the BSDT has a sampleName column
 #' @param sampleType could be case/control, tissue type, etc.
 #' 
+#' @return A MIRA score for each region set in GRList. See ?scoreDip. 
+#' @example 
+#' data("GM06990_1_ExampleSet",package="MIRA")
+#' data("Gm12878Nrf1_Subset",package="MIRA")
+#' 
+#' 
 #' @export
 MIRAScore = function(BSDT,GRList, binNum=11, scoringMethod="logRatio",sampleNameInBSDT=TRUE,sampleType=NULL){
+  
+  #making sure methyl column is part of input BSDT
+  if (!"methyl" %in% names(BSDT)){
+    stop("BSDT must have a methyl column with proportion of methylation. addMethCol() will add this.")
+  }
+  
   MIRAresults=list()
   
   
-  bigBin=returnMIRABins(BSDT,GRList, binNum,sampleNameInBSDT,sampleType)
+  bigBin=returnMIRABins(BSDT = BSDT,GRList = GRList, binNum = binNum,sampleNameInBSDT = sampleNameInBSDT,sampleType = sampleType)
   
   #using binned methylation data to calculate MIRA score
   scoreDT=bigBin[,.(score=scoreDip(methyl,binNum,method=scoringMethod)),by=.(featureID,sampleName)]
@@ -116,10 +142,18 @@ MIRAScore = function(BSDT,GRList, binNum=11, scoringMethod="logRatio",sampleName
 
 #' My dip scoring function - for MIRA scores;
 #' That's Methylation-based Inference of Regulatory Activity
-#' just calculates the ratio between the flank (shoulders) and midpoint
-#'
+#' 
+#' @param values A vector with proportion of methylation values for each bin. 
+#'  Between 0 and 1.
+#' @param binCount Number of bins, also length of "values" vector.
 #' @param shoulderShift The number of bins away from the center to use as the
 #' shoulders. I have used 5 or 3.
+#' @param method The scoring method. "logRatio" is the log of the ratio of
+#' the average of outside values (shoulders) divided by the average of the middle values. 
+#' A higher score with "logRatio" corresponds to a deeper dip.
+#' 
+#' @return A MIRA score. The MIRA score quantifies the "dip" of the MIRA signature
+#' which is an aggregation of methylation over all regions in a region set. 
 #' 
 #' @export
 #' @example
@@ -163,7 +197,10 @@ scoreDip = function(values, binCount, shoulderShift = 5,method="logRatio") {
 #'
 #' In theory, this just runs on 3 values, but you can run it inside a 
 #' data.table j expression to divide a bunch of regions in the same way.
-#' @param start 
+#' @param start Coordinate for beginning of range/range.
+#' @param end Coordinate for end of range/region.
+#' @param bins How many bins to divide this range/region.
+#' @param idDF UPDATE
 #'
 #' @return
 #' A data.table, expanded to nrow= number of bins, with these id columns:
@@ -171,10 +208,10 @@ scoreDip = function(values, binCount, shoulderShift = 5,method="logRatio") {
 #' 		binID: repeating ID (this is the value to aggregate across)
 #' 		ubinID: unique bin IDs
 #' @export
-#' @examples
-#' #load example region set
-#' cgIslandsDT = data.table(...)
-#' binnedCGI = cgIslandsDT[, binRegion(start,end, 50)]
+#@examples
+#load example region set
+#cgIslandsDT = data.table(...)
+#binnedCGI = cgIslandsDT[, binRegion(start,end, 50)]
 binRegion = function(start, end, bins, idDF=NULL) {
 	#if (!is.null(idDF) & ( ! "data.frame"  %in% class(idDF))) {
 	#	stop("idDF should be a data.frame")
@@ -199,12 +236,23 @@ binRegion = function(start, end, bins, idDF=NULL) {
 #' each bin across a set of regions, individually.
 #'
 #' Produced originally for binning Ewing RRBS data across various region sets
-#'
+#' 
+#' @param BSDT A single data table that has DNA methylation data on individual sites including a "chr" column with chromosome, 
+#'  a "start" column with the coordinate number for the cytosine, a "methyl" column with proportion of methylation (0 to 1),
+#'  a "hitCount" column with number of methylated reads for each site, and a "readCount" column with total number of reads for each site.
 #' @param rangeDT A data table with the sets of regions to be binned, 
-#' with columns named start, end
-#' @param binCount Number of bins across the region
-#' @param byRegionGroup Pass along to binCount (see ?binCount)
+#' with columns named "start", "end".
+#' @param binCount Number of bins across the region.
+#' @param byRegionGroup Pass along to binCount (see ?binCount).
 #' @param minReads Filter out bins with fewer than X reads before returning.
+#' @param splitFactor UPDATE
+#' 
+#' @return With splitFactor=NULL, it will return a data.table with binCount rows, 
+#' containing aggregated methylation data over regions in region set "rangeDT".
+#' Each region was split into bins; methylation was put in these bins; 
+#' Output contains sum of the all corresponding bins for the regions of each region set 
+#' ie for all regions in each region set: first bins summed, second bins summed, etc
+#' Columns of the output should be "regionGroupID", "methyl", and "readCount"
 #' 
 #' @export
 BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500, byRegionGroup=TRUE,splitFactor="id") {
@@ -251,11 +299,16 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500, byRegionGroup
 #' @param BSDT The bisulfite data.table (output from one of the parsing
 #' functions for methylation calls) that you wish to aggregate. It can
 #' be a combined table, with individual samples identified by column passed
-#' to splitFactor.
+#' to splitFactor. To be safe, "chr", "start", "hitCount", "readCount", and 
+#' "methyl" columns should be in BSDT.
 #' @param regionsGRL Regions across which you want to aggregate.
 #' @param excludeGR A GenomicRanges object with regions you want to 
 #' exclude from the aggregation function. These regions will be eliminated
 #' from the input table and not counted.
+#' @param regionsGRL.length UPDATE
+#' @param splitFactor UPDATE
+#' @param keepCols UPDATE
+#' @param sumCols UPDATE
 #' @param jCommand You can pass a custom command in the j slot to data.table
 #' specifying which columns to aggregate, and which functions to use. You
 #' can use buildJ() to build a jCommand argument easily.
@@ -265,6 +318,9 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500, byRegionGroup
 #' the output is 1 row per region.
 #' Turn on this flag to aggregate across all region groups, making the result
 #' uncontiguous, and resulting in 1 row per *region group*.
+#' @param keep.na UPDATE
+#' 
+#' @return UPDATE: take out unnecessary arguments and embed them in code so returned value will be straightforward
 #'
 BSAggregate = function(BSDT, regionsGRL, excludeGR=NULL, regionsGRL.length = NULL, splitFactor=NULL, keepCols=NULL, sumCols=NULL, jCommand=NULL, byRegionGroup=FALSE, keep.na=FALSE) {
 
@@ -404,6 +460,8 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR=NULL, regionsGRL.length = NUL
 #' (featureID), case/control column (sampleType), sample name (sampleName).
 #' @param featID Region set names in a single string or vector of strings.
 #' @param plotType Line or jitter (ggplot2). 
+#' 
+#' @return A plot of class "gg"/ "ggplot" that shows MIRA signatures
 #' @export
 plotMIRARegions <- function(binnedRegDT,featID=unique(binnedRegDT[,featureID]),plotType="line"){
   setkey(binnedRegDT,featureID)
@@ -426,6 +484,7 @@ plotMIRARegions <- function(binnedRegDT,featID=unique(binnedRegDT[,featureID]),p
 #' 
 #' @param scoreDT A datatable with the following columns: score, featureID (names of regions),sampleType.
 #' @param featID Region set name/names in a single string or vector of strings.
+#' @return a plot of class "gg" / "ggplot" that shows MIRA scores with geom_boxplot and geom_jitter
 #' @export
 plotMIRAScores <- function(scoreDT,featID=unique(scoreDT[,featureID])){
   setkey(scoreDT,featureID)
@@ -441,6 +500,7 @@ plotMIRAScores <- function(scoreDT,featID=unique(scoreDT[,featureID])){
 #' @param BSDTList A bisulfite datatable or list of datatables with a column for number of methylated 
 #' reads (hitCount) and a column for number of total reads (readCount) for each cytosine that 
 #' was measured.
+#' @return The BSDTList but with extra methyl column on each data.table in list.
 #' @export
 addMethCol <- function(BSDTList){
   
@@ -461,6 +521,7 @@ addMethCol <- function(BSDTList){
   return(BSDTList)
 }
 
+#UPDATE: should normalizeMIRA really be exported? might need to be rehauled first
 #' Function to normalize case/experimental samples to the controls
 #' 
 #' It finds the median of the controls for each bin for each region set
@@ -469,6 +530,7 @@ addMethCol <- function(BSDTList){
 #' aggregated methylation across regions for that sample; 
 #' it should have a column with sample annotation so cases and controls can be split up as
 #' well as annotation of the region sets (featureID column) and sampleType column (case/control).
+#' @return UPDATE
 #' 
 #' @export
 normalizeMIRA = function(binnedDT){
@@ -498,10 +560,15 @@ normalizeMIRA = function(binnedDT){
 }
 
 #' helper function
-#' given a vector of colums, and the equally-sized vector of functions
+#' given a vector of columns, and the equally-sized vector of functions
 #' to apply to those columns, constructs a j-expression for use in
-#' a data.table.
+#' a data.table (functions applied to columns in corresponding spot in "cols" string).
+#' One function may be given to be applied to multiple columns.
 #' use it in a DT[,eval(parse(text=buildJ(cols,funcs)))]
+#' @param cols A string/vector of strings containing columns on which to use functions.
+#' @param funcs Functions to use on columns.
+#' @return A jcommand string. After performing function on column, column 
+#' is reassigned the same name.
 buildJ = function(cols, funcs) {
   r = paste("list(", paste(paste0(cols, "=", funcs, "(", cols, ")"), collapse=","), ")")
   return(r);
@@ -509,6 +576,7 @@ buildJ = function(cols, funcs) {
 
 #Two utility functions for converting data.tables into GRanges objects
 #genes = dtToGR(gModels, "chr", "txStart", "txEnd", "strand", "geneId");
+#UPDATE: do I need to include parameters/return values for this function?
 dtToGrInternal = function(DT, chr, start, end=NA, strand=NA, name=NA, metaCols=NA) {
   if (is.na(end)) {
     if ("end" %in% colnames(DT)) {
@@ -541,6 +609,7 @@ dtToGrInternal = function(DT, chr, start, end=NA, strand=NA, name=NA, metaCols=N
   gr;
 }
 
+#UPDATE: does this function need parameters/output?
 dtToGr = function(DT, chr="chr", start="start", end=NA, strand=NA, name=NA, splitFactor=NA, metaCols=NA) {
   if(is.na(splitFactor)) {
     return(dtToGrInternal(DT, chr, start, end, strand, name,metaCols));
@@ -736,4 +805,27 @@ lapplyAlias = function(..., mc.preschedule=TRUE) {
 # extract sample names from file names as the first part of the file name (before any suffix)
 extractSampleName = function(fileNames, suffixSep="\\.", pathSep="/") {
   sapply(strsplit(fileNames,pathSep),function(x) strsplit(rev(x)[1],suffixSep)[[1]][1])
+}
+
+#' Given a BSDT (bisulfite data.table), remove any entries that overlap
+#' regions given in the excludeGR argument.
+#' @param BSDT Bisulfite data.table to filter
+#' @param minReads Require at least this level of coverage at a cpg.
+#' @param excludeGR GRanges object with regions to filter.
+BSFilter = function(BSDT, minReads=10, excludeGR=NULL) {
+  # First, filter for minimum reads.
+  if (minReads > 0) {
+    BSDT = BSDT[readCount >= minReads,]
+  }
+  if (NROW(BSDT) == 0) { return(data.table(NULL)) }
+  # Now, filter entries overlapping a region in excludeGR.
+  if ( !is.null(excludeGR) ) {
+    gr = dtToGr(BSDT)
+    fo = findOverlaps(gr, excludeGR)
+    qh = unique(queryHits(fo))
+    length(qh)
+    nrow(BSDT)
+    BSDT = BSDT[-qh,]
+  }
+  return(BSDT)
 }

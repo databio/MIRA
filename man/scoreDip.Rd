@@ -3,37 +3,43 @@
 \name{scoreDip}
 \alias{scoreDip}
 \title{My dip scoring function - for MIRA scores;
-That's Methylation-based Inference of Regulatory Activity
-just calculates the ratio between the flank (shoulders) and midpoint}
+That's Methylation-based Inference of Regulatory Activity}
 \usage{
 scoreDip(values, binCount, shoulderShift = 5, method = "logRatio")
 }
 \arguments{
+\item{values}{A vector with proportion of methylation values for each bin. 
+Between 0 and 1.}
+
+\item{binCount}{Number of bins, also length of "values" vector.}
+
 \item{shoulderShift}{The number of bins away from the center to use as the
 shoulders. I have used 5 or 3.}
+
+\item{method}{The scoring method. "logRatio" is the log of the ratio of
+the average of outside values (shoulders) divided by the average of the middle values. 
+A higher score with "logRatio" corresponds to a deeper dip.}
+}
+\value{
+A MIRA score. The MIRA score quantifies the "dip" of the MIRA signature
+which is an aggregation of methylation over all regions in a region set.
 }
 \description{
 My dip scoring function - for MIRA scores;
 That's Methylation-based Inference of Regulatory Activity
-just calculates the ratio between the flank (shoulders) and midpoint
 }
 \examples{
-#loading necessary libraries
-library(data.table)
-library(ggplot2)
-library(GenomicRanges)
-library(MIRA)
 
-#setting initial parameter
+#initial parameter
 binNum=11
 
-#reading in annotation
+#loading sample annotation
 load(system.file("data","annoDF.RData",package="MIRA"))
 annoDF=as.data.table(annoDF)
 
 #reading in region data and bisulfite data
-BSDT=get(load(system.file("data","Gm12878Nrf1_Subset.RData",package="MIRA")))
-someFeatures=get(load(system.file("data","GM06990_1_ExampleSet.RData",package = "MIRA")))
+someFeatures=get(load(system.file("data","Gm12878Nrf1_Subset.RData",package="MIRA")))
+BSDT=get(load(system.file("data","GM06990_1_ExampleSet.RData",package = "MIRA")))
 
 #converting to lists 
 BSDTList=list(BSDT)
@@ -60,13 +66,8 @@ setkey(sampleScores,sampleName)
 setkey(annoDF,sampleName)
 sampleScores=merge(sampleScores,annoDF,all.x=TRUE)
 
-
-
-#visualizing MIRA signatures
+#visualizing MIRA signature
 plotMIRARegions(binnedRegDT = bigBinDT)
-
-#visualizing MIRA scores
-plotMIRAScores(scoreDT=sampleScores)
 
 
 }

@@ -7,7 +7,13 @@
 binRegion(start, end, bins, idDF = NULL)
 }
 \arguments{
-\item{start}{}
+\item{start}{Coordinate for beginning of range/range.}
+
+\item{end}{Coordinate for end of range/region.}
+
+\item{bins}{How many bins to divide this range/region.}
+
+\item{idDF}{UPDATE}
 }
 \value{
 A data.table, expanded to nrow= number of bins, with these id columns:
@@ -28,9 +34,4 @@ in bins across many regions of the same type.
 
 In theory, this just runs on 3 values, but you can run it inside a 
 data.table j expression to divide a bunch of regions in the same way.
-}
-\examples{
-#load example region set
-cgIslandsDT = data.table(...)
-binnedCGI = cgIslandsDT[, binRegion(start,end, 50)]
 }

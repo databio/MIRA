@@ -8,10 +8,12 @@ returnMIRABins(BSDT, GRList, binNum = 11, minReads = 500,
   sampleNameInBSDT = TRUE, sampleType = NULL)
 }
 \arguments{
-\item{BSDT}{A single data table that has DNA methylation data including :.}
+\item{BSDT}{A single data table that has DNA methylation data on individual sites including a "chr" column with chromosome, 
+a "start" column with the coordinate number for the cytosine, a "methyl" column with proportion of methylation (0 to 1),
+a "hitCount" column with number of methylated reads for each site, and a "readCount" column with total number of reads for each site. A "sampleName" column is preferred.}
 
-\item{GRList}{A GRangesList object containing region sets, each set corresponding to a regulatory element;
-Each regionSet in the list should be named; A named list of data.tables also works.}
+\item{GRList}{A GRangesList object containing region sets, each set corresponding to a regulatory element.
+Each regionSet in the list should be named. A named list of data.tables also works.}
 
 \item{binNum}{How many bins each region should be split into for aggregation of the DNA methylation data}
 
@@ -26,27 +28,24 @@ a data.table with binNum rows for each region set containing aggregated methylat
 Each region was split into bins; methylation was put in these bins; 
 Output contains sum of the all corresponding bins for the regions of each region set 
 ie for all regions in each region set: first bins summed, second bins summed, etc
+Columns of the output should be "regionGroupID", "methyl", "readCount", "featureID", and 
+possibly "sampleName".
 }
 \description{
 Function to aggregate methylation data into bins over all regions in each region set;
 }
 \examples{
-#loading necessary libraries
-library(data.table)
-library(ggplot2)
-library(GenomicRanges)
-library(MIRA)
 
-#setting initial parameter
+#initial parameter
 binNum=11
 
-#reading in annotation
+#loading sample annotation
 load(system.file("data","annoDF.RData",package="MIRA"))
 annoDF=as.data.table(annoDF)
 
 #reading in region data and bisulfite data
-BSDT=get(load(system.file("data","Gm12878Nrf1_Subset.RData",package="MIRA")))
-someFeatures=get(load(system.file("data","GM06990_1_ExampleSet.RData",package = "MIRA")))
+someFeatures=get(load(system.file("data","Gm12878Nrf1_Subset.RData",package="MIRA")))
+BSDT=get(load(system.file("data","GM06990_1_ExampleSet.RData",package = "MIRA")))
 
 #converting to lists 
 BSDTList=list(BSDT)
@@ -73,13 +72,8 @@ setkey(sampleScores,sampleName)
 setkey(annoDF,sampleName)
 sampleScores=merge(sampleScores,annoDF,all.x=TRUE)
 
-
-
-#visualizing MIRA signatures
+#visualizing MIRA signature
 plotMIRARegions(binnedRegDT = bigBinDT)
-
-#visualizing MIRA scores
-plotMIRAScores(scoreDT=sampleScores)
 
 
 }
