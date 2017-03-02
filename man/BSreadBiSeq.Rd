@@ -15,6 +15,12 @@ BSreadBiSeq(files, contrastList = NULL,
 \item{sampleNames}{a vector of length length(files), name for each file. You can also just use contrastList to implement the same thing so this is really unnecessary...}
 
 \item{cores}{number of processors.}
+
+\item{returnAsList}{Whether to return the output as a list or as one big data.table}
+}
+\value{
+Data from each input file joined together into one big data.table.
+If returnAsList=TRUE, then input from each file will be in its own data.table in a list.
 }
 \description{
 Read in files from biseq meth caller

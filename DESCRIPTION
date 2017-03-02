@@ -19,7 +19,8 @@ Imports:
 Suggests:
     knitr,
     parallel,
-    testthat
+    testthat,
+    rmarkdown
 Enhances: simpleCache
 VignetteBuilder: knitr
 License: GPL-3

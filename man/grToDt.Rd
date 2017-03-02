@@ -7,7 +7,7 @@
 grToDt(GR)
 }
 \arguments{
-\item{a}{GRanges object}
+\item{GR}{A GRanges object}
 }
 \value{
 A data.table object.

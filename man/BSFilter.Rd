@@ -3,7 +3,8 @@
 \name{BSFilter}
 \alias{BSFilter}
 \title{Given a BSDT (bisulfite data.table), remove any entries that overlap
-regions given in the excludeGR argument.}
+regions given in the excludeGR argument and/or filter out sites
+that have lower than a minimum number of reads.}
 \usage{
 BSFilter(BSDT, minReads = 10, excludeGR = NULL)
 }
@@ -14,7 +15,11 @@ BSFilter(BSDT, minReads = 10, excludeGR = NULL)
 
 \item{excludeGR}{GRanges object with regions to filter.}
 }
+\value{
+The BSDT with appropriate regions removed.
+}
 \description{
 Given a BSDT (bisulfite data.table), remove any entries that overlap
-regions given in the excludeGR argument.
+regions given in the excludeGR argument and/or filter out sites
+that have lower than a minimum number of reads.
 }
