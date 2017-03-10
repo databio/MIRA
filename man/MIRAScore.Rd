@@ -6,7 +6,7 @@
 a wrapper for returnMIRABins and scoreDip}
 \usage{
 MIRAScore(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
-  sampleNameInBSDT = TRUE, sampleType = NULL)
+  sampleNameInBSDT = TRUE, sampleType = NULL, minReads = 500)
 }
 \arguments{
 \item{BSDT}{A single data table that has DNA methylation data on individual sites including a "chr" column with chromosome, 
@@ -23,6 +23,8 @@ Each regionSet in the list should be named.}
 \item{sampleNameInBSDT}{boolean for whether the BSDT has a sampleName column}
 
 \item{sampleType}{could be case/control, tissue type, etc.}
+
+\item{minReads}{Filter out bins with fewer than X reads before returning.}
 }
 \value{
 A MIRA score for each region set in GRList. See ?scoreDip.

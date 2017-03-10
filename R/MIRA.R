@@ -10,11 +10,13 @@
 #' @name MIRA
 #' @author Nathan Sheffield
 #'
-#' @references \url{http://github.com/sheffien}
-#' @importFrom GenomicRanges GRanges GRangesList elementMetadata strand seqnames
+#' @references \url{http://github.com/databio}
+#' @importFrom GenomicRanges GRanges GRangesList elementMetadata strand seqnames granges
 #' @importFrom ggplot2 ggplot aes facet_wrap geom_boxplot geom_jitter geom_line
 #' @import BiocGenerics S4Vectors IRanges
-#' @importFrom data.table ":=" setDT data.table setkey fread setnames as.data.table setcolorder melt setkeyv rbindlist
+#' @importFrom data.table ":=" setDT data.table setkey fread setnames setcolorder melt setkeyv rbindlist setattr
+#' @importFrom Biobase sampleNames
+#' @importFrom bsseq getBSseq hasBeenSmoothed
 NULL
 
 
@@ -55,6 +57,7 @@ if(getRversion() >= "2.15.1"){
 #' R/examples/example.R
 returnMIRABins = function(BSDT,GRList, binNum=11, minReads = 500, sampleNameInBSDT=TRUE,sampleType=NULL){
   
+  ###################################Preprocessing and formatting##############################
   #converting to list format if GRList is a data.table or GRanges object
   if (class(GRList) %in% "GRanges"){
     GRList=GRangesList(GRList)
@@ -70,15 +73,18 @@ returnMIRABins = function(BSDT,GRList, binNum=11, minReads = 500, sampleNameInBS
     stop("GRList should be a named list/GRangesList.")
   }
   
+  #checking if region sets have names
   if (is.null(names(GRList))){
     warning("GRList should be a named list/GRangesList. Sequential names given according to order in object.")
     names(GRList)<-paste0(rep("RegionSet",length(GRList)),1:length(GRList))
   }
   
-  #checking that all objects in GRList are the same type 
+  #checking that all objects in GRList are the same type and converting to data.tables
   if (all(sapply(X = GRList,FUN = class) %in% "GRanges")){
     GRDTList=lapply(X = GRList,FUN = grToDt)#GRanges to data.tables
-  }else if (all(sapply(X = GRList,FUN = class) %in% "data.table")){
+    #below statement will be true if all objects in the list are of class data.table
+    #necessary since data.tables also include data.frame as a class
+  }else if (all(sapply(X = lapply(X = GRList,FUN = function(x) class(x) %in% "data.table") ,FUN=any))){
     GRDTList=GRList #this case is okay
   }else{
     stop("GRList should be a GRangesList or a list of data.tables")
@@ -90,6 +96,8 @@ returnMIRABins = function(BSDT,GRList, binNum=11, minReads = 500, sampleNameInBS
     BSDT=BSDTList[[1]] 
   }
 
+  ########################################End preprocessing and formatting#########################
+  
   
   methylByBin=lapply(X = GRDTList, FUN = function(x) BSBinAggregate(BSDT = BSDT,rangeDT = x, binCount = binNum,splitFactor=NULL,minReads = minReads))
   names(methylByBin)=names(GRList)#preserving names
@@ -123,15 +131,16 @@ returnMIRABins = function(BSDT,GRList, binNum=11, minReads = 500, sampleNameInBS
 #' @param scoringMethod Method to calculate MIRA score after binning, includes "logRatio", "area". See scoreDip function.
 #' @param sampleNameInBSDT boolean for whether the BSDT has a sampleName column
 #' @param sampleType could be case/control, tissue type, etc.
+#' @param minReads Filter out bins with fewer than X reads before returning.
 #' 
 #' @return A MIRA score for each region set in GRList. See ?scoreDip. 
 #' @example 
-#' data("GM06990_1_ExampleSet",package="MIRA")
-#' data("Gm12878Nrf1_Subset",package="MIRA")
-#' MIRAScore(BSDT=exampleSet,GRList=Gm12878Nrf1_Subset)
+#' data("GM06990_1_ExampleSet",package="MIRA") #exampleBSDT
+#' data("Gm12878Nrf1_Subset",package="MIRA") #exampleRegionSet
+#' MIRAScore(BSDT=exampleBSDT,GRList=exampleRegionSet)
 #' 
 #' @export
-MIRAScore = function(BSDT,GRList, binNum=11, scoringMethod="logRatio",sampleNameInBSDT=TRUE,sampleType=NULL){
+MIRAScore = function(BSDT,GRList, binNum=11, scoringMethod="logRatio",sampleNameInBSDT=TRUE,sampleType=NULL,minReads=500){
   
   #making sure methyl column is part of input BSDT
   if (!"methyl" %in% names(BSDT)){
@@ -141,7 +150,7 @@ MIRAScore = function(BSDT,GRList, binNum=11, scoringMethod="logRatio",sampleName
   MIRAresults=list()
   
   
-  bigBin=returnMIRABins(BSDT = BSDT,GRList = GRList, binNum = binNum,sampleNameInBSDT = sampleNameInBSDT,sampleType = sampleType)
+  bigBin=returnMIRABins(BSDT = BSDT,GRList = GRList, binNum = binNum,sampleNameInBSDT = sampleNameInBSDT,sampleType = sampleType,minReads = minReads)
   
   #using binned methylation data to calculate MIRA score
   scoreDT=bigBin[,.(score=scoreDip(methyl,binNum,method=scoringMethod)),by=.(featureID,sampleName)]
@@ -285,12 +294,12 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500, byRegionGroup
 		}
 	}
 
-	#if(!silent){
-	message("Binning...")
-	#}
+	##if(!silent){
+	#message("Binning...")
+	##}
 	binnedDT = rangeDT[, binRegion(start, end, binCount, get(seqnamesColName))]
 	binnedGR = sapply(split(binnedDT, binnedDT$binID), dtToGr)
-	message("Aggregating...")
+	#message("Aggregating...")
 	binnedBSDT = BSAggregate(BSDT=BSDT, regionsGRL=GRangesList(binnedGR), jCommand=buildJ(c("methyl", "readCount"), c("mean", "sum")), byRegionGroup=byRegionGroup, splitFactor=splitFactor)
 	# If we aren't aggregating by bin, then don't restrict to min reads!
 	if (byRegionGroup) {
@@ -373,7 +382,7 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR=NULL, regionsGRL.length = NUL
 		message("BSAggregate: Calculating sizes. You can speed this up by supplying a regionsGRL.length vector...", appendLF=FALSE)
 		}
 		regionsGRL.length = sapply(regionsGRL, length)
-		message("Done counting regionsGRL lengths.");
+		#message("Done counting regionsGRL lengths.");
 	}
 
 	# Build a table to keep track of which regions belong to which group
@@ -387,14 +396,14 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR=NULL, regionsGRL.length = NUL
 	setkey(region2group, regionID)
 
 
-	message("Finding overlaps...");
+	#message("Finding overlaps...");
 	fo = findOverlaps(bsgr[[1]], regionsGR)
 
 	setkey(BSDT, chr, start)
 	# Gut check:
 	# stopifnot(all(elementMetadata(bsgr[[1]])$readCount == BSDT$readCount))
 
-	message("Setting regionIDs...");
+	#message("Setting regionIDs...");
 	BSDT = BSDT[queryHits(fo),] #restrict the table to CpGs in any region.
 
 	if (NROW(BSDT) < 1) {
@@ -413,7 +422,7 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR=NULL, regionsGRL.length = NUL
 		funcs = c(rep("sum", length(sumCols)), rep("unique", length(keepCols)))
 		jCommand = buildJ(cols, funcs)
 	}
-	message("jCommand: ", jCommand)
+	#message("jCommand: ", jCommand)
 	
 	# Define aggregation column. aggregate by region or by region group?
 	if (byRegionGroup) {
@@ -430,7 +439,7 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR=NULL, regionsGRL.length = NUL
 	}
 
 	# Now actually do the aggregate:
-	message("Combining...");
+	#message("Combining...");
   bsCombined = BSDT[,eval(parse(text=jCommand)), by=eval(parse(text=byString))]
 	setkey(bsCombined, regionID)
 	# Now aggregate across groups.
@@ -860,4 +869,29 @@ BSFilter = function(BSDT, minReads=10, excludeGR=NULL) {
     BSDT = BSDT[-qh,]
   }
   return(BSDT)
+}
+
+#check whether object is smoothed
+#check for names in phenoData
+#fix names in data.table
+#add methyl column?, use addMethCol or bsseq built in getMeth()?
+bsseqToMIRA <-function(bsseqObj){
+  # if (hasBeenSmoothed(bsseqObj)){
+  #   warning("Raw (not smoothed) methylation and coverage values are being used.")
+  # }
+  MIRAFormatBSDTList=list() #to store output
+  #obtaining coordinates as GRanges obj. and changing to data.table
+  coordinates=grToDt(granges(bsseqObj))
+  for (i in 1:ncol(bsseqObj)){ #each column is a different sample
+    hitCount=getBSseq(BSseq = bsseqObj[,i],type = "M")
+    readCount=getBSseq(BSseq = bsseqObj[,i], type="Cov")
+    notCovered=which(readCount==0)#index for taking out rows with 0 coverage
+    warning("Taking out rows with no coverage. 
+            Genomic coordinates may not have identical row numbers in different samples now.")
+    MIRAFormatBSDTList[[i]]=data.table(chr=coordinates[,chr],start=coordinates[,start],hitCount=hitCount,readCount=readCount)[!notCovered]
+    setnames(MIRAFormatBSDTList[[i]],c("chr","start","hitCount","readCount"))
+  }
+  setattr(MIRAFormatBSDTList,"names", Biobase::sampleNames(bsseqObj))#names for list (by reference)
+  
+  return(MIRAFormatBSDTList)
 }

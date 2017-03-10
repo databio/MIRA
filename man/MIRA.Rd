@@ -19,7 +19,7 @@ This script provides functions for aggregating methylation
 data across region sets, in bins
 }
 \references{
-\url{http://github.com/sheffien}
+\url{http://github.com/databio}
 }
 \author{
 Nathan Sheffield
