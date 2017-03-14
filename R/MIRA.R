@@ -658,6 +658,10 @@ dtToGR = dtToGr;
 
 #Converts a list of data.tables (From BSreadbeds) into GRanges.
 #UPDATE
+# @param dtList A list of data.tables, each must have "chr","start","hitCount", and "readCount" columns
+
+# @return a list of GRanges objects, strand has been set to "*",
+# "start" and "end" have both been set to "start" of the DT
 BSdtToGRanges = function(dtList) {
     gList = list();
     for (i in 1:length(dtList)) {
@@ -825,7 +829,7 @@ setLapplyAlias = function(cores=0) {
 #' @return Result from lapply or parallel::mclapply
 lapplyAlias = function(..., mc.preschedule=TRUE) {
     if (is.null(getOption("mc.cores"))) { setLapplyAlias(1) }
-    if(getOption("mc.cores") > 1) 
+    if(getOption("mc.cores") > 1) {
         return(parallel::mclapply(..., mc.preschedule=mc.preschedule))
     } else {
         return(lapply(...))
