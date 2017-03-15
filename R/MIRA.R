@@ -81,7 +81,7 @@ returnMIRABins = function(BSDT,GRList, binNum=11, minReads = 500, sampleNameInBS
 
     #checking that all objects in GRList are the same type and converting to data.tables
     if (all(sapply(X = GRList,FUN = class) %in% "GRanges")){
-        GRDTList=lapply(X = GRList,FUN = grToDt)#GRanges to data.tables
+        GRDTList=lapply(X = GRList,FUN = grToDt,includeStrand=TRUE)#GRanges to data.tables
         #below statement will be true if all objects in the list are of class data.table
         #necessary since data.tables also include data.frame as a class
     }else if (all(sapply(X = lapply(X = GRList,FUN = function(x) class(x) %in% "data.table") ,FUN=any))){
@@ -224,7 +224,8 @@ scoreDip = function(values, binCount, shoulderShift = 5,method="logRatio") {
 #' @param start Coordinate for beginning of range/range.
 #' @param end Coordinate for end of range/region.
 #' @param bins How many bins to divide this range/region.
-#' @param idDF UPDATE
+#' @param idDF A string/vector of strings that has chromosome (e.g. "chr1") 
+#' for given start and end values
 #'
 #' @return
 #' A data.table, expanded to nrow= number of bins, with these id columns:
@@ -236,24 +237,71 @@ scoreDip = function(values, binCount, shoulderShift = 5,method="logRatio") {
 #load example region set
 #cgIslandsDT = data.table(...)
 #binnedCGI = cgIslandsDT[, binRegion(start,end, 50)]
-binRegion = function(start, end, bins, idDF=NULL) {
+binRegion = function(start, end, bins, idDF=NULL,strand="*") {
     #if (!is.null(idDF) & ( ! "data.frame"  %in% class(idDF))) {
     #   stop("idDF should be a data.frame")
     #}
-    binSize = (end-start)/(bins)
-    breaks = round(rep(start, each=(bins+1)) + (0:(bins)) * rep(binSize, each=(bins+1)))
+    finalColNames=c("chr","start","end","id","binID","ubinID")#conditionally altered later
+    if (!"*" %in% strand){
+        if ("+" %in% strand){
+            plusIndex=which(strand == "+")
+            #once for plus strand coordinates
+            plusStart=start[plusIndex]
+            plusEnd=end[plusIndex]
+            
+            binSize = (plusEnd-plusStart)/(bins)
+            breaks = round(rep(plusStart, each=(bins+1)) + (0:(bins)) * rep(binSize, each=(bins+1)))
+            
+            endpoints = (bins+1) * (1:(length(plusStart)))
+            startpoints = 1 + (bins+1)  * (0:(length(plusStart)-1))
+            
+            plusDT = data.table(start=breaks[-endpoints], end=breaks[-startpoints], id=rep(plusIndex, each=bins), binID= 1:bins, strand="+", key="id")
+            dt=plusDT #placeholder but may be returned
+        }
+        if ("-" %in% strand){
+            minusIndex=which(strand == "-")
+        
+            minusStart=start[minusIndex]
+            minusEnd=end[minusIndex]
+        
+            binSize = (minusEnd-minusStart)/(bins)
+            breaks = round(rep(minusStart, each=(bins+1)) + (0:(bins)) * rep(binSize, each=(bins+1)))
+        
+            endpoints = (bins+1) * (1:(length(minusStart)))
+            startpoints = 1 + (bins+1)  * (0:(length(minusStart)-1))
+        
+            minusDT = data.table(start=breaks[-endpoints], end=breaks[-startpoints], id=rep(minusIndex, each=bins), binID= bins:1, strand="-", key="id")
+            dt=minusDT #placeholder but may be returned
+        }
+        
+        #combining and sorting plus and minus data.tables if there are both + and - strands
+        if (("+" %in% strand) && ("-" %in% strand)){
+            dt=rbindlist(list(plusDT,minusDT))
+            setorder(x = dt,id,binID)#setorder(dt,id) might also work?
+        }
+        
+        finalColNames=c(finalColNames,"strand")#included only if +/- are present
+        dt[,ubinID := 1:nrow(dt)] 
+        
+    }else { #some strand information is "*", don't flip bin directions
+    
+        binSize = (end-start)/(bins)
+        breaks = round(rep(start, each=(bins+1)) + (0:(bins)) * rep(binSize, each=(bins+1)))
 
-    endpoints = (bins+1) * (1:(length(start)))
-    startpoints = 1 + (bins+1)  * (0:(length(start)-1))
-    #TODO: remove this code split
-    if (is.null(idDF)) {
+        endpoints = (bins+1) * (1:(length(start)))
+        startpoints = 1 + (bins+1)  * (0:(length(start)-1))
+        #do all regions in the same order
         dt = data.table(start=breaks[-endpoints], end=breaks[-startpoints], id=rep((1:length(start)), each=bins), binID= 1:bins, ubinID=1:length(breaks[-startpoints]), key="id")
-    } else {
-        chr = rep(idDF, each=bins)
-        dt = data.table(chr, start=breaks[-endpoints], end=breaks[-startpoints], id=rep((1:length(start)), each=bins), binID= 1:bins, ubinID=1:length(breaks[-startpoints]), key="id")
-
+    
     }
-    return(dt)
+    
+    if (!(is.null(idDF))){
+        chr = rep(idDF, each=bins)
+        dt=dt[,chr:=chr]
+        setcolorder(dt,finalColNames)#putting chr first, does not copy
+    }
+    
+    return(dt[])
 }
 
 #' A wrapper of BSAggregate that first bins regions and then aggregates
@@ -297,7 +345,7 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500, byRegionGroup
     ##if(!silent){
     #message("Binning...")
     ##}
-    binnedDT = rangeDT[, binRegion(start, end, binCount, get(seqnamesColName))]
+    binnedDT = rangeDT[, binRegion(start, end, binCount, get(seqnamesColName),strand)]
     binnedGR = sapply(split(binnedDT, binnedDT$binID), dtToGr)
     #message("Aggregating...")
     binnedBSDT = BSAggregate(BSDT=BSDT, regionsGRL=GRangesList(binnedGR), jCommand=buildJ(c("methyl", "readCount"), c("mean", "sum")), byRegionGroup=byRegionGroup, splitFactor=splitFactor)
@@ -329,8 +377,10 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500, byRegionGroup
 #' @param excludeGR A GenomicRanges object with regions you want to 
 #' exclude from the aggregation function. These regions will be eliminated
 #' from the input table and not counted.
-#' @param regionsGRL.length UPDATE
-#' @param splitFactor UPDATE
+#' @param regionsGRL.length Vector with number of regions in each bin.
+#' From bin1 to binN. With default NULL value, it will be auto assigned.
+#' @param splitFactor Used to make "by string" to be plugged into a data.table
+#' "by=" statemnt. With default NULL value, by string will be "list(regionID)"
 #' @param keepCols UPDATE
 #' @param sumCols UPDATE
 #' @param jCommand You can pass a custom command in the j slot to data.table
@@ -449,17 +499,20 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR=NULL, regionsGRL.length = NUL
     # Define aggregation column. aggregate by region or by region group?
     if (byRegionGroup) {
         # must set allow=TRUE here in case there are multiple IDs (splitCol)
+        #adds regionGroupID column from region2group to bsCombined
         bsCombined[region2group, regionGroupID:=regionGroupID, allow=TRUE]
         if (! is.null(splitFactor) ) { 
             byStringGroup = paste0("list(", paste("regionGroupID", paste0(splitFactor, collapse=", "), sep=", "), ")")
         } else {
             byStringGroup = "list(regionGroupID)"
         }
+        #actual aggregation operation
         bsCombined=bsCombined[,eval(parse(text=jCommand)), by=eval(parse(text=byStringGroup))]
         
-        #if no strand information was given, averaging the signatures about the center...
+        #if any strand information was not given, averaging the signatures about the center...
         #...to account for unknown strand orientation, also averaging readCount about center
-        if (!strand(regionsGR)@values %in% c("+","-")){
+        #ie if any "*" are present then average
+        if ("*" %in% strand(regionsGR)@values){
             bsCombined[,methyl := (methyl+rev(methyl))/2]
             bsCombined[,readCount := (readCount+rev(readCount))/2]
         }
@@ -613,6 +666,11 @@ dtToGrInternal = function(DT, chr, start, end=NA, strand=NA, name=NA, metaCols=N
             end = start;
         }
     }
+    if (is.na(strand)){
+        if ("strand" %in% colnames(DT)){ #checking if strand info is in DT
+            strand="strand"
+        }
+    }
     if (is.na(strand)) {
         gr=GRanges(seqnames=DT[[`chr`]], ranges=IRanges(start=DT[[`start`]], end=DT[[`end`]]), strand="*")
     } else {
@@ -761,13 +819,21 @@ parseBiseq = function(DT) {
 #' convert a GenomicRanges into a data.table
 #' 
 #' @param GR A GRanges object
-#' @return A data.table object.
-grToDt = function(GR) {
+#' @return A data.table object with columns "chr","start", and "end"
+grToDt = function(GR,includeStrand=FALSE) {
     DF=as.data.frame(elementMetadata(GR))
     if( ncol(DF) > 0) {
-        DT = data.table(chr=as.vector(seqnames(GR)), start=start(GR), end=end(GR), DF)
+        if(includeStrand){
+            DT = data.table(chr=as.vector(seqnames(GR)), start=start(GR), end=end(GR),strand=as.vector(strand(GR),mode = "character"), DF)    
+        } else{
+            DT = data.table(chr=as.vector(seqnames(GR)), start=start(GR), end=end(GR), DF)    
+        }
     } else {
-        DT = data.table(chr=as.vector(seqnames(GR)), start=start(GR), end=end(GR))
+        if(includeStrand){
+            DT = data.table(chr=as.vector(seqnames(GR)), start=start(GR), end=end(GR),strand=as.vector(strand(GR),mode="character")) 
+        } else{
+            DT = data.table(chr=as.vector(seqnames(GR)), start=start(GR), end=end(GR))    
+        }
     }
     return(DT)
 }
