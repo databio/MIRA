@@ -4,13 +4,15 @@
 \alias{grToDt}
 \title{convert a GenomicRanges into a data.table}
 \usage{
-grToDt(GR)
+grToDt(GR, includeStrand = FALSE)
 }
 \arguments{
 \item{GR}{A GRanges object}
+
+\item{includeStrand}{Boolean, whether to include strand from GR in output DT}
 }
 \value{
-A data.table object.
+A data.table object with columns "chr","start", and "end" (possibly strand)
 }
 \description{
 convert a GenomicRanges into a data.table

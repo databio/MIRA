@@ -19,3 +19,8 @@ The BSDTList but with extra methyl column on each data.table in list.
 Adding methyl column that has proportion of reads that were methylated for each site.
 Note: Assigns methyl column by reference with ":="
 }
+\examples{
+data("GM06990_1_ExampleSet",package="MIRA") #exampleBSDT
+exampleBSDT[,methyl := NULL] #removing methyl column
+addMethCol(list(exampleBSDT))
+}

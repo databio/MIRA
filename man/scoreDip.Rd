@@ -18,7 +18,8 @@ shoulders. I have used 5 or 3.}
 
 \item{method}{The scoring method. "logRatio" is the log of the ratio of
 the average of outside values (shoulders) divided by the average of the middle values. 
-A higher score with "logRatio" corresponds to a deeper dip.}
+A higher score with "logRatio" corresponds to a deeper dip. "logRatio" is the
+only scoring method currently but more methods may be added in the future.}
 }
 \value{
 A MIRA score. The MIRA score quantifies the "dip" of the MIRA signature
@@ -27,4 +28,9 @@ which is an aggregation of methylation over all regions in a region set.
 \description{
 My dip scoring function - for MIRA scores;
 That's Methylation-based Inference of Regulatory Activity
+}
+\examples{
+data("exampleBins")
+binCount=11 #bin number for exampleBins 
+exampleBins[,scoreDip(methyl,binCount),by=.(featureID,sampleName)]
 }

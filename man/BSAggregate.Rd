@@ -6,7 +6,9 @@
 for multiple samples at a time.
 This function is as BScombineByRegion, but can handle not only multiple
 samples in BSDT, but also simultaneously multiple region sets by passing
-a regionsGRL (GRangesList object).
+a regionsGRL (GRangesList object).However currently code for symmetrical 
+averaging will cause it to only work with one region set (which may be
+split up into multiple GRanges in a GRangesList).
 you can use jCommand to do other functions.
 Given a bisulfite data table as input, with an identifier column for
 different samples; plus a GRanges objects with regions to aggregate.}
@@ -28,13 +30,15 @@ to splitFactor. To be safe, "chr", "start", "hitCount", "readCount", and
 exclude from the aggregation function. These regions will be eliminated
 from the input table and not counted.}
 
-\item{regionsGRL.length}{UPDATE}
+\item{regionsGRL.length}{Vector with number of regions in each bin.
+From bin1 to binN. With default NULL value, it will be auto assigned.}
 
-\item{splitFactor}{UPDATE}
+\item{splitFactor}{Used to make "by string" to be plugged into a data.table
+"by=" statemnt. With default NULL value, by string will be "list(regionID)"}
 
-\item{keepCols}{UPDATE}
+\item{keepCols}{Deprecated, NULL value should be used for MIRA aggregation}
 
-\item{sumCols}{UPDATE}
+\item{sumCols}{Deprecated, NULL value should be used for MIRA aggregation}
 
 \item{jCommand}{You can pass a custom command in the j slot to data.table
 specifying which columns to aggregate, and which functions to use. You
@@ -47,7 +51,7 @@ the output is 1 row per region.
 Turn on this flag to aggregate across all region groups, making the result
 uncontiguous, and resulting in 1 row per *region group*.}
 
-\item{keep.na}{UPDATE}
+\item{keep.na}{No longer used by function, kept for reference.}
 }
 \value{
 UPDATE: take out unnecessary arguments and embed them in code so returned value will be straightforward
@@ -57,7 +61,9 @@ BSaggregate -- Aggregate a BSDT across regions or region groups,
 for multiple samples at a time.
 This function is as BScombineByRegion, but can handle not only multiple
 samples in BSDT, but also simultaneously multiple region sets by passing
-a regionsGRL (GRangesList object).
+a regionsGRL (GRangesList object).However currently code for symmetrical 
+averaging will cause it to only work with one region set (which may be
+split up into multiple GRanges in a GRangesList).
 you can use jCommand to do other functions.
 Given a bisulfite data table as input, with an identifier column for
 different samples; plus a GRanges objects with regions to aggregate.

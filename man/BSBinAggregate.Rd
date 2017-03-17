@@ -22,7 +22,7 @@ with columns named "start", "end".}
 
 \item{byRegionGroup}{Pass along to binCount (see ?binCount).}
 
-\item{splitFactor}{UPDATE}
+\item{splitFactor}{Should be NULL for use in MIRA, UPDATE}
 }
 \value{
 With splitFactor=NULL, it will return a data.table with binCount rows, 
@@ -31,7 +31,15 @@ Each region was split into bins; methylation was put in these bins;
 Output contains sum of the all corresponding bins for the regions of each region set 
 ie for all regions in each region set: first bins summed, second bins summed, etc
 Columns of the output should be "regionGroupID", "methyl", and "readCount"
+#UPDATE, change default splitFactor="id" to splitFactor="NULL"
 }
 \description{
 Produced originally for binning Ewing RRBS data across various region sets
+}
+\examples{
+data("GM06990_1_ExampleSet") #exampleBSDT
+data("Gm12878Nrf1_Subset") #exampleRegionSet
+exampleRegionSet=grToDt(exampleRegionSet,includeStrand=TRUE)
+aggregateBins=BSBinAggregate(BSDT=exampleBSDT,rangeDT=exampleRegionSet,binCount=11,splitFactor=NULL)
+
 }

@@ -4,7 +4,7 @@
 \alias{binRegion}
 \title{Aggregating signals in bins across a set of regions}
 \usage{
-binRegion(start, end, bins, idDF = NULL)
+binRegion(start, end, bins, idDF = NULL, strand = "*")
 }
 \arguments{
 \item{start}{Coordinate for beginning of range/range.}
@@ -13,13 +13,14 @@ binRegion(start, end, bins, idDF = NULL)
 
 \item{bins}{How many bins to divide this range/region.}
 
-\item{idDF}{UPDATE}
+\item{idDF}{A string/vector of strings that has chromosome (e.g. "chr1") 
+for given start and end values}
 }
 \value{
 A data.table, expanded to nrow= number of bins, with these id columns:
-		id: region ID
-		binID: repeating ID (this is the value to aggregate across)
-		ubinID: unique bin IDs
+     id: region ID
+     binID: repeating ID (this is the value to aggregate across)
+     ubinID: unique bin IDs
 }
 \description{
 given a start, end, and number of bins, to divide, 
@@ -34,4 +35,17 @@ in bins across many regions of the same type.
 
 In theory, this just runs on 3 values, but you can run it inside a 
 data.table j expression to divide a bunch of regions in the same way.
+}
+\examples{
+start=c(100,1000,3000)
+end=c(500,1400,3400)
+chr=c("chr1","chr1","chr2")
+strand=c("*","*","*")
+#strand not included in GRanges object 
+#since MIRA assumes "*" already unless given something else
+regionsToBin=GRanges(seqnames=chr,ranges=IRanges(start=start,end=end))
+regionsDT=grToDt(regionsToBin,includeStrand=FALSE)
+numberOfBins=15
+#data.table "j command" using column names and numberOfBins variable
+binnedRegionDT = regionsDT[, binRegion(start,end,numberOfBins,chr)]
 }

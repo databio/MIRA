@@ -5,7 +5,7 @@
 \title{Function to aggregate methylation data into bins over all regions in each region set;}
 \usage{
 returnMIRABins(BSDT, GRList, binNum = 11, minReads = 500,
-  sampleNameInBSDT = TRUE, sampleType = NULL)
+  sampleNameInBSDT = TRUE)
 }
 \arguments{
 \item{BSDT}{A single data table that has DNA methylation data on individual sites including a "chr" column with chromosome, 
@@ -20,8 +20,6 @@ Each regionSet in the list should be named. A named list of data.tables also wor
 \item{minReads}{Filter out bins with fewer than X reads before returning.}
 
 \item{sampleNameInBSDT}{boolean for whether the BSDT has a sampleName column}
-
-\item{sampleType}{could be case/control, tissue type, etc.}
 }
 \value{
 a data.table with binNum rows for each region set containing aggregated methylation data

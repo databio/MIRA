@@ -13,7 +13,7 @@ it should have a column with sample annotation so cases and controls can be spli
 well as annotation of the region sets (featureID column) and sampleType column (case/control).}
 }
 \value{
-UPDATE
+binnedDT The input DT but with normalized "methyl" values
 }
 \description{
 It finds the median of the controls for each bin for each region set

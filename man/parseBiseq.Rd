@@ -8,10 +8,13 @@ of methylation calls, splitting them into individual columns}
 parseBiseq(DT)
 }
 \arguments{
-\item{DT}{data.table to parse}
+\item{DT}{data.table to parse
+"chr", "start", "end", "meth", "rate", "strand" columns expected
+in that order.}
 }
 \value{
-data.table with separate methylated and unmethylated columns
+data.table with separate methylated and unmethylated columns.
+Specific col names are set
 }
 \description{
 Takes a data.table from BSreadBiSeq and parses the strange x/y format
