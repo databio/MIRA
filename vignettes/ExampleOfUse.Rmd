@@ -1,0 +1,74 @@
+---
+title: "Applying MIRA to a Biological Question"
+author: "John Lawson"
+date: "`r Sys.Date()`"
+output: 
+  BiocStyle::html_document
+vignette: >
+  %\VignetteIndexEntry{Applying MIRA to a Biological Question}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Biological Question
+Ewing sarcoma is a pediatric cancer characterized by the fusion of the EWS and FLI1 genes which results in a fusion transcription factor. We want to see if regulation of //certain regulatory features/element UPDATE// is different in Ewing sarcoma? To address that question, we can compare MIRA scores for Ewing and non-Ewing samples using the set of //instances of this feature/element UPDATE//.
+input: a few RRBS samples from Ewing sarcoma and myeloid cell type (DNA methylation)
+input: regionset that I get from Nathan (EWS specific),myeloid specific TF
+
+## Package workflow
+
+The workflow is the same as the "Methylation-based Inference of Regulatory Activity" vignette but this time we are adding annotation and using multiple samples and region sets:  
+1. Start with appropriately formatted single-nucleotide resolution methylation data, region sets- each with genomic regions corresponding to some biological annotation, and an annotation file that has sample name (sampleName column) and sample type (sampleType column).  
+2. Split the regions into bins and aggregate methylation data in those bins to get a MIRA signature for each region set, sample combination.  
+3. Calculate MIRA score for each region set, sample combination based on shape of MIRA signature.
+
+
+```{r,eval=FALSE}
+#change to eval=TRUE when done
+library(MIRA)
+library(data.table) #fread, setkey 
+load(exampleAnnoDF2)#object name: "exampleAnnoDF2", data.table
+```
+```{r,eval=FALSE}
+caseFiles=c("RRBS_cpgMethylation_EWS_T10.bed","RRBS_cpgMethylation_EWS_T11.bed","RRBS_cpgMethylation_EWS_T12.bed")
+controlFiles=c("RRBS_cpgMethylation_MSC_10.bed","RRBS_cpgMethylation_MSC_11.bed","RRBS_cpgMethylation_MSC_12.bed")
+RRBSFiles=c(caseFiles,controlFiles)
+regionSetFiles=(File Nathan gives me + MSC specific set)
+BSDTList=lapply(X = RRBSFiles,FUN = BSreadBiSeq)
+regionSets=fread(regionSetFiles)
+regionSets=lapply(X = regionSets,FUN = setNames(c("chr","start","stop")))
+```
+
+Next let's divide each region into bins, find methylation that is contained in each bin in each region, and aggregate matching bins over all the regions.
+
+
+```{r,eval=FALSE}
+bigBin=lapply(X = BSDTList,FUN = returnMIRABins,GRList=regionSets,binNum=11,sampleNameInBSDT=TRUE)
+bigBinDT=rbindlist(bigBin)
+```
+
+```{r,eval=FALSE}
+#change to eval=TRUE
+data(ewingNormalbigBinDT) #name: "bigBinDT", has binned data for this example
+setkey(exampleAnnoDF2,sampleName)
+setkey(bigBinDT,sampleName)
+merge(bigBinDT,sampleName,all.x=TRUE)#adding annotation
+plotMIRARegions(binnedRegDT = bigBinDT)
+```
+
+Next we calculate MIRA scores based on the MIRA signatures for all samples.
+
+```{r,eval=FALSE}
+#change to eval=TRUE when vignette is working
+sampleScores=bigBinDT[,.(score = scoreDip(methyl,binCount=11)),by=.(featureID,sampleName)]
+head(sampleScores)
+setkey(exampleAnnoDF2,sampleName)
+setkey(sampleScores,sampleName)
+merge(sampleScores,sampleName,all.x=TRUE)#adding annotation
+plotMIRAScores(sampleScores)
+```
+
+## Interpreting the results
+We found that the Ewing sarcoma samples had higher MIRA scores for the //Ewing region set// and that the MSC samples had higher MIRA scores for the //MSC region set//. 
+
+
