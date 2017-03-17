@@ -379,6 +379,9 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500, byRegionGroup
     # If we aren't aggregating by bin, then don't restrict to min reads!
     if (byRegionGroup) {
         binnedBSDT = binnedBSDT[readCount >= minReads,]
+        if (nrow(binnedBSDT)<binCount){
+            stop("Less than minReads. Unable to give MIRA score.")
+        }
     }
     
     
@@ -552,7 +555,7 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR=NULL, regionsGRL.length = NUL
             bsCombined[,readCount := (readCount+rev(readCount))/2]
         }
         
-        return(bsCombined);
+        return(bsCombined[]);
     } else {
     warning("Using byRegionGroup=FALSE may result in missing functionalities such as symmetrical averaging")
         e = region2group[bsCombined,]

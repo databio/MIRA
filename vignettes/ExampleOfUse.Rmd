@@ -33,17 +33,18 @@ load(exampleAnnoDF2)#object name: "exampleAnnoDF2", data.table
 caseFiles=c("RRBS_cpgMethylation_EWS_T10.bed","RRBS_cpgMethylation_EWS_T11.bed","RRBS_cpgMethylation_EWS_T12.bed")
 controlFiles=c("RRBS_cpgMethylation_MSC_10.bed","RRBS_cpgMethylation_MSC_11.bed","RRBS_cpgMethylation_MSC_12.bed")
 RRBSFiles=c(caseFiles,controlFiles)
-regionSetFiles=(File Nathan gives me + MSC specific set)
+regionSetFiles=c("sknmc_specific.bed","muscle-specifichg38.bed")
 BSDTList=lapply(X = RRBSFiles,FUN = BSreadBiSeq)
-regionSets=fread(regionSetFiles)
-regionSets=lapply(X = regionSets,FUN = setNames(c("chr","start","stop")))
+regionSets=lapply(X=regionSetFiles,FUN=fread)
+regionSets=lapply(X = regionSets,FUN = function(x) setNames(x,c("chr","start","end")))
+names(regionSets) <- c("Ewing_Specific","Muscle_Specific")
 ```
 
-Next let's divide each region into bins, find methylation that is contained in each bin in each region, and aggregate matching bins over all the regions.
+When it comes to MIRA, lapply is your friend. This allows for distributed computing with mclapply if desired. Next let's divide each region into bins, find methylation that is contained in each bin in each region, and aggregate matching bins over all the regions.
 
 
 ```{r,eval=FALSE}
-bigBin=lapply(X = BSDTList,FUN = returnMIRABins,GRList=regionSets,binNum=11,sampleNameInBSDT=TRUE)
+bigBin=lapply(X = BSDTList,FUN = returnMIRABins,GRList=regionSets,binNum=11,minReads=0,sampleNameInBSDT=TRUE)
 bigBinDT=rbindlist(bigBin)
 ```
 
@@ -52,7 +53,7 @@ bigBinDT=rbindlist(bigBin)
 data(ewingNormalbigBinDT) #name: "bigBinDT", has binned data for this example
 setkey(exampleAnnoDF2,sampleName)
 setkey(bigBinDT,sampleName)
-merge(bigBinDT,sampleName,all.x=TRUE)#adding annotation
+merge(bigBinDT,exampleAnnoDF2,all.x=TRUE)#adding annotation
 plotMIRARegions(binnedRegDT = bigBinDT)
 ```
 
@@ -64,7 +65,7 @@ sampleScores=bigBinDT[,.(score = scoreDip(methyl,binCount=11)),by=.(featureID,sa
 head(sampleScores)
 setkey(exampleAnnoDF2,sampleName)
 setkey(sampleScores,sampleName)
-merge(sampleScores,sampleName,all.x=TRUE)#adding annotation
+merge(sampleScores,exampleAnnoDF2,all.x=TRUE)#adding annotation
 plotMIRAScores(sampleScores)
 ```
 
