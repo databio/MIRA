@@ -183,15 +183,23 @@ MIRAScore = function(BSDT,GRList, binNum=11, scoringMethod="logRatio",sampleName
 #' data("exampleBins")
 #' binCount=11 #bin number for exampleBins 
 #' exampleBins[,scoreDip(methyl,binCount),by=.(featureID,sampleName)]
-scoreDip = function(values, binCount, shoulderShift = 5,method="logRatio") {
-    if (!method %in% "logRatio"){
+scoreDip = function(values, binCount, shoulderShift = floor((binCount-1)/2),method="logRatio") {
+    if (!method %in% "logRatio"){ #add new methods eventually
         stop("Invalid scoring method. Check spelling/capitalization.")
     }
     if (method=="logRatio"){
-        centerSpot = ceiling(binCount/2)
-        leftSide = centerSpot - shoulderShift  # 3
-        rightSide = centerSpot + shoulderShift  # 3
-        midpoint = (values[centerSpot] + values[centerSpot+1] + values[centerSpot-1] ) /3
+        centerSpot = (binCount+1)/2 # X.5 for even binCount
+        #floor and ceiling are only relevant when binCount is even (odd shoulderShift)
+        leftSide = floor(centerSpot - shoulderShift)  
+        rightSide = ceiling(centerSpot + shoulderShift)
+        if ((binCount %% 2) == 0){ #if binCount is even,centerSpot is X.5
+            #includes 4 bins but outer two bins are weighted by half
+            #approximates having 3 middle bins
+            midpoint=(.5*values[centerSpot-1.5]+values[centerSpot-.5]+values[centerSpot+.5]+0.5*values[centerSpot+1.5])/3
+        }else{#if binCount is odd, centerSpot is X.0
+            #three middle bins
+            midpoint = (values[centerSpot] + values[centerSpot+1] + values[centerSpot-1] ) /3
+        }
         shoulders=((values[leftSide] + values[rightSide])/2)
         if (midpoint<.000001){
             warning("Division by zero. Consider adding a small constant to all bins for this region set.")
@@ -771,7 +779,8 @@ dtToGR = dtToGr;
 #' Each must have "chr","start","hitCount", and "readCount" columns
 
 #' @return a list of GRanges objects, strand has been set to "*",
-#' "start" and "end" have both been set to "start" of the DT
+#' "start" and "end" have both been set to "start" of the DT.
+#' hitCount and readCount info is preserved in GRanges object.
 BSdtToGRanges = function(dtList) {
     gList = list();
     for (i in 1:length(dtList)) {
