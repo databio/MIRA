@@ -5,7 +5,8 @@
 \title{My dip scoring function - for MIRA scores;
 That's Methylation-based Inference of Regulatory Activity}
 \usage{
-scoreDip(values, binCount, shoulderShift = 5, method = "logRatio")
+scoreDip(values, binCount, shoulderShift = floor((binCount - 1)/2),
+  method = "logRatio")
 }
 \arguments{
 \item{values}{A vector with proportion of methylation values for each bin. 

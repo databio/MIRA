@@ -36,9 +36,9 @@ From bin1 to binN. With default NULL value, it will be auto assigned.}
 \item{splitFactor}{Used to make "by string" to be plugged into a data.table
 "by=" statemnt. With default NULL value, by string will be "list(regionID)"}
 
-\item{keepCols}{Deprecated, NULL value should be used for MIRA aggregation}
+\item{keepCols}{Deprecated, NULL value should be used for MIRA aggregation.}
 
-\item{sumCols}{Deprecated, NULL value should be used for MIRA aggregation}
+\item{sumCols}{Deprecated, NULL value should be used for MIRA aggregation.}
 
 \item{jCommand}{You can pass a custom command in the j slot to data.table
 specifying which columns to aggregate, and which functions to use. You
@@ -51,10 +51,14 @@ the output is 1 row per region.
 Turn on this flag to aggregate across all region groups, making the result
 uncontiguous, and resulting in 1 row per *region group*.}
 
-\item{keep.na}{No longer used by function, kept for reference.}
+\item{keep.na}{Not used in general MIRA context.}
 }
 \value{
-UPDATE: take out unnecessary arguments and embed them in code so returned value will be straightforward
+In context of MIRA, with byRegionGroup=TRUE and jCommand=
+list( methyl=mean(methyl),readCount=sum(readCount) )", this function
+will return a data.table with binCount rows (parameter for BSBinAggregate)
+containing aggregated methylation from BSDT over binned regions from a region
+set.
 }
 \description{
 BSaggregate -- Aggregate a BSDT across regions or region groups,

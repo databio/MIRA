@@ -12,7 +12,8 @@ Each must have "chr","start","hitCount", and "readCount" columns}
 }
 \value{
 a list of GRanges objects, strand has been set to "*",
-"start" and "end" have both been set to "start" of the DT
+"start" and "end" have both been set to "start" of the DT.
+hitCount and readCount info is preserved in GRanges object.
 }
 \description{
 Converts a list of data.tables into GRanges.

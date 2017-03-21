@@ -4,7 +4,7 @@
 #' level surrounding a regulatory site of interest, such as a 
 #' transcription factor binding sites.
 #' This script provides functions for aggregating methylation 
-#' data across region sets, in bins
+#' data across region sets, in bins.
 #'
 #' @docType package
 #' @name MIRA
@@ -343,7 +343,8 @@ binRegion = function(start, end, bins, idDF=NULL,strand="*") {
 #' @param binCount Number of bins across the region.
 #' @param byRegionGroup Pass along to binCount (see ?binCount).
 #' @param minReads Filter out bins with fewer than X reads before returning.
-#' @param splitFactor Should be NULL for use in MIRA, UPDATE
+#' @param splitFactor With default NULL, aggregation will be done 
+#' separately/individually for each sample.
 #' 
 #' @return With splitFactor=NULL, it will return a data.table with binCount rows, 
 #' containing aggregated methylation data over regions in region set "rangeDT".
@@ -351,7 +352,6 @@ binRegion = function(start, end, bins, idDF=NULL,strand="*") {
 #' Output contains sum of the all corresponding bins for the regions of each region set 
 #' ie for all regions in each region set: first bins summed, second bins summed, etc
 #' Columns of the output should be "regionGroupID", "methyl", and "readCount"
-#' #UPDATE, change default splitFactor="id" to splitFactor="NULL" 
 #' @examples
 #' data("GM06990_1_ExampleSet") #exampleBSDT
 #' data("Gm12878Nrf1_Subset") #exampleRegionSet
@@ -359,7 +359,7 @@ binRegion = function(start, end, bins, idDF=NULL,strand="*") {
 #' aggregateBins=BSBinAggregate(BSDT=exampleBSDT,rangeDT=exampleRegionSet,binCount=11,splitFactor=NULL)
 #' 
 #' @export
-BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500, byRegionGroup=TRUE,splitFactor="id") {
+BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500, byRegionGroup=TRUE,splitFactor=NULL) {
     if (! "data.table" %in% class(rangeDT)) {
         stop("rangeDT must be a data.table")
     }
@@ -421,8 +421,8 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500, byRegionGroup
 #' From bin1 to binN. With default NULL value, it will be auto assigned.
 #' @param splitFactor Used to make "by string" to be plugged into a data.table
 #' "by=" statemnt. With default NULL value, by string will be "list(regionID)"
-#' @param keepCols Deprecated, NULL value should be used for MIRA aggregation
-#' @param sumCols Deprecated, NULL value should be used for MIRA aggregation
+#' @param keepCols Deprecated, NULL value should be used for MIRA aggregation.
+#' @param sumCols Deprecated, NULL value should be used for MIRA aggregation.
 #' @param jCommand You can pass a custom command in the j slot to data.table
 #' specifying which columns to aggregate, and which functions to use. You
 #' can use buildJ() to build a jCommand argument easily.
@@ -432,9 +432,13 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500, byRegionGroup
 #' the output is 1 row per region.
 #' Turn on this flag to aggregate across all region groups, making the result
 #' uncontiguous, and resulting in 1 row per *region group*.
-#' @param keep.na No longer used by function, kept for reference.
+#' @param keep.na Not used in general MIRA context.
 #' 
-#' @return UPDATE: take out unnecessary arguments and embed them in code so returned value will be straightforward
+#' @return In context of MIRA, with byRegionGroup=TRUE and jCommand=
+#' list( methyl=mean(methyl),readCount=sum(readCount) )", this function
+#' will return a data.table with binCount rows (parameter for BSBinAggregate)
+#' containing aggregated methylation from BSDT over binned regions from a region
+#' set.
 #'
 BSAggregate = function(BSDT, regionsGRL, excludeGR=NULL, regionsGRL.length = NULL, splitFactor=NULL, keepCols=NULL, sumCols=NULL, jCommand=NULL, byRegionGroup=FALSE, keep.na=FALSE) {
 
@@ -457,9 +461,6 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR=NULL, regionsGRL.length = NUL
 
     bsgr = BSdtToGRanges(list(BSDT));
     
-    #not used for anything, UPDATE
-    additionalColNames = setdiff(colnames(BSDT), c("chr","start", "end","hitCount","readCount", splitFactor));
-
     colModes = sapply(BSDT,mode);
     if (is.null(sumCols)) {
         sumCols = setdiff(colnames(BSDT),c("chr", "start", "end", "strand", splitFactor, keepCols))
@@ -519,14 +520,6 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR=NULL, regionsGRL.length = NUL
     }
     #message("jCommand: ", jCommand)
 
-    # Define aggregation column. aggregate by region or by region group?
-    #agCol is not used anywhere, remove, UPDATE
-    if (byRegionGroup) {
-        agCol = "regionGroupID";
-    } else {
-        agCol = "regionID"; # Default
-    }
-
     # Build the by string
     if (is.null(splitFactor)) {
         byString = paste0("list(regionID)");
@@ -558,7 +551,7 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR=NULL, regionsGRL.length = NUL
         #if any strand information was not given, averaging the signatures about the center...
         #...to account for unknown strand orientation, also averaging readCount about center
         #ie if any "*" are present then average
-        if ("*" %in% strand(regionsGR)@values){
+        if ("*" %in% unique(as.character(strand(exampleRegionSet)))){
             bsCombined[,methyl := (methyl+rev(methyl))/2]
             bsCombined[,readCount := (readCount+rev(readCount))/2]
         }
@@ -707,12 +700,11 @@ buildJ = function(cols, funcs) {
     return(r);
 }
 
-#' Internal part of a utility to convert data.tables into GRanges objects
-#' genes = dtToGR(gModels, "chr", "txStart", "txEnd", "strand", "geneId").
-#' 
-#' @param DT A data.table with at least "chr" and "start" columns
-#' @return gr A genomic ranges object derived from DT
-#UPDATE: can parameters also be simplified for this function?
+# Internal part of a utility to convert data.tables into GRanges objects
+# genes = dtToGR(gModels, "chr", "txStart", "txEnd", "strand", "geneId").
+# 
+# @param DT A data.table with at least "chr" and "start" columns
+# @return gr A genomic ranges object derived from DT
 dtToGrInternal = function(DT, chr, start, end=NA, strand=NA, name=NA, metaCols=NA) {
     if (is.na(end)) {
         if ("end" %in% colnames(DT)) {
@@ -750,12 +742,11 @@ dtToGrInternal = function(DT, chr, start, end=NA, strand=NA, name=NA, metaCols=N
     gr;
 }
 
-#UPDATE: can parameters be simplified?
-#' Convert a data.table to GRanges object.
-#' 
-#' @param DT a data.table with at least "chr" and "start" columns
-#' 
-#' @return gr A genomic ranges object derived from DT
+# Convert a data.table to GRanges object.
+# 
+# @param DT a data.table with at least "chr" and "start" columns
+# 
+# @return gr A genomic ranges object derived from DT
 dtToGr = function(DT, chr="chr", start="start", end=NA, strand=NA, name=NA, splitFactor=NA, metaCols=NA) {
     if(is.na(splitFactor)) {
         return(dtToGrInternal(DT, chr, start, end, strand, name,metaCols));
