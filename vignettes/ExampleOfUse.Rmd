@@ -27,7 +27,7 @@ The workflow is the same as the "Methylation-based Inference of Regulatory Activ
 #change to eval=TRUE when done
 library(MIRA)
 library(data.table) #fread, setkey 
-load(exampleAnnoDF2)#object name: "exampleAnnoDF2", data.table
+load("exampleAnnoDF2.RData")#object name: "exampleAnnoDF2", data.table
 ```
 ```{r,eval=FALSE}
 caseFiles=c("RRBS_cpgMethylation_EWS_T10.bed","RRBS_cpgMethylation_EWS_T11.bed","RRBS_cpgMethylation_EWS_T12.bed")
@@ -53,7 +53,7 @@ bigBinDT=rbindlist(bigBin)
 data(ewingNormalbigBinDT) #name: "bigBinDT", has binned data for this example
 setkey(exampleAnnoDF2,sampleName)
 setkey(bigBinDT,sampleName)
-merge(bigBinDT,exampleAnnoDF2,all.x=TRUE)#adding annotation
+bigBinDT=merge(bigBinDT,exampleAnnoDF2,all.x=TRUE)#adding annotation
 plotMIRARegions(binnedRegDT = bigBinDT)
 ```
 
@@ -65,7 +65,7 @@ sampleScores=bigBinDT[,.(score = scoreDip(methyl,binCount=11)),by=.(featureID,sa
 head(sampleScores)
 setkey(exampleAnnoDF2,sampleName)
 setkey(sampleScores,sampleName)
-merge(sampleScores,exampleAnnoDF2,all.x=TRUE)#adding annotation
+sampleScores=merge(sampleScores,exampleAnnoDF2,all.x=TRUE)#adding annotation
 plotMIRAScores(sampleScores)
 ```
 
