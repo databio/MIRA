@@ -5,3 +5,4 @@
 - [ ] pass R BiocCheck
 - [ ] Divide MIRA.R file
 - [ ] Interface with bsseq objects
+- [ ] Write README (Follow [LOLA](https://github.com/nsheff/LOLA) example)
