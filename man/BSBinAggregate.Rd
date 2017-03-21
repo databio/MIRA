@@ -6,7 +6,7 @@
 each bin across a set of regions, individually.}
 \usage{
 BSBinAggregate(BSDT, rangeDT, binCount, minReads = 500,
-  byRegionGroup = TRUE, splitFactor = "id")
+  byRegionGroup = TRUE, splitFactor = NULL)
 }
 \arguments{
 \item{BSDT}{A single data table that has DNA methylation data on individual sites including a "chr" column with chromosome, 
@@ -22,7 +22,8 @@ with columns named "start", "end".}
 
 \item{byRegionGroup}{Pass along to binCount (see ?binCount).}
 
-\item{splitFactor}{Should be NULL for use in MIRA, UPDATE}
+\item{splitFactor}{With default NULL, aggregation will be done 
+separately/individually for each sample.}
 }
 \value{
 With splitFactor=NULL, it will return a data.table with binCount rows, 
@@ -31,7 +32,6 @@ Each region was split into bins; methylation was put in these bins;
 Output contains sum of the all corresponding bins for the regions of each region set 
 ie for all regions in each region set: first bins summed, second bins summed, etc
 Columns of the output should be "regionGroupID", "methyl", and "readCount"
-#UPDATE, change default splitFactor="id" to splitFactor="NULL"
 }
 \description{
 Produced originally for binning Ewing RRBS data across various region sets
