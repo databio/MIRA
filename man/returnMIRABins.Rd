@@ -2,57 +2,46 @@
 % Please edit documentation in R/MIRA.R
 \name{returnMIRABins}
 \alias{returnMIRABins}
-\title{Function to aggregate methylation data into bins over all regions in each region set;}
+\title{Function to aggregate methylation data into bins 
+over all regions in each region set;}
 \usage{
 returnMIRABins(BSDT, GRList, binNum = 11, minReads = 500,
   sampleNameInBSDT = TRUE)
 }
 \arguments{
-\item{BSDT}{A single data table that has DNA methylation data on individual sites including a "chr" column with chromosome, 
-a "start" column with the coordinate number for the cytosine, a "methyl" column with proportion of methylation (0 to 1),
-a "hitCount" column with number of methylated reads for each site, and a "readCount" column with total number of reads for each site. A "sampleName" column is preferred.}
+\item{BSDT}{A single data table that has DNA methylation data on individual 
+sites including a "chr" column with chromosome, a "start" column with the 
+coordinate number for the cytosine, a "methyl" column with proportion of 
+methylation (0 to 1), a "hitCount" column with number of methylated reads for
+each site, and a "readCount" column with total number of reads for each site.
+A "sampleName" column is preferred.}
 
-\item{GRList}{A GRangesList object containing region sets, each set corresponding to a regulatory element.
-Each regionSet in the list should be named. A named list of data.tables also works.}
+\item{GRList}{A GRangesList object containing region sets, each set 
+corresponding to a regulatory element. Each regionSet in the list should be 
+named. A named list of data.tables also works.}
 
-\item{binNum}{How many bins each region should be split into for aggregation of the DNA methylation data}
+\item{binNum}{How many bins each region should be split into for aggregation 
+of the DNA methylation data.}
 
 \item{minReads}{Filter out bins with fewer than X reads before returning.}
 
 \item{sampleNameInBSDT}{boolean for whether the BSDT has a sampleName column}
 }
 \value{
-a data.table with binNum rows for each region set containing aggregated methylation data
+a data.table with binNum rows for each region set containing
+aggregated methylation data.
 Each region was split into bins; methylation was put in these bins; 
-Output contains sum of the all corresponding bins for the regions of each region set 
-ie for all regions in each region set: first bins summed, second bins summed, etc
-Columns of the output should be "regionGroupID", "methyl", "readCount", "featureID", and 
-possibly "sampleName".
+Output contains sum of the all corresponding bins for the regions of each 
+region set, ie for all regions in each region set: first bins summed, second 
+bins summed, etc. Columns of the output should be "regionGroupID", "methyl",
+"readCount", "featureID", and possibly "sampleName".
 }
 \description{
-Function to aggregate methylation data into bins over all regions in each region set;
+Function to aggregate methylation data into bins 
+over all regions in each region set;
 }
 \examples{
-
-#loading sample annotation
-#annoDF object, classes: data.table, data.frame
-load(system.file("data","annoDF.RData",package="MIRA")) 
-
-#reading in region data and bisulfite data
-someFeatures=get(load(system.file("data","Gm12878Nrf1_Subset.RData",package="MIRA")))
-BSDT=get(load(system.file("data","GM06990_1_ExampleSet.RData",package = "MIRA")))
-
-#converting to lists 
-BSDTList=list(BSDT)
-
-#doing MIRA analysis
-bigBin=lapply(X = BSDTList,FUN = returnMIRABins,GRList=someFeatures,binNum=11,sampleNameInBSDT=TRUE)
-
-bigBinDT=bigBin[[1]]
-
-#scoring samples
-sampleScores=bigBinDT[,.(score = scoreDip(methyl,binCount=11)),by=.(featureID,sampleName)]
-
-
-
+data("GM06990_1_ExampleSet",package="MIRA") #exampleBSDT
+data("Gm12878Nrf1_Subset",package="MIRA") #exampleRegionSet
+exBinDT=returnMIRABins(exampleBSDT,exampleRegionSet)
 }

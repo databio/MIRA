@@ -61,7 +61,8 @@ test_that("binRegion is working and flipping - strand"){
     #highest value is original end
     expect_equal(max(testBins[1:numBins+numBins,end]),e2)
     expect_true(min(testBins[1:numBins+numBins,end])>s2)#all ends are in range
-    #check that size of output is as expected (each Region should have been split up into binNum rows)
+    #check that size of output is as expected 
+    #(each Region should have been split up into binNum rows)
     expect_equal(nrow(testBins),(numBins * regionNum) )
     #last start val should be less than first if orientation was flipped
     #due to "-" strand on second region as it should have been
@@ -85,7 +86,8 @@ test_that("binRegion is working and flipping - strand"){
     e2=testGRDT[2,end]
     #lowest value is original start
     expect_equal(min(testBins[1:numBins+numBins,start]),s2)
-    expect_true(max(testBins[1:numBins+numBins,start])<e2)#all starts are in range
+    #all starts are in range
+    expect_true(max(testBins[1:numBins+numBins,start])<e2)
     #highest value is original end
     expect_equal(max(testBins[1:numBins+numBins,end]),e2)
     expect_true(min(testBins[1:numBins+numBins,end])>s2)#all ends are in range
@@ -97,7 +99,10 @@ test_that("BSAggregate"){
     binnedDT=testGRDT[, binRegion(start, end, numBins, chr,strand)]
     binnedGR = sapply(split(binnedDT, binnedDT$binID), dtToGr)
     #
-    binnedBSDT = BSAggregate(BSDT=testBSDT, regionsGRL=GRangesList(binnedGR), jCommand=buildJ(c("methyl", "readCount"), c("mean", "sum")), byRegionGroup=TRUE, splitFactor=NULL)
+    binnedBSDT <- 
+        BSAggregate(BSDT=testBSDT, regionsGRL=GRangesList(binnedGR), 
+                    jCommand=buildJ(c("methyl", "readCount"), c("mean", "sum")), 
+                    byRegionGroup=TRUE, splitFactor=NULL)
     #all should be the same since having opposite strands resulted in
     #flipping the second region
     expect_equal(round(binnedBSDT[,methyl],2),rep(.54,nrow(binnedBSDT)))
@@ -109,7 +114,10 @@ test_that("BSAggregate"){
     testBSDT[numBins*2,readCount:= readCount*2]
     binnedDT=testGRDT[, binRegion(start, end, numBins, chr,strand)]
     binnedGR = sapply(split(binnedDT, binnedDT$binID), dtToGr)
-    binnedBSDT = BSAggregate(BSDT=testBSDT, regionsGRL=GRangesList(binnedGR), jCommand=buildJ(c("methyl", "readCount"), c("mean", "sum")), byRegionGroup=TRUE, splitFactor=NULL)
+    binnedBSDT <-
+        BSAggregate(BSDT=testBSDT, regionsGRL=GRangesList(binnedGR), 
+                    jCommand=buildJ(c("methyl", "readCount"), c("mean", "sum")), 
+                    byRegionGroup=TRUE, splitFactor=NULL)
     #all should be the same since having opposite strands resulted in
     #flipping the second region
     expect_equal(round(binnedBSDT[,methyl],2),round(1:numBins/numBins,2))
@@ -122,15 +130,22 @@ test_that("BSAggregate"){
     testBSDT[1,methyl := methyl*2]
     binnedDT=testGRDT[, binRegion(start, end, numBins, chr)] #no strand
     binnedGR = sapply(split(binnedDT, binnedDT$binID), dtToGr)
-    binnedBSDT = BSAggregate(BSDT=testBSDT, regionsGRL=GRangesList(binnedGR), jCommand=buildJ(c("methyl", "readCount"), c("mean", "sum")), byRegionGroup=TRUE, splitFactor=NULL)
+    binnedBSDT <- 
+        BSAggregate(BSDT=testBSDT, regionsGRL=GRangesList(binnedGR), 
+                    jCommand=buildJ(c("methyl", "readCount"), c("mean", "sum")), 
+                    byRegionGroup=TRUE, splitFactor=NULL)
     #hard coded so may need to be updated later
     expect_equal(round(binnedBSDT[,methyl],2),c(.56,rep(.54,numBins-2),.56))
     
     #test more than two CpG sites in one bin
-    testBSDT[24,start:=(testBSDT[25,start]-2)]#putting 24th CpG very close to 25th CpG
+    #putting 24th CpG very close to 25th CpG
+    testBSDT[24,start:=(testBSDT[25,start]-2)]
     binnedDT=testGRDT[, binRegion(start, end, numBins, chr,strand)] 
     binnedGR = sapply(split(binnedDT, binnedDT$binID), dtToGr)
-    binnedBSDT = BSAggregate(BSDT=testBSDT, regionsGRL=GRangesList(binnedGR), jCommand=buildJ(c("methyl", "readCount"), c("mean", "sum")), byRegionGroup=TRUE, splitFactor=NULL)
+    binnedBSDT <-
+        BSAggregate(BSDT=testBSDT, regionsGRL=GRangesList(binnedGR), 
+                    jCommand=buildJ(c("methyl", "readCount"), c("mean", "sum")), 
+                    byRegionGroup=TRUE, splitFactor=NULL)
     expect_equal(round(binnedBSDT[12,methyl],2),0.9)
     
     #test that error is given if BSDT input does not have a "methyl"...
@@ -144,14 +159,16 @@ test_that("BSAggregate"){
 
 test_that("returnMIRABins and MIRAScore"){
     #testing returnMIRABins
-    binnedBSDT=returnMIRABins(BSDT = testBSDT,GRList=testGR,binNum=numBins,minReads = 0)
+    binnedBSDT=returnMIRABins(BSDT = testBSDT,GRList=testGR,
+                              binNum=numBins,minReads = 0)
     expect_equal(round(binnedBSDT[,methyl],2),rep(0.54,numBins))
     #testing that expected readcount in each bin is obtained
     expect_equal(binnedBSDT[,readCount],c(rep(20000,numBins)))
     
     
     #testing MIRAScore
-    scoreDT=MIRAScore(BSDT = testBSDT,GRList=testGR,binNum=numBins,minReads = 0,scoringMethod = "logRatio")
+    scoreDT=MIRAScore(BSDT = testBSDT,GRList=testGR,binNum=numBins,minReads = 0,
+                      scoringMethod = "logRatio")
     #since the MIRA signature was flat, score=0
     expect_equal(scoreDT$score,0)
     #region set name should have been given automatically
@@ -176,7 +193,8 @@ test_that("scoreDip"){
     y=x^2
     binNumber=length(y) #10
     testScore=round(scoreDip(values = y,binCount = binNumber),2)
-    expScore=round(log(mean(y[c(1,binNumber)])/((0.5*y[4]+y[5]+y[6]+.5*y[7])/3)),2)
+    expScore=round(log(mean(y[c(1,binNumber)])
+                       /((0.5*y[4]+y[5]+y[6]+.5*y[7])/3)),2)
     expect_equal(testScore,expScore)
     #test with non default shoulderShift
     testScore=round(scoreDip(values = y,binCount = binNumber,shoulderShift=3),2)

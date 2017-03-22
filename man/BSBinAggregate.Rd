@@ -20,7 +20,9 @@ with columns named "start", "end".}
 
 \item{minReads}{Filter out bins with fewer than X reads before returning.}
 
-\item{byRegionGroup}{Pass along to binCount (see ?binCount).}
+\item{byRegionGroup}{Default TRUE will aggregate methylation over 
+corresponding bins for each region (all bin1's aggregated, all bin2's, etc).
+byRegionGroup=FALSE is deprecated.}
 
 \item{splitFactor}{With default NULL, aggregation will be done 
 separately/individually for each sample.}
