@@ -1,2 +1,2 @@
 # MIRA
-Methylation-based Inference of Regulatory Activity
+Methylation-based Inference of Regulatory Activity.
