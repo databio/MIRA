@@ -15,8 +15,8 @@ Imports:
     IRanges,
     GenomicRanges,
     data.table,
-    ggplot2
-    Biobase
+    ggplot2,
+    Biobase,
     bsseq
 Suggests:
     knitr,
