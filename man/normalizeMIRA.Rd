@@ -7,10 +7,11 @@
 normalizeMIRA(binnedDT)
 }
 \arguments{
-\item{binnedDT}{A datatable containing bins for each region set for each sample;bins contain
-aggregated methylation across regions for that sample; 
-it should have a column with sample annotation so cases and controls can be split up as
-well as annotation of the region sets (featureID column) and sampleType column (case/control).}
+\item{binnedDT}{A datatable containing bins for each region set for each 
+sample;bins contain aggregated methylation across regions for that sample; 
+it should have a column with sample annotation 
+so cases and controls can be split up: sampleType column (case/control)
+as well as annotation of the region sets (featureID column).}
 }
 \value{
 binnedDT The input DT but with normalized "methyl" values

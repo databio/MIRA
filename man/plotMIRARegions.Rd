@@ -8,9 +8,12 @@ plotMIRARegions(binnedRegDT, featID = unique(binnedRegDT[, featureID]),
   plotType = "line")
 }
 \arguments{
-\item{binnedRegDT}{A datatable with specific column names containing the following:
-bin numbers(binnedRegionDT), aggregated methylation values (methyl), name of the region set
-(featureID), case/control column (sampleType), sample name (sampleName).}
+\item{binnedRegDT}{A datatable with specific column names containing:
+bin numbers(binnedRegionDT column), 
+aggregated methylation values (methyl column), 
+name of the region set (featureID column), 
+case/control column (sampleType column), 
+sample name (sampleName column).}
 
 \item{featID}{Region set names in a single string or vector of strings.}
 

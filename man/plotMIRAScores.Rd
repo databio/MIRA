@@ -7,12 +7,14 @@
 plotMIRAScores(scoreDT, featID = unique(scoreDT[, featureID]))
 }
 \arguments{
-\item{scoreDT}{A datatable with the following columns: score, featureID (names of regions),sampleType.}
+\item{scoreDT}{A datatable with the following columns: 
+score, featureID (names of regions),sampleType.}
 
 \item{featID}{Region set name/names in a single string or vector of strings.}
 }
 \value{
-a plot of class "gg" / "ggplot" that shows MIRA scores with geom_boxplot and geom_jitter
+a plot of class "gg" / "ggplot" that shows MIRA scores 
+with geom_boxplot and geom_jitter.
 }
 \description{
 A function to plot MIRA scores and compare case/control.

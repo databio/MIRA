@@ -646,7 +646,7 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR=NULL,
         #about the center to account for unknown strand orientation, 
         #also averaging readCount about center
         #ie if any "*" are present then average
-        if ("*" %in% unique(as.character(strand(exampleRegionSet)))){
+        if ("*" %in% unique(as.character(strand(regionsGR)))){
             bsCombined[,methyl := (methyl+rev(methyl))/2]
             bsCombined[,readCount := (readCount+rev(readCount))/2]
         }

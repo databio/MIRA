@@ -2,21 +2,23 @@
 % Please edit documentation in R/MIRA.R
 \name{addMethCol}
 \alias{addMethCol}
-\title{Adding methyl column that has proportion of reads that were methylated for each site.
+\title{Adding methyl column that has proportion of reads that were methylated for 
+each site.
 Note: Assigns methyl column by reference with ":="}
 \usage{
 addMethCol(BSDTList)
 }
 \arguments{
-\item{BSDTList}{A bisulfite datatable or list of datatables with a column for number of methylated 
-reads (hitCount) and a column for number of total reads (readCount) for each cytosine that 
-was measured.}
+\item{BSDTList}{A bisulfite datatable or list of datatables with a column for
+number of methylated reads (hitCount) and a column for number of total reads 
+(readCount) for each cytosine that was measured.}
 }
 \value{
 The BSDTList but with extra methyl column on each data.table in list.
 }
 \description{
-Adding methyl column that has proportion of reads that were methylated for each site.
+Adding methyl column that has proportion of reads that were methylated for 
+each site.
 Note: Assigns methyl column by reference with ":="
 }
 \examples{

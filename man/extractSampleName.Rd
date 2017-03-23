@@ -2,16 +2,20 @@
 % Please edit documentation in R/MIRA.R
 \name{extractSampleName}
 \alias{extractSampleName}
-\title{Extract sample names from file names as the first part of the file name (before any suffix).}
+\title{Extract sample names from file names as the first part of the file name 
+(before any suffix).}
 \usage{
 extractSampleName(fileNames, suffixSep = "\\\\.", pathSep = "/")
 }
 \arguments{
 \item{fileNames}{A string/vector containing names of files.
-fileNames can contain the full path. The actual file name should be the sample name 
-followed by a character (suffixSep) that is not in the sample name then whatever else.}
+fileNames can contain the full path. The actual file name should be the 
+sample name followed by a character (suffixSep) that is not in 
+the sample name then whatever else part of the file name 
+(like file extension).}
 
-\item{suffixSep}{The character in between the sample name and the rest of the file name}
+\item{suffixSep}{The character in between the sample name 
+and the rest of the file name.}
 
 \item{pathSep}{The character in between directories in the file path.}
 }
@@ -19,5 +23,6 @@ followed by a character (suffixSep) that is not in the sample name then whatever
 The sample name portion of a file name as a string/vector of strings.
 }
 \description{
-Extract sample names from file names as the first part of the file name (before any suffix).
+Extract sample names from file names as the first part of the file name 
+(before any suffix).
 }

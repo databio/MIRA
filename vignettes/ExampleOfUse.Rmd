@@ -38,7 +38,7 @@ BSDTList=lapply(X = RRBSFiles,FUN = BSreadBiSeq)
 regionSets=lapply(X=regionSetFiles,FUN=fread)
 regionSets=lapply(X = regionSets,FUN = function(x) setNames(x,c("chr","start","end")))
 regionSets=lapply(X = regionSets, FUN = dtToGr)
-regionSets=lapply(X = regionSets, FUN = resize, 10000)
+regionSets=lapply(X = regionSets, FUN = resize, 5000, fix="center")
 names(regionSets) <- c("Ewing_Specific","Muscle_Specific")
 ```
 
@@ -46,7 +46,7 @@ When it comes to MIRA, lapply is your friend. This allows for distributed comput
 
 
 ```{r,eval=FALSE}
-bigBin=lapply(X = BSDTList,FUN = returnMIRABins,GRList=regionSets,binNum=11,minReads=0,sampleNameInBSDT=TRUE)
+bigBin=lapply(X = BSDTList,FUN = returnMIRABins,GRList=regionSets,binNum=21,minReads=0,sampleNameInBSDT=TRUE)
 bigBinDT=rbindlist(bigBin)
 bigBinDT[,sampleName:=gsub("RRBS_cpgMethylation_","",sampleName)]
 ```
