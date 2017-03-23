@@ -30,8 +30,8 @@ library(data.table) #fread, setkey
 load("exampleAnnoDF2.RData")#object name: "exampleAnnoDF2", data.table
 ```
 ```{r,eval=FALSE}
-caseFiles=c("RRBS_cpgMethylation_EWS_T10.bed","RRBS_cpgMethylation_EWS_T11.bed","RRBS_cpgMethylation_EWS_T12.bed")
-controlFiles=c("RRBS_cpgMethylation_MSC_10.bed","RRBS_cpgMethylation_MSC_11.bed","RRBS_cpgMethylation_MSC_12.bed")
+caseFiles=c("RRBS_cpgMethylation_EWS_T1.bed","RRBS_cpgMethylation_EWS_T2.bed","RRBS_cpgMethylation_EWS_T3.bed")
+controlFiles=c("RRBS_cpgMethylation_Hsmmt_1.bed","RRBS_cpgMethylation_Hsmmt_2.bed","RRBS_cpgMethylation_Hsmmt_3.bed")
 RRBSFiles=c(caseFiles,controlFiles)
 regionSetFiles=c("sknmc_specific.bed","muscle-specifichg38.bed")
 BSDTList=lapply(X = RRBSFiles,FUN = BSreadBiSeq)
