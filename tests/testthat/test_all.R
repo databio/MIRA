@@ -43,7 +43,7 @@ testGRDT=grToDt(testGR,includeStrand = TRUE)
 rm(list=c("chr","start","end","strand","methyl","hitCount","readCount"))
 rm("sampleName")
 
-test_that("binRegion is working and flipping - strand"){
+test_that("binRegion is working and flipping - strand",{
     #testing that binRegion is reversing - strands during binning if given strand info
     
     #Using two regions, first has "+", second "-" strand
@@ -92,9 +92,9 @@ test_that("binRegion is working and flipping - strand"){
     expect_equal(max(testBins[1:numBins+numBins,end]),e2)
     expect_true(min(testBins[1:numBins+numBins,end])>s2)#all ends are in range
     
-}
+})
 
-test_that("BSAggregate"){
+test_that("BSAggregate",{
     #setting up prereqs for BSAggregate
     binnedDT=testGRDT[, binRegion(start, end, numBins, chr,strand)]
     binnedGR = sapply(split(binnedDT, binnedDT$binID), dtToGr)
@@ -153,11 +153,11 @@ test_that("BSAggregate"){
     testBSDT[,methyl:=NULL]
     expect_error(BSAggregate(BSDT=testBSDT, regionsGRL=GRangesList(binnedGR), jCommand=buildJ(c("methyl", "readCount"), c("mean", "sum")), byRegionGroup=TRUE, splitFactor=NULL))
 
-}
+})
 
 ###############testing scoring and wrapper functions#################
 
-test_that("returnMIRABins and MIRAScore"){
+test_that("returnMIRABins and MIRAScore",{
     #testing returnMIRABins
     binnedBSDT=returnMIRABins(BSDT = testBSDT,GRList=testGR,
                               binNum=numBins,minReads = 0)
@@ -173,9 +173,9 @@ test_that("returnMIRABins and MIRAScore"){
     expect_equal(scoreDT$score,0)
     #region set name should have been given automatically
     expect_equal(scoreDT$featureID,"RegionSet1")
-}
+})
 
-test_that("scoreDip"){
+test_that("scoreDip",{
     #test with odd bin number
     x=-10:10
     y=x^2
@@ -202,11 +202,11 @@ test_that("scoreDip"){
     expect_equal(testScore,expScore)
     
     
-}
+})
 
 ##########testing smaller functions##########
 
-test_that("addMethCol"){
+test_that("addMethCol",{
     #Note: this function assigns methyl column by reference (:=)
     #still returns object from function call though
     
@@ -219,7 +219,7 @@ test_that("addMethCol"){
     expect_equal(colDiff,"methyl")
     #testing that methyl values are as expected
     expect_equal(round(testBSDT$methyl,2),rep(round(1:numCpG/numCpG,2),2))
-}
+})
 
 #############cleaning up the environment after finishing tests##############
 
