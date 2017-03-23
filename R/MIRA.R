@@ -222,7 +222,7 @@ MIRAScore = function(BSDT,GRList, binNum=11, scoringMethod="logRatio",
 #' @examples
 #' data("exampleBins")
 #' binCount=11 #bin number for exampleBins 
-#' exampleBins[,scoreDip(methyl,binCount),by=.(featureID,sampleName)]
+#' exampleBins[,.(score=scoreDip(methyl,binCount)),by=.(featureID,sampleName)]
 scoreDip = function(values, binCount, 
                     shoulderShift = floor((binCount-1)/2),method="logRatio") {
     if (!method %in% "logRatio"){ #add new methods eventually

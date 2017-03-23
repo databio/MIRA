@@ -64,7 +64,9 @@ Next we calculate MIRA scores based on the MIRA signatures for all samples.
 
 ```{r,eval=FALSE}
 #change to eval=TRUE when vignette is working
-sampleScores=bigBinDT[,.(score = scoreDip(methyl,binCount=11)),by=.(featureID,sampleName)]
+bigBinDT[,methyl := methyl-min(methyl)+.05,by=.(featureID,sampleName)]
+sampleScores=bigBinDT[,.(score = scoreDip(methyl,binCount=21,shoulderShift=5)),
+                      by=.(featureID,sampleName)]
 head(sampleScores)
 setkey(exampleAnnoDF2,sampleName)
 setkey(sampleScores,sampleName)
