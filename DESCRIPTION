@@ -16,6 +16,8 @@ Imports:
     GenomicRanges,
     data.table,
     ggplot2
+    Biobase
+    bsseq
 Suggests:
     knitr,
     parallel,
