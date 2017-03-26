@@ -2,7 +2,7 @@
 % Please edit documentation in R/MIRA.R
 \name{scoreDip}
 \alias{scoreDip}
-\title{My dip scoring function - for MIRA scores;
+\title{My dip scoring function for MIRA scores.
 That's Methylation-based Inference of Regulatory Activity}
 \usage{
 scoreDip(values, binCount, shoulderShift = floor((binCount - 1)/2),
@@ -29,11 +29,11 @@ the MIRA signature which is an aggregation of methylation
 over all regions in a region set.
 }
 \description{
-My dip scoring function - for MIRA scores;
+My dip scoring function for MIRA scores.
 That's Methylation-based Inference of Regulatory Activity
 }
 \examples{
 data("exampleBins")
-binCount=11 #bin number for exampleBins 
-exampleBins[,.(score=scoreDip(methyl,binCount)),by=.(featureID,sampleName)]
+binCount = 11 #bin number for exampleBins 
+exampleBins[, .(score = scoreDip(methyl, binCount)), by = .(featureID, sampleName)]
 }

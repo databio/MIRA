@@ -33,7 +33,7 @@ aggregated methylation data.
 Each region was split into bins; methylation was put in these bins; 
 Output contains sum of the all corresponding bins for the regions of each 
 region set, ie for all regions in each region set: first bins summed, second 
-bins summed, etc. Columns of the output should be "regionGroupID", "methyl",
+bins summed, etc. Columns of the output should be "regionGroupID", "methyl", 
 "readCount", "featureID", and possibly "sampleName".
 }
 \description{
@@ -41,7 +41,7 @@ Function to aggregate methylation data into bins
 over all regions in each region set;
 }
 \examples{
-data("GM06990_1_ExampleSet",package="MIRA") #exampleBSDT
-data("Gm12878Nrf1_Subset",package="MIRA") #exampleRegionSet
-exBinDT=returnMIRABins(exampleBSDT,exampleRegionSet)
+data("GM06990_1_ExampleSet", package = "MIRA") #exampleBSDT
+data("Gm12878Nrf1_Subset", package = "MIRA") #exampleRegionSet
+exBinDT = returnMIRABins(exampleBSDT, exampleRegionSet)
 }

@@ -25,7 +25,7 @@ or as one big data.table.}
 }
 \value{
 Data from each input file joined together into one big data.table.
-If returnAsList=TRUE, then input from each file will be in its own data.table
+If returnAsList = TRUE, then input from each file will be in its own data.table
 in a list.
 }
 \description{

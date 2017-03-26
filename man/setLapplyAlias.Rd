@@ -2,9 +2,9 @@
 % Please edit documentation in R/MIRA.R
 \name{setLapplyAlias}
 \alias{setLapplyAlias}
-\title{To make parallel processing a possibility but not required,
+\title{To make parallel processing a possibility but not required, 
 I use an lapply alias which can point at either the base lapply
-(for no multicore), or it can point to mclapply,
+(for no multicore), or it can point to mclapply, 
 and set the options for the number of cores (what mclapply uses).
 With no argument given, returns intead the number of cpus currently selected.}
 \usage{
@@ -17,9 +17,9 @@ setLapplyAlias(cores = 0)
 None
 }
 \description{
-To make parallel processing a possibility but not required,
+To make parallel processing a possibility but not required, 
 I use an lapply alias which can point at either the base lapply
-(for no multicore), or it can point to mclapply,
+(for no multicore), or it can point to mclapply, 
 and set the options for the number of cores (what mclapply uses).
 With no argument given, returns intead the number of cpus currently selected.
 }

@@ -8,7 +8,7 @@ to apply to those columns, constructs a j-expression for use in
 a data.table 
 (functions applied to columns in corresponding spot in "cols" string).
 One function may be given to be applied to multiple columns.
-use it in a DT[,eval(parse(text=buildJ(cols,funcs)))]}
+use it in a DT[, eval(parse(text = buildJ(cols, funcs)))]}
 \usage{
 buildJ(cols, funcs)
 }
@@ -29,5 +29,5 @@ to apply to those columns, constructs a j-expression for use in
 a data.table 
 (functions applied to columns in corresponding spot in "cols" string).
 One function may be given to be applied to multiple columns.
-use it in a DT[,eval(parse(text=buildJ(cols,funcs)))]
+use it in a DT[, eval(parse(text = buildJ(cols, funcs)))]
 }

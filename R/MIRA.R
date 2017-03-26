@@ -16,7 +16,7 @@
 #' @importFrom ggplot2 ggplot aes facet_wrap geom_boxplot geom_jitter geom_line
 #' @import BiocGenerics S4Vectors IRanges
 #' @importFrom data.table ":=" setDT data.table setkey fread setnames 
-#'             setcolorder melt setkeyv rbindlist setattr
+#'             setcolorder melt setkeyv rbindlist setattr setorder
 #' @importFrom Biobase sampleNames
 #' @importFrom bsseq getBSseq hasBeenSmoothed
 NULL
@@ -26,10 +26,10 @@ NULL
 #(see here: http://stackoverflow.com/questions/9439256/)
 # I have to register stuff used in data.table as non-standard evaluation, 
 # in order to pass some R CMD check NOTES.
-if(getRversion() >= "2.15.1"){
+if (getRversion() >= "2.15.1") {
     utils::globalVariables(c(
-    ".", "V1", "chr", "featureID", "hitCount", "meth", "methyl", "readCount", 
-    "regionGroupID", "regionID", "sampleName", "sampleType"))
+    ".", "binID", "chr", "featureID", "hitCount", "id", "meth", "methyl", "readCount", 
+    "regionGroupID", "regionID", "sampleName", "sampleType", "ubinID", "V1"))
 }
 
 
@@ -69,22 +69,22 @@ returnMIRABins = function(BSDT, GRList, binNum = 11, minReads = 500,
   
     #########returnMIRABins:Preprocessing and formatting###############
     #converting to list format if GRList is a data.table or GRanges object
-    if (class(GRList) %in% "GRanges"){
+    if (class(GRList) %in% "GRanges") {
       GRList = GRangesList(GRList)
       message("Converting to GRangesList...")
     }
-    if (class(GRList) %in% "data.table"){
+    if (class(GRList) %in% "data.table") {
         GRList = list(GRList)
         message("Converting to list...")
     }
 
     #checking that input is in list format
-    if (!class(GRList) %in% c("list", "GRangesList")){
+    if (!class(GRList) %in% c("list", "GRangesList")) {
         stop("GRList should be a named list/GRangesList.")
     }
 
     #checking if region sets have names
-    if (is.null(names(GRList))){
+    if (is.null(names(GRList))) {
         warning("GRList should be a named list/GRangesList. 
                 Sequential names given according to order in object.")
         names(GRList)<-paste0(rep("RegionSet", length(GRList)), 1:length(GRList))
@@ -92,7 +92,7 @@ returnMIRABins = function(BSDT, GRList, binNum = 11, minReads = 500,
 
     #checking that all objects in GRList are the same type 
     #and converting to data.tables
-    if (all(sapply(X = GRList, FUN = class) %in% "GRanges")){
+    if (all(sapply(X = GRList, FUN = class) %in% "GRanges")) {
         #GRanges to data.tables
         GRDTList = lapply(X = GRList, FUN = grToDt, includeStrand = TRUE)
         #below statement will be true if all objects in the list are of 
@@ -100,21 +100,21 @@ returnMIRABins = function(BSDT, GRList, binNum = 11, minReads = 500,
         #necessary since data.tables also include data.frame as a class
     }else if (all(sapply(
         X = lapply(X = GRList, FUN = function(x) class(x) %in% "data.table"), 
-        FUN = any))){
+        FUN = any))) {
         
         GRDTList = GRList #this case is okay
     }else{
         stop("GRList should be a GRangesList or a list of data.tables")
     }
     
-    if (sampleNameInBSDT){
-        if(!"sampleName" %in% colnames(BSDT)){
+    if (sampleNameInBSDT) {
+        if (!"sampleName" %in% colnames(BSDT)) {
             stop("BSDT should have sampleName col if sampleNameInBSDT = TRUE")
         }
     }
 
     #adding a methyl column if it is not already in the BSDT
-    if (!"methyl" %in% names(BSDT)){
+    if (!"methyl" %in% names(BSDT)) {
         BSDTList = addMethCol(list(BSDT))
         BSDT = BSDTList[[1]] 
     }
@@ -130,17 +130,17 @@ returnMIRABins = function(BSDT, GRList, binNum = 11, minReads = 500,
     names(methylByBin) = names(GRList)#preserving names
     #adding a feature ID column to each data.table that 
     #should identify what region set was used
-    for (i in 1:length(methylByBin)){
+    for (i in 1:length(methylByBin)) {
         methylByBin[[i]][, featureID := rep(names(methylByBin)[i], 
                                            nrow(methylByBin[[i]]))][]
     }
     #screening out region sets that had incomplete binning
     binNumScreen = sapply(X = methylByBin, FUN = nrow)
     #taking out incomplete region sets
-    methylByBin = methylByBin[!(binNumScreen<binNum)]
+    methylByBin = methylByBin[!(binNumScreen < binNum)]
 
     bigMethylByBin = rbindlist(methylByBin)
-    if (sampleNameInBSDT){
+    if (sampleNameInBSDT) {
         #creating new sampleName column
         bigMethylByBin[, sampleName := rep(BSDT[1, sampleName])][] 
     }
@@ -181,7 +181,7 @@ MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
                      sampleNameInBSDT = TRUE, minReads = 500){
 
     #making sure methyl column is part of input BSDT
-    if (!"methyl" %in% names(BSDT)){
+    if (!"methyl" %in% names(BSDT)) {
         stop("BSDT must have a methyl column with proportion of methylation. 
              addMethCol() will add this.")
     }
@@ -200,7 +200,7 @@ MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
     return(scoreDT)
 }
 
-#' My dip scoring function - for MIRA scores;
+#' My dip scoring function for MIRA scores.
 #' That's Methylation-based Inference of Regulatory Activity
 #' 
 #' @param values A vector with proportion of methylation values for each bin. 
@@ -224,47 +224,47 @@ MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
 #' binCount = 11 #bin number for exampleBins 
 #' exampleBins[, .(score = scoreDip(methyl, binCount)), by = .(featureID, sampleName)]
 scoreDip = function(values, binCount, 
-                    shoulderShift = floor((binCount-1)/2), method = "logRatio") {
-    if (!method %in% "logRatio"){ #add new methods eventually
+                    shoulderShift = floor((binCount - 1) / 2), method = "logRatio"){
+    if (!method %in% "logRatio") { #add new methods eventually
         stop("Invalid scoring method. Check spelling/capitalization.")
     }
-    if (method == "logRatio"){
-        centerSpot = (binCount + 1)/2 # X.5 for even binCount
+    if (method == "logRatio") {
+        centerSpot = (binCount + 1) / 2 # X.5 for even binCount
         #floor and ceiling are only relevant when binCount is even 
         #(which means centerSpot is X.5)
         leftSide = floor(centerSpot - shoulderShift)  
         rightSide = ceiling(centerSpot + shoulderShift)
-        if ((binCount %% 2) == 0){ #if binCount is even, centerSpot is X.5
+        if ((binCount %% 2) == 0) { #if binCount is even, centerSpot is X.5
             #includes 4 bins but outer two bins are weighted by half
             #approximates having 3 middle bins
-            midpoint = (.5*values[centerSpot-1.5] + values[centerSpot-.5]
-                      + values[centerSpot + .5] + 0.5*values[centerSpot + 1.5])/3
+            midpoint = (.5 * values[centerSpot - 1.5] + values[centerSpot - .5]
+                      + values[centerSpot + .5] + 0.5 * values[centerSpot + 1.5]) / 3
         }else{#if binCount is odd, centerSpot is X.0
             #three middle bins
             midpoint = (values[centerSpot] + values[centerSpot + 1] 
-                       + values[centerSpot-1] ) /3
+                       + values[centerSpot - 1] ) / 3
         }
-        shoulders = ((values[leftSide] + values[rightSide])/2)
-        if (midpoint<.000001){
+        shoulders = ((values[leftSide] + values[rightSide]) / 2)
+        if (midpoint < .000001) {
             warning("Division by zero. Consider adding a small constant 
                     to all bins for this region set.")
         }
-        if (shoulders<.000001){
+        if (shoulders < .000001) {
             warning("Taking log of zero. Consider adding a small constant 
                     to all bins for this region set.")
         }
         # log ratio...
-        score = log( shoulders / midpoint )
+        score = log(shoulders / midpoint)
     }
 
     # #alternate way of scoring by the area in the dip
-    # if (method == "area"){
+    # if (method == "area") {
     #     maxMethyl = max(values)
-    #     score = maxMethyl*binCount-sum(values)
+    #     score = maxMethyl * binCount - sum(values)
     # }
 
     # #another alternate method
-    # if (method == "parabola"){
+    # if (method == "parabola") {
     #     #fit2 <- lm(y~poly(x, 2, raw = TRUE))
     #     #lines(xx, predict(fit2, data.frame(x = xx)), col = "green")
     # }
@@ -290,6 +290,8 @@ scoreDip = function(values, binCount,
 #' @param bins How many bins to divide this range/region.
 #' @param idDF A string/vector of strings that has chromosome (e.g. "chr1") 
 #' for given start and end values
+#' @param strand "strand" column of the data.table (or single
+#' strand value if binRegion is only used on one region). Default is "*".
 #'
 #' @return
 #' A data.table, expanded to nrow = number of bins, with these id columns:
@@ -298,17 +300,17 @@ scoreDip = function(values, binCount,
 #'      ubinID: unique bin IDs
 #' @export
 #' @examples
+#' library(data.table)
 #' start = c(100, 1000, 3000)
 #' end = c(500, 1400, 3400)
 #' chr = c("chr1", "chr1", "chr2")
 #' strand = c("*", "*", "*")
-#' #strand not included in GRanges object 
+#' #strand not included in object 
 #' #since MIRA assumes "*" already unless given something else
-#' regionsToBin = GRanges(seqnames = chr, ranges = IRanges(start = start, end = end))
-#' regionsDT = grToDt(regionsToBin, includeStrand = FALSE)
+#' regionsToBinDT = data.table(chr, start, end)
 #' numberOfBins = 15
 #' #data.table "j command" using column names and numberOfBins variable
-#' binnedRegionDT = regionsDT[, binRegion(start, end, numberOfBins, chr)]
+#' binnedRegionDT = regionsToBinDT[, binRegion(start, end, numberOfBins, chr)]
 binRegion = function(start, end, bins, idDF = NULL, strand = "*") {
     #if (!is.null(idDF) & ( ! "data.frame"  %in% class(idDF))) {
     #   stop("idDF should be a data.frame")
@@ -316,19 +318,19 @@ binRegion = function(start, end, bins, idDF = NULL, strand = "*") {
     
     #conditionally altered later
     finalColNames = c("chr", "start", "end", "id", "binID", "ubinID")
-    if (!"*" %in% strand){
-        if ("+" %in% strand){
+    if (!"*" %in% strand) {
+        if ("+" %in% strand) {
             plusIndex = which(strand == "+")
             #once for plus strand coordinates
             plusStart = start[plusIndex]
             plusEnd = end[plusIndex]
             
-            binSize = (plusEnd-plusStart)/(bins)
+            binSize = (plusEnd - plusStart) / (bins)
             breaks = round(rep(plusStart, each = (bins + 1)) 
                           + (0:(bins)) * rep(binSize, each = (bins + 1)))
             
             endpoints = (bins + 1) * (1:(length(plusStart)))
-            startpoints = 1 + (bins + 1)  * (0:(length(plusStart)-1))
+            startpoints = 1 + (bins + 1)  * (0:(length(plusStart) - 1))
             
             plusDT = data.table(start = breaks[-endpoints], 
                                 end = breaks[-startpoints], 
@@ -338,18 +340,18 @@ binRegion = function(start, end, bins, idDF = NULL, strand = "*") {
                                 key = "id")
             dt = plusDT #placeholder but may be returned
         }
-        if ("-" %in% strand){
+        if ("-" %in% strand) {
             minusIndex = which(strand == "-")
         
             minusStart = start[minusIndex]
             minusEnd = end[minusIndex]
         
-            binSize = (minusEnd-minusStart)/(bins)
+            binSize = (minusEnd - minusStart) / (bins)
             breaks = round(rep(minusStart, each = (bins + 1)) 
                           + (0:(bins)) * rep(binSize, each = (bins + 1)))
         
             endpoints = (bins + 1) * (1:(length(minusStart)))
-            startpoints = 1 + (bins + 1)  * (0:(length(minusStart)-1))
+            startpoints = 1 + (bins + 1)  * (0:(length(minusStart) - 1))
         
             minusDT = data.table(start = breaks[-endpoints], 
                                  end = breaks[-startpoints], 
@@ -362,7 +364,7 @@ binRegion = function(start, end, bins, idDF = NULL, strand = "*") {
         
         #if there are both + and - strands
         #combining and sorting plus and minus data.tables 
-        if (("+" %in% strand) && ("-" %in% strand)){
+        if (("+" %in% strand) && ("-" %in% strand)) {
             dt = rbindlist(list(plusDT, minusDT))
             setorder(x = dt, id, binID)#setorder(dt, id) might also work?
         }
@@ -372,12 +374,12 @@ binRegion = function(start, end, bins, idDF = NULL, strand = "*") {
         
     }else { #some strand information is "*", don't flip bin directions
     
-        binSize = (end-start)/(bins)
+        binSize = (end - start) / (bins)
         breaks = round(rep(start, each = (bins + 1)) 
                       + (0:(bins)) * rep(binSize, each = (bins + 1)))
 
         endpoints = (bins + 1) * (1:(length(start)))
-        startpoints = 1 + (bins + 1)  * (0:(length(start)-1))
+        startpoints = 1 + (bins + 1)  * (0:(length(start) - 1))
         #do all regions in the same order
         dt = data.table(start = breaks[-endpoints], 
                         end = breaks[-startpoints], 
@@ -388,7 +390,7 @@ binRegion = function(start, end, bins, idDF = NULL, strand = "*") {
     
     }
     
-    if (!(is.null(idDF))){
+    if (!(is.null(idDF))) {
         chr = rep(idDF, each = bins)
         dt = dt[, chr := chr]
         setcolorder(dt, finalColNames)#putting chr first, does not copy
@@ -429,31 +431,36 @@ binRegion = function(start, end, bins, idDF = NULL, strand = "*") {
 #' @examples
 #' data("GM06990_1_ExampleSet") #exampleBSDT
 #' data("Gm12878Nrf1_Subset") #exampleRegionSet
-#' exampleRegionSet = grToDt(exampleRegionSet, includeStrand = TRUE)
 #' aggregateBins = BSBinAggregate(BSDT = exampleBSDT, rangeDT = exampleRegionSet, 
 #'                              binCount = 11, splitFactor = NULL)
 #' 
 #' @export
 BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500, 
                           byRegionGroup = TRUE, splitFactor = NULL) {
+    
+    #if given GRanges object, change to DT
+    if ("GRanges" %in% class(rangeDT)) {
+        rangeDT = grToDt(GR = rangeDT, includeStrand = TRUE)
+    }
+    
     if (! "data.table" %in% class(rangeDT)) {
         stop("rangeDT must be a data.table")
     }
     seqnamesColName = "seqnames"  # default column name
-        if ("chr" %in% colnames(rangeDT)) {
-            message("seqnames column name set to: chr")
-            seqnamesColName = "chr"
-        } else {
-            # Got neither.
-            stop("rangeDT must have a seqnames column")
-        }
+    if ("chr" %in% colnames(rangeDT)) {
+        message("seqnames column name set to: chr")
+        seqnamesColName = "chr"
+    } else {
+        # Got neither.
+        stop("rangeDT must have a seqnames column")
+    }
     
-    if(! "strand" %in% colnames(rangeDT)){
+    if (! "strand" %in% colnames(rangeDT)) {
         rangeDT[, strand := "*"]
         warning("Since strand not given, set to '*' ")
     }
 
-    ##if(!silent){
+    ##if (!silent) {
     #message("Binning...")
     ##}
     binnedDT = rangeDT[, binRegion(start, end, 
@@ -469,7 +476,7 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500,
     # If we aren't aggregating by bin, then don't restrict to min reads!
     if (byRegionGroup) {
         binnedBSDT = binnedBSDT[readCount >= minReads, ]
-        if (nrow(binnedBSDT)<binCount){
+        if (nrow(binnedBSDT) < binCount) {
             stop("Less than minReads. Unable to give MIRA score.")
         }
     }
@@ -478,7 +485,7 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500,
     return(binnedBSDT)
 }
 
-#' BSaggregate -- Aggregate a BSDT across regions or region groups, 
+#' BSaggregate: Aggregate a BSDT across regions or region groups, 
 #' for multiple samples at a time.
 #' This function is as BScombineByRegion, but can handle not only multiple
 #' samples in BSDT, but also simultaneously multiple region sets by passing
@@ -502,7 +509,7 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500,
 #' @param regionsGRL.length Vector with number of regions in each bin.
 #' From bin1 to binN. With default NULL value, it will be auto assigned.
 #' @param splitFactor Used to make "by string" to be plugged into a data.table
-#' "by = " statemnt. With default NULL value, by string will be "list(regionID)"
+#' "by=" statemnt. With default NULL value, by string will be "list(regionID)"
 #' @param keepCols Deprecated, NULL value should be used for MIRA aggregation.
 #' @param sumCols Deprecated, NULL value should be used for MIRA aggregation.
 #' @param jCommand You can pass a custom command in the j slot to data.table
@@ -529,18 +536,18 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
 
     # Assert that regionsGRL is a GRL.
     # If regionsGRL is given as a GRanges, we convert to GRL
-    if( "GRanges" %in% class(regionsGRL)) {
+    if ("GRanges" %in% class(regionsGRL)) {
         regionsGRL = GRangesList(regionsGRL);
     } else if (! "GRangesList" %in% class(regionsGRL)) {
         stop("regionsGRL is not a GRanges or GRangesList object");
     }
 
     #make sure methyl column is present
-    if(!"methyl" %in% colnames(BSDT)){
+    if (!"methyl" %in% colnames(BSDT)) {
         stop("BSDT must have a methyl column.")
     }
     
-    if(! is.null(excludeGR)) {
+    if (! is.null(excludeGR)) {
         BSDT = BSFilter(BSDT, minReads = 0, excludeGR)
     }
 
@@ -561,7 +568,7 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
     # regions came from which group.
     regionsGR = unlist(regionsGRL)
     
-    if(is.null(regionsGRL.length)) {
+    if (is.null(regionsGRL.length)) {
         if (length(regionsGRL) > 100) {
             message("BSAggregate: Calculating sizes. You can speed this up by supplying a regionsGRL.length vector...", appendLF = FALSE)
         }
@@ -613,7 +620,7 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
         byString = paste0("list(regionID)");
     } else {
         byString = paste0("list(", paste("regionID", paste0(splitFactor, ""), 
-                                         collapse = ", ", sep = ", "), ")")
+                                         collapse = ",", sep = ","), ")")
     }
 
     # Now actually do the aggregate:
@@ -632,8 +639,8 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
         if (! is.null(splitFactor) ) { 
             byStringGroup = paste0("list(", 
                                    paste("regionGroupID", 
-                                         paste0(splitFactor, collapse = ", "), 
-                                         sep = ", "), 
+                                         paste0(splitFactor, collapse = ","), 
+                                         sep = ","), 
                                    ")")
         } else {
             byStringGroup = "list(regionGroupID)"
@@ -646,9 +653,9 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
         #about the center to account for unknown strand orientation, 
         #also averaging readCount about center
         #ie if any "*" are present then average
-        if ("*" %in% unique(as.character(strand(regionsGR)))){
-            bsCombined[, methyl := (methyl + rev(methyl))/2]
-            bsCombined[, readCount := (readCount + rev(readCount))/2]
+        if ("*" %in% unique(as.character(strand(regionsGR)))) {
+            bsCombined[, methyl := (methyl + rev(methyl)) / 2]
+            bsCombined[, readCount := (readCount + rev(readCount)) / 2]
         }
         
         return(bsCombined[]);
@@ -690,15 +697,15 @@ plotMIRARegions <- function(binnedRegDT,
     binPlot = ggplot(data = binnedRegDT[featID], 
                    mapping = aes(x = regionGroupID, y = methyl))
     
-    if (!("sampleType" %in% names(binnedRegDT))){
+    if (!("sampleType" %in% names(binnedRegDT))) {
         sampleType = "All samples" 
         #if no sampleType column then all lines/points will be black
         warning("sampleType column must exist if it is desired to split up sample types by color")
     }
-    if (plotType == "line"){
+    if (plotType == "line") {
         binPlot = binPlot + geom_line(aes(col = sampleType, group = sampleName)) + 
             facet_wrap(~featureID)
-    }else if (plotType == "jitter"){
+    }else if (plotType == "jitter") {
         binPlot = binPlot + geom_jitter(aes(col = sampleType)) + facet_wrap(~featureID)
     }else {
         stop('The only supported values for plotType are "line" and "jitter"')
@@ -713,9 +720,8 @@ plotMIRARegions <- function(binnedRegDT,
 #' @param featID Region set name/names in a single string or vector of strings.
 #' @return a plot of class "gg" / "ggplot" that shows MIRA scores 
 #' with geom_boxplot and geom_jitter.
-#' @example
-#' ##UPDATE #plotMIRAScores(scoreDT = EwingExample)
 #' @export
+# ##UPDATE example 
 plotMIRAScores <- function(scoreDT, featID = unique(scoreDT[, featureID])){
     setkey(scoreDT, featureID)
     scorePlot = ggplot(data = scoreDT[featID], mapping = aes(x = sampleType, y = score)) + 
@@ -726,7 +732,7 @@ plotMIRAScores <- function(scoreDT, featID = unique(scoreDT[, featureID])){
 
 #' Adding methyl column that has proportion of reads that were methylated for 
 #' each site.
-#' Note: Assigns methyl column by reference with " := "
+#' Note: Assigns methyl column by reference with ":="
 #' 
 #' @param BSDTList A bisulfite datatable or list of datatables with a column for
 #' number of methylated reads (hitCount) and a column for number of total reads 
@@ -740,12 +746,12 @@ plotMIRAScores <- function(scoreDT, featID = unique(scoreDT[, featureID])){
 addMethCol <- function(BSDTList){
 
     #converting to a data.table list if it was a single data.table
-    if ("data.table" %in% class(BSDTList)){
+    if ("data.table" %in% class(BSDTList)) {
         BSDTList = list(BSDTList)
     }
 
     #stopping the function if the input was not data.table originally
-    if (!"data.table" %in% class(BSDTList[[1]])){
+    if (!"data.table" %in% class(BSDTList[[1]])) {
         stop('Input must be a single data.table object 
              or list of data.table objects')
     }
@@ -754,54 +760,11 @@ addMethCol <- function(BSDTList){
     #element of list
     #extra [] on the end is necessary for proper display/printing of the object
     BSDTList = lapply(X = BSDTList, 
-                    FUN = function(x) x[, methyl := round(hitCount/readCount, 3)][])
+                    FUN = function(x) x[, methyl := round(hitCount / readCount, 3)][])
 
     return(BSDTList)
 }
 
-#UPDATE:should normalizeMIRA really be exported? might need to be rehauled first
-#' Function to normalize case/experimental samples to the controls
-#' 
-#' It finds the median of the controls for each bin for each region set
-#' then divides by the median (oldBinVal/medianBinVal) for each bin.
-#' @param binnedDT A datatable containing bins for each region set for each 
-#' sample;bins contain aggregated methylation across regions for that sample; 
-#' it should have a column with sample annotation 
-#' so cases and controls can be split up: sampleType column (case/control)
-#' as well as annotation of the region sets (featureID column). 
-#' @return binnedDT The input DT but with normalized "methyl" values
-#' 
-#'
-normalizeMIRA = function(binnedDT){
-    if ("list" %in% class(binnedDT)){
-        binnedDT = rbindlist(binnedDT)
-    }
-    if (!"data.table" %in% class(binnedDT)){
-        stop("binnedDT must be a data.table (or list of data.tables)")
-    }
-
-    features = unique(binnedDT[, featureID]) #get a set of all features
-
-    setkey(binnedDT, featureID, sampleType)
-
-    #getting regionGroupIDs for the loop
-    regGroupID = unique(binnedDT[, regionGroupID])
-    #normalize for each feature
-    for (i in 1:length(features)){ #get median methylation for each feature
-        medMeth = binnedDT[.(features[i], "control"), median(methyl), 
-                         by = regionGroupID]
-    for (j in regGroupID){
-        #divide each methylation values for each region group by 
-        #the appropriate value
-        #do operation on the rows for this feature and 
-        #only one regionGroupID at a time
-        binnedDT[featureID == features[i] & regionGroupID == j, 
-                 methyl := methyl/medMeth[regionGroupID == j, V1] ]
-    }
-
-    } 
-    return(binnedDT)
-}
 
 #' helper function
 #' given a vector of columns, and the equally-sized vector of functions
@@ -816,7 +779,7 @@ normalizeMIRA = function(binnedDT){
 #' @return A jcommand string. After performing function on column, column 
 #' is reassigned the same name.
 buildJ = function(cols, funcs) {
-    r = paste("list(", paste(paste0(cols, " = ", funcs, "(", cols, ")"), collapse = ", "), ")")
+    r = paste("list(", paste(paste0(cols, "=", funcs, "(", cols, ")"), collapse = ","), ")")
     return(r);
 }
 
@@ -835,8 +798,8 @@ dtToGrInternal = function(DT, chr, start,
             end = start;
         }
     }
-    if (is.na(strand)){
-        if ("strand" %in% colnames(DT)){ #checking if strand info is in DT
+    if (is.na(strand)) {
+        if ("strand" %in% colnames(DT)) { #checking if strand info is in DT
             strand = "strand"
         }
     }
@@ -860,7 +823,7 @@ dtToGrInternal = function(DT, chr, start,
     } else {
         names(gr) = 1:length(gr);
     }
-    if(! is.na(metaCols)) {
+    if (! is.na(metaCols)) {
         for(x in metaCols) {
             elementMetadata(gr)[[`x`]] = DT[[`x`]]
         }
@@ -876,11 +839,11 @@ dtToGrInternal = function(DT, chr, start,
 dtToGr = function(DT, chr = "chr", start = "start", 
                   end = NA, strand = NA, name = NA, splitFactor = NA, metaCols = NA) {
     
-    if(is.na(splitFactor)) {
+    if (is.na(splitFactor)) {
         return(dtToGrInternal(DT, chr, start, end, strand, name, metaCols));
     }
     if ( length(splitFactor) == 1 ) { 
-        if( splitFactor %in% colnames(DT) ) {
+        if ( splitFactor %in% colnames(DT) ) {
             splitFactor = DT[, get(splitFactor)];
         }
     }
@@ -950,7 +913,7 @@ BSreadBiSeq = function(files, contrastList = NULL,
     cores = min(length(files), cores); #not more cores than files!
     setLapplyAlias(cores);
     if (!is.null(contrastList)) {
-        if( any(sapply(contrastList, length) ! = length(files))) {
+        if ( any(sapply(contrastList, length) != length(files))) {
             stop("contrastList must be a list, 
                  with each value having the same number of elements as files.");
         }
@@ -968,11 +931,11 @@ BSreadBiSeq = function(files, contrastList = NULL,
         if (numberOfFiles > 1) {
             message(i, ": ", sampleNames[i], "; ", appendLF = FALSE)
         }
-        if (numberOfFiles > 1 && i == numberOfFiles){
+        if (numberOfFiles > 1 && i == numberOfFiles) {
             message("", appendLF = TRUE)
         }
         DT = freadListParsed[[i]]; #convenience alias.
-        if(!is.null(contrastList)) {
+        if (!is.null(contrastList)) {
             DT[, get("colNames") := as.list(sapply(contrastList, "[[", i))]
         }
         if (!is.null(sampleNames)) {
@@ -987,7 +950,7 @@ BSreadBiSeq = function(files, contrastList = NULL,
     # faster
     #default (returnAsList = FALSE) is to return as 
     #one combined data.table/data.frame
-    if (!returnAsList){ 
+    if (!returnAsList) { 
         filteredList = rbindlist(freadListParsed)
     }else{
         filteredList = freadListParsed
@@ -1013,7 +976,7 @@ parseBiseq = function(DT) {
     #split the '12/12' format of meth calls
     ll = unlist(strsplit(DT$meth, "/", fixed = TRUE))
     idx = seq(1, length(ll), by = 2)
-    DT[, ` := `(hitCount = as.integer(ll[idx]), 
+    DT[, `:=`(hitCount = as.integer(ll[idx]), 
               readCount = as.integer(ll[idx + 1]))]
     DT[, start := as.integer(start + 1)] #re-index
     DT[, c("rate", "end", "meth" ) := NULL] #remove unnecessary columns
@@ -1034,8 +997,8 @@ parseBiseq = function(DT) {
 #' "chr", "start", and "end" (possibly strand)
 grToDt = function(GR, includeStrand = FALSE) {
     DF = as.data.frame(elementMetadata(GR))
-    if( ncol(DF) > 0) {
-        if(includeStrand){
+    if ( ncol(DF) > 0) {
+        if (includeStrand) {
             DT = data.table(chr = as.vector(seqnames(GR)), 
                             start = start(GR), 
                             end = end(GR), 
@@ -1048,7 +1011,7 @@ grToDt = function(GR, includeStrand = FALSE) {
                             DF)    
         }
     } else {
-        if(includeStrand){
+        if (includeStrand) {
             DT = data.table(chr = as.vector(seqnames(GR)), 
                             start = start(GR), 
                             end = end(GR), 
@@ -1079,7 +1042,7 @@ grToDt = function(GR, includeStrand = FALSE) {
 nlist = function(...) {
     fcall = match.call(expand.dots = FALSE)
     l = list(...);
-    if(!is.null(names(list(...)))) { 
+    if (!is.null(names(list(...)))) { 
         names(l)[names(l) == ""] = fcall[[2]][names(l) == ""]
     } else {  
         names(l) = fcall[[2]];
@@ -1099,7 +1062,7 @@ setLapplyAlias = function(cores = 0) {
     if (cores < 1) {
         return(getOption("mc.cores"))
     }
-    if(cores > 1) { #use multicore?
+    if (cores > 1) { #use multicore?
         if (requireNamespace("parallel", quietly = TRUE)) {
             options(mc.cores = cores)
         } else {
@@ -1119,7 +1082,7 @@ setLapplyAlias = function(cores = 0) {
 #' @return Result from lapply or parallel::mclapply
 lapplyAlias = function(..., mc.preschedule = TRUE) {
     if (is.null(getOption("mc.cores"))) { setLapplyAlias(1) }
-    if(getOption("mc.cores") > 1) {
+    if (getOption("mc.cores") > 1) {
         return(parallel::mclapply(..., mc.preschedule = mc.preschedule))
     } else {
         return(lapply(...))
@@ -1176,13 +1139,13 @@ BSFilter = function(BSDT, minReads = 10, excludeGR = NULL) {
 # @return MIRAFormatBSDTList A list of data.tables in MIRA format
 # One data table for each sample column of the bsseq object.
 bsseqToMIRA <-function(bsseqObj){
-    # if (hasBeenSmoothed(bsseqObj)){
+    # if (hasBeenSmoothed(bsseqObj)) {
     #   warning("Raw (not smoothed) methylation and coverage values are being used.")
     # }
     MIRAFormatBSDTList = list() #to store output
     #obtaining coordinates as GRanges obj. and changing to data.table
     coordinates = grToDt(granges(bsseqObj))
-    for (i in 1:ncol(bsseqObj)){ #each column is a different sample
+    for (i in 1:ncol(bsseqObj)) { #each column is a different sample
         hitCount = getBSseq(BSseq = bsseqObj[, i], type = "M")
         readCount = getBSseq(BSseq = bsseqObj[, i], type = "Cov")
         #index for taking out rows with 0 coverage

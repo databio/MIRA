@@ -2,7 +2,7 @@
 % Please edit documentation in R/MIRA.R
 \name{BSAggregate}
 \alias{BSAggregate}
-\title{BSaggregate -- Aggregate a BSDT across regions or region groups,
+\title{BSaggregate: Aggregate a BSDT across regions or region groups, 
 for multiple samples at a time.
 This function is as BScombineByRegion, but can handle not only multiple
 samples in BSDT, but also simultaneously multiple region sets by passing
@@ -54,14 +54,14 @@ uncontiguous, and resulting in 1 row per *region group*.}
 \item{keep.na}{Not used in general MIRA context.}
 }
 \value{
-In context of MIRA, with byRegionGroup=TRUE and jCommand=
-list( methyl=mean(methyl),readCount=sum(readCount) )", this function
+In context of MIRA, with byRegionGroup = TRUE and jCommand = 
+list( methyl = mean(methyl), readCount = sum(readCount) )", this function
 will return a data.table with binCount rows (parameter for BSBinAggregate)
 containing aggregated methylation from BSDT over binned regions from a region
 set.
 }
 \description{
-BSaggregate -- Aggregate a BSDT across regions or region groups,
+BSaggregate: Aggregate a BSDT across regions or region groups, 
 for multiple samples at a time.
 This function is as BScombineByRegion, but can handle not only multiple
 samples in BSDT, but also simultaneously multiple region sets by passing

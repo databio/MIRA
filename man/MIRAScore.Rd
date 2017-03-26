@@ -39,8 +39,8 @@ Function to take DNA methylation and region data and return a MIRA score;
 a wrapper for returnMIRABins and scoreDip
 }
 \examples{
-data("GM06990_1_ExampleSet",package="MIRA") #exampleBSDT
-data("Gm12878Nrf1_Subset",package="MIRA") #exampleRegionSet
-MIRAScore(BSDT=exampleBSDT,GRList=exampleRegionSet)
+data("GM06990_1_ExampleSet", package = "MIRA") #exampleBSDT
+data("Gm12878Nrf1_Subset", package = "MIRA") #exampleRegionSet
+MIRAScore(BSDT = exampleBSDT, GRList = exampleRegionSet)
 
 }

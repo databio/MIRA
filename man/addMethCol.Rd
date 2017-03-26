@@ -22,7 +22,7 @@ each site.
 Note: Assigns methyl column by reference with ":="
 }
 \examples{
-data("GM06990_1_ExampleSet",package="MIRA") #exampleBSDT
-exampleBSDT[,methyl := NULL] #removing methyl column
+data("GM06990_1_ExampleSet", package = "MIRA") #exampleBSDT
+exampleBSDT[, methyl := NULL] #removing methyl column
 addMethCol(list(exampleBSDT))
 }

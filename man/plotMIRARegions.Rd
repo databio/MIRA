@@ -26,7 +26,7 @@ A plot of class "gg"/ "ggplot" that shows MIRA signatures
 A function to plot the binned methylation of samples over a region.
 }
 \examples{
-data("exampleBins",package="MIRA")
-MIRAplot=plotMIRARegions(binnedRegDT=exampleBins)
+data("exampleBins", package = "MIRA")
+MIRAplot = plotMIRARegions(binnedRegDT = exampleBins)
 
 }

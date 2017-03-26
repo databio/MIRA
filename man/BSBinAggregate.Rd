@@ -10,9 +10,9 @@ BSBinAggregate(BSDT, rangeDT, binCount, minReads = 500,
 }
 \arguments{
 \item{BSDT}{A single data table that has DNA methylation data 
-on individual sites including a "chr" column with chromosome,
+on individual sites including a "chr" column with chromosome, 
 a "start" column with the coordinate number for the cytosine, 
-a "methyl" column with proportion of methylation (0 to 1),
+a "methyl" column with proportion of methylation (0 to 1), 
 a "hitCount" column with number of methylated reads for each site, and 
 a "readCount" column with total number of reads for each site.}
 
@@ -25,13 +25,13 @@ with columns named "start", "end".}
 
 \item{byRegionGroup}{Default TRUE will aggregate methylation over 
 corresponding bins for each region (all bin1's aggregated, all bin2's, etc).
-byRegionGroup=FALSE is deprecated.}
+byRegionGroup = FALSE is deprecated.}
 
 \item{splitFactor}{With default NULL, aggregation will be done 
 separately/individually for each sample.}
 }
 \value{
-With splitFactor=NULL, it will return a data.table 
+With splitFactor = NULL, it will return a data.table 
 with binCount rows, 
 containing aggregated methylation data over regions in region set "rangeDT".
 Each region was split into bins; methylation was put in these bins; 
@@ -46,8 +46,7 @@ Produced originally for binning Ewing RRBS data across various region sets
 \examples{
 data("GM06990_1_ExampleSet") #exampleBSDT
 data("Gm12878Nrf1_Subset") #exampleRegionSet
-exampleRegionSet=grToDt(exampleRegionSet,includeStrand=TRUE)
-aggregateBins=BSBinAggregate(BSDT=exampleBSDT,rangeDT=exampleRegionSet,
-                             binCount=11,splitFactor=NULL)
+aggregateBins = BSBinAggregate(BSDT = exampleBSDT, rangeDT = exampleRegionSet, 
+                             binCount = 11, splitFactor = NULL)
 
 }

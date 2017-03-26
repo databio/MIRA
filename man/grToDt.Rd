@@ -13,7 +13,7 @@ grToDt(GR, includeStrand = FALSE)
 }
 \value{
 A data.table object with columns:
-"chr","start", and "end" (possibly strand)
+"chr", "start", and "end" (possibly strand)
 }
 \description{
 convert a GenomicRanges into a data.table

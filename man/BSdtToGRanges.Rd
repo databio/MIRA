@@ -7,13 +7,13 @@
 BSdtToGRanges(dtList)
 }
 \arguments{
-\item{dtList}{A list of data.tables,
-Each should have "chr","start","hitCount", and "readCount" columns.
+\item{dtList}{A list of data.tables, 
+Each should have "chr", "start", "hitCount", and "readCount" columns.
 Error results if missing "chr", "start" but if hitCount and readCount are
 missing, it will still work, just not have that info in the output.}
 }
 \value{
-a list of GRanges objects, strand has been set to "*",
+a list of GRanges objects, strand has been set to "*", 
 "start" and "end" have both been set to "start" of the DT.
 hitCount and readCount info is preserved in GRanges object.
 }
