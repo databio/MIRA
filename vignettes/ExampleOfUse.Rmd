@@ -49,10 +49,11 @@ regionSets = lapply(X = regionSets, FUN =
                         function(x) GRanges(seqnames = x$chr, 
                                               ranges = IRanges(x$start, x$end)))
 regionSets[[1]] = resize(regionSets[[1]], 4000, fix = "center")
-regionSets[[2]] = resize(regionSets[[2]], 2000, fix = "center")
+regionSets[[2]] = resize(regionSets[[2]], 1750, fix = "center")
 names(regionSets) <- c("Ewing_Specific", "Muscle_Specific")
 ```
 
+An important decision is how big to make each region
 When it comes to MIRA, lapply is your friend. This allows for distributed computing with mclapply if desired. Next let's divide each region into bins and find methylation that is contained in each bin in each region. Then matching bins will be aggregated over all regions (all bin1's together, all bin2's together, etc.). The function returnMIRABins accomplishes all of this.
 
 
@@ -77,6 +78,7 @@ Next we calculate MIRA scores based on the MIRA signatures for all samples.
 ```{r, eval = FALSE}
 #change to eval = TRUE when vignette is working
 bigBinDT[, methyl := methyl - min(methyl) + .05, by = .(featureID, sampleName)]
+plotMIRARegions(binnedRegDT = bigBinDT)
 sampleScores = bigBinDT[, .(score = scoreDip(methyl, 
                                              binCount = 21, 
                                              shoulderShift = 5)), 
