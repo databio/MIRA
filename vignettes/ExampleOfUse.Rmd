@@ -11,25 +11,25 @@ vignette: >
 ---
 
 ## Biological Question
-Ewing sarcoma is a pediatric cancer characterized by the fusion of the EWS and FLI1 genes which results in a fusion transcription factor. We want to see if regulation of //certain regulatory features/element UPDATE// is different in Ewing sarcoma? To address that question, we can compare MIRA scores for Ewing and non-Ewing samples using the set of //instances of this feature/element UPDATE//.
-input: a few RRBS samples from Ewing sarcoma and myeloid cell type (DNA methylation)
-input: regionset that I get from Nathan (EWS specific), myeloid specific TF
+Ewing sarcoma is a pediatric cancer characterized by the fusion of the EWS and FLI1 genes which results in a fusion transcription factor. We want to see if Ewing samples can be distinguished from muscle-related samples based on their respective MIRA scores. To accomplish that, we can compare MIRA scores for Ewing and non-Ewing samples using a set of Ewing-specific DNase hypersensitivity sites (DHSs). A set of muscle-specific DHSs will also be used for comparison.
+input: single-nucleotide resolution DNA methylation data (from reduced representation bisulfite sequencing) for samples from Ewing sarcoma and a collection of muscle related samples including human skeletal muscle myoblasts, myotubes differentiated from a skeletal muscle myoblasts cell line, primary myoblasts from patients with Facioscapulohumeral Muscular Dystrophy (FSHD), and myotubes from FSHD myoblasts.
+input: A set of Ewing-specific DNase hypersensitivity sites, muscle-specific DNase hypersensitivity sites.
 
 ## Package workflow
 
 The workflow is the same as the "Methylation-based Inference of Regulatory Activity" vignette but this time we are adding annotation and using multiple samples and region sets:  
-1. Start with appropriately formatted single-nucleotide resolution methylation data, region sets- each with genomic regions corresponding to some biological annotation, and an annotation file that has sample name (sampleName column) and sample type (sampleType column).  
+1. Start with appropriately formatted single-nucleotide resolution methylation data, region sets -- each with genomic regions corresponding to some biological annotation, and an annotation file that has sample name (sampleName column) and sample type (sampleType column).  
 2. Split the regions into bins and aggregate methylation data in those bins to get a MIRA signature for each region set, sample combination.  
 3. Calculate MIRA score for each region set, sample combination based on shape of MIRA signature.
 
 
-```{r, eval = FALSE}
-#change to eval = TRUE when done
+```{r, eval = TRUE}
 library(MIRA)
 library(data.table) #fread, setkey, 
 library(GenomicRanges) #GRanges, resize
-load("exampleAnnoDF2.RData")#object name: "exampleAnnoDF2", data.table
+#data(exampleAnnoDF2)#object name: "exampleAnnoDF2", data.table
 ```
+
 ```{r, eval = FALSE}
 caseFiles = c("RRBS_cpgMethylation_EWS_T1.bed", 
               "RRBS_cpgMethylation_EWS_T2.bed", 
@@ -53,7 +53,7 @@ regionSets[[2]] = resize(regionSets[[2]], 2000, fix = "center")
 names(regionSets) <- c("Ewing_Specific", "Muscle_Specific")
 ```
 
-When it comes to MIRA, lapply is your friend. This allows for distributed computing with mclapply if desired. Next let's divide each region into bins, find methylation that is contained in each bin in each region, and aggregate matching bins over all the regions.
+When it comes to MIRA, lapply is your friend. This allows for distributed computing with mclapply if desired. Next let's divide each region into bins and find methylation that is contained in each bin in each region. Then matching bins will be aggregated over all regions (all bin1's together, all bin2's together, etc.). The function returnMIRABins accomplishes all of this.
 
 
 ```{r, eval = FALSE}
@@ -90,6 +90,5 @@ plotMIRAScores(sampleScores)
 ```
 
 ## Interpreting the results
-We found that the Ewing sarcoma samples had higher MIRA scores for the //Ewing region set// and that the MSC samples had higher MIRA scores for the //MSC region set//. 
-
+We found that the Ewing sarcoma samples had higher MIRA scores for the Ewing-specific DHSs, with the exception of a couple outliers from the muscle group. The results from the muscle-specific DHSs require more interpretation. The results depended a lot on the size of the region surrounding the DHSs and what was counted as the outer edge of the region when calculating the MIRA score (shoulderShift variable).
 
