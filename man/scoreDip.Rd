@@ -35,5 +35,6 @@ That's Methylation-based Inference of Regulatory Activity
 \examples{
 data("exampleBins")
 binCount = 11 #bin number for exampleBins 
-exampleBins[, .(score = scoreDip(methyl, binCount)), by = .(featureID, sampleName)]
+exampleBins[, .(score = scoreDip(methyl, binCount)), 
+              by = .(featureID, sampleName)]
 }

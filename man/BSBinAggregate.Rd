@@ -46,7 +46,8 @@ Produced originally for binning Ewing RRBS data across various region sets
 \examples{
 data("GM06990_1_ExampleSet") #exampleBSDT
 data("Gm12878Nrf1_Subset") #exampleRegionSet
-aggregateBins = BSBinAggregate(BSDT = exampleBSDT, rangeDT = exampleRegionSet, 
+aggregateBins = BSBinAggregate(BSDT = exampleBSDT, 
+                             rangeDT = exampleRegionSet, 
                              binCount = 11, splitFactor = NULL)
 
 }

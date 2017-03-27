@@ -923,7 +923,7 @@ BSdtToGRanges = function(dtList) {
 #'
 #' @export
 BSreadBiSeq = function(files, contrastList = NULL, 
-                       sampleNames = extractSampleName(files), 
+                       sampleNames = tools::file_path_sans_ext(basename(files)), 
                        cores = 4, returnAsList = FALSE) {
     
     cores = min(length(files), cores); #not more cores than files!
@@ -1103,22 +1103,6 @@ lapplyAlias = function(..., mc.preschedule = TRUE) {
     } else {
         return(lapply(...))
     }
-}
-
-#' Extract sample names from file names as the first part of the file name 
-#' (before any suffix).
-#' @param fileNames A string/vector containing names of files.
-#' fileNames can contain the full path. The actual file name should be the 
-#' sample name followed by a character (suffixSep) that is not in 
-#' the sample name then whatever else part of the file name 
-#' (like file extension).
-#' @param suffixSep The character in between the sample name 
-#' and the rest of the file name.
-#' @param pathSep The character in between directories in the file path.
-#' @return The sample name portion of a file name as a string/vector of strings.
-extractSampleName = function(fileNames, suffixSep = "\\.", pathSep = "/") {
-    sapply(strsplit(fileNames, pathSep), 
-           function(x) strsplit(rev(x)[1], suffixSep)[[1]][1])
 }
 
 #' Given a BSDT (bisulfite data.table), remove any entries that overlap

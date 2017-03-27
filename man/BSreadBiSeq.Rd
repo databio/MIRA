@@ -5,7 +5,8 @@
 \title{Read in files from biseq meth caller}
 \usage{
 BSreadBiSeq(files, contrastList = NULL,
-  sampleNames = extractSampleName(files), cores = 4, returnAsList = FALSE)
+  sampleNames = tools::file_path_sans_ext(basename(files)), cores = 4,
+  returnAsList = FALSE)
 }
 \arguments{
 \item{files}{a list of filenames (use parseInputArg if necessary)}
@@ -25,8 +26,8 @@ or as one big data.table.}
 }
 \value{
 Data from each input file joined together into one big data.table.
-If returnAsList = TRUE, then input from each file will be in its own data.table
-in a list.
+If returnAsList = TRUE, then input from each file will be 
+in its own data.table in a list.
 }
 \description{
 Read in files from biseq meth caller
