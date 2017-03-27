@@ -7,20 +7,7 @@ The MIRA package aggregates DNA methylation across the genome for instances of a
 
 ### Installing MIRA
 
-MIRA may be installed from the Bioconductor website:
-
-
-```{r}
-
-source("https://bioconductor.org/biocLite.R")
-
-biocLite("MIRA")
-
-```
-
-
-
-from Github:
+MIRA may be installed from Github:
 
 ```{r}
 
