@@ -5,7 +5,8 @@ library(data.table)
 
 context("Testthat context...")
 # 
-# #test that BSBinAggregate can deal with 0 methylation scores and low methylation in general 
+# #test that BSBinAggregate can deal with 0 methylation scores and 
+# #low methylation in general 
 # # and that it is not possible to get a negative proportion of methylation
 # #test that nonunique regionSet gives result for the unique version of that region set
 # #check what happens if annotation is messed up
@@ -148,7 +149,8 @@ test_that("BSAggregate", {
                     jCommand = buildJ(c("methyl", "readCount"), c("mean", "sum")), 
                     byRegionGroup = TRUE, splitFactor = NULL)
     #hard coded so may need to be updated later
-    expect_equal(round(binnedBSDT[, methyl], 2), c(.56, rep(.54, numBins - 2), .56))
+    expect_equal(round(binnedBSDT[, methyl], 2), 
+                 c(.56, rep(.54, numBins - 2), .56))
     
     #test more than two CpG sites in one bin
     #putting 24th CpG very close to 25th CpG
@@ -164,7 +166,11 @@ test_that("BSAggregate", {
     #test that error is given if BSDT input does not have a "methyl"...
     #...column with proportion of reads methylated
     testBSDT[, methyl := NULL]
-    expect_error(BSAggregate(BSDT = testBSDT, regionsGRL = GRangesList(binnedGR), jCommand = buildJ(c("methyl", "readCount"), c("mean", "sum")), byRegionGroup = TRUE, splitFactor = NULL))
+    expect_error(BSAggregate(BSDT = testBSDT, 
+                             regionsGRL = GRangesList(binnedGR), 
+                             jCommand = buildJ(c("methyl", "readCount"), 
+                                               c("mean", "sum")), 
+                             byRegionGroup = TRUE, splitFactor = NULL))
 
 })
 

@@ -31,16 +31,23 @@ library(GenomicRanges) #GRanges, resize
 load("exampleAnnoDF2.RData")#object name: "exampleAnnoDF2", data.table
 ```
 ```{r, eval = FALSE}
-caseFiles = c("RRBS_cpgMethylation_EWS_T1.bed", "RRBS_cpgMethylation_EWS_T2.bed", "RRBS_cpgMethylation_EWS_T3.bed")
-controlFiles = c("RRBS_cpgMethylation_Hsmmt_1.bed", "RRBS_cpgMethylation_Hsmmt_2.bed", "RRBS_cpgMethylation_Hsmmt_3.bed")
+caseFiles = c("RRBS_cpgMethylation_EWS_T1.bed", 
+              "RRBS_cpgMethylation_EWS_T2.bed", 
+              "RRBS_cpgMethylation_EWS_T3.bed")
+controlFiles = c("RRBS_cpgMethylation_Hsmmt_1.bed", 
+                 "RRBS_cpgMethylation_Hsmmt_2.bed", 
+                 "RRBS_cpgMethylation_Hsmmt_3.bed")
 RRBSFiles = c(caseFiles, controlFiles)
 regionSetFiles = c("sknmc_specific.bed", "muscle-specifichg38.bed")
 BSDTList = lapply(X = RRBSFiles, FUN = BSreadBiSeq)
 regionSets = lapply(X = regionSetFiles, FUN = fread)
-regionSets = lapply(X = regionSets, FUN = function(x) setNames(x, c("chr", "start", "end")))
+regionSets = lapply(X = regionSets, 
+                    FUN = function(x) setNames(x, c("chr", "start", "end")))
 #converting list items from data.table to GRanges objects
 #strand is not relevant for our region sets
-regionSets = lapply(X = regionSets, FUN = function(x) GRanges(seqnames = x$chr, ranges = IRanges(x$start, x$end)))
+regionSets = lapply(X = regionSets, FUN = 
+                        function(x) GRanges(seqnames = x$chr, 
+                                              ranges = IRanges(x$start, x$end)))
 regionSets[[1]] = resize(regionSets[[1]], 4000, fix = "center")
 regionSets[[2]] = resize(regionSets[[2]], 2000, fix = "center")
 names(regionSets) <- c("Ewing_Specific", "Muscle_Specific")
@@ -50,7 +57,8 @@ When it comes to MIRA, lapply is your friend. This allows for distributed comput
 
 
 ```{r, eval = FALSE}
-bigBin = lapply(X = BSDTList, FUN = returnMIRABins, GRList = regionSets, binNum = 21, minReads = 0, sampleNameInBSDT = TRUE)
+bigBin = lapply(X = BSDTList, FUN = returnMIRABins, GRList = regionSets, 
+                binNum = 21, minReads = 0, sampleNameInBSDT = TRUE)
 bigBinDT = rbindlist(bigBin)
 bigBinDT[, sampleName := gsub("RRBS_cpgMethylation_", "", sampleName)]
 ```
@@ -69,12 +77,15 @@ Next we calculate MIRA scores based on the MIRA signatures for all samples.
 ```{r, eval = FALSE}
 #change to eval = TRUE when vignette is working
 bigBinDT[, methyl := methyl - min(methyl) + .05, by = .(featureID, sampleName)]
-sampleScores = bigBinDT[, .(score = scoreDip(methyl, binCount = 21, shoulderShift = 5)), 
-                      by = .(featureID, sampleName)]
+sampleScores = bigBinDT[, .(score = scoreDip(methyl, 
+                                             binCount = 21, 
+                                             shoulderShift = 5)), 
+                        by = .(featureID, sampleName)]
 head(sampleScores)
 setkey(exampleAnnoDF2, sampleName)
 setkey(sampleScores, sampleName)
-sampleScores = merge(sampleScores, exampleAnnoDF2, all.x = TRUE) #adding annotation
+#adding annotation
+sampleScores = merge(sampleScores, exampleAnnoDF2, all.x = TRUE)
 plotMIRAScores(sampleScores)
 ```
 

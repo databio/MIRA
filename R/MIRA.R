@@ -28,8 +28,9 @@ NULL
 # in order to pass some R CMD check NOTES.
 if (getRversion() >= "2.15.1") {
     utils::globalVariables(c(
-    ".", "binID", "chr", "featureID", "hitCount", "id", "meth", "methyl", "readCount", 
-    "regionGroupID", "regionID", "sampleName", "sampleType", "ubinID", "V1"))
+    ".", "binID", "chr", "featureID", "hitCount", "id", "meth", 
+    "methyl", "readCount", "regionGroupID", "regionID", 
+    "sampleName", "sampleType", "ubinID", "V1"))
 }
 
 
@@ -87,7 +88,8 @@ returnMIRABins = function(BSDT, GRList, binNum = 11, minReads = 500,
     if (is.null(names(GRList))) {
         warning("GRList should be a named list/GRangesList. 
                 Sequential names given according to order in object.")
-        names(GRList)<-paste0(rep("RegionSet", length(GRList)), 1:length(GRList))
+        names(GRList) <- paste0(rep("RegionSet", length(GRList)), 
+                              1:length(GRList))
     }
 
     #checking that all objects in GRList are the same type 
@@ -123,7 +125,8 @@ returnMIRABins = function(BSDT, GRList, binNum = 11, minReads = 500,
 
 
     methylByBin = lapply(X = GRDTList, 
-                       FUN = function(x) BSBinAggregate(BSDT = BSDT, rangeDT = x, 
+                       FUN = function(x) BSBinAggregate(BSDT = BSDT, 
+                                                        rangeDT = x, 
                                                         binCount = binNum, 
                                                         splitFactor = NULL, 
                                                         minReads = minReads))
@@ -194,7 +197,8 @@ MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
                           minReads = minReads)
   
     #using binned methylation data to calculate MIRA score
-    scoreDT = bigBin[, .(score = scoreDip(methyl, binNum, method = scoringMethod)), 
+    scoreDT = bigBin[, .(score = scoreDip(methyl, binNum, 
+                                          method = scoringMethod)), 
                    by = .(featureID, sampleName)]
 
     return(scoreDT)
@@ -222,9 +226,11 @@ MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
 #' @examples
 #' data("exampleBins")
 #' binCount = 11 #bin number for exampleBins 
-#' exampleBins[, .(score = scoreDip(methyl, binCount)), by = .(featureID, sampleName)]
+#' exampleBins[, .(score = scoreDip(methyl, binCount)), 
+#'               by = .(featureID, sampleName)]
 scoreDip = function(values, binCount, 
-                    shoulderShift = floor((binCount - 1) / 2), method = "logRatio"){
+                    shoulderShift = floor((binCount - 1) / 2), 
+                    method = "logRatio"){
     if (!method %in% "logRatio") { #add new methods eventually
         stop("Invalid scoring method. Check spelling/capitalization.")
     }
@@ -238,7 +244,8 @@ scoreDip = function(values, binCount,
             #includes 4 bins but outer two bins are weighted by half
             #approximates having 3 middle bins
             midpoint = (.5 * values[centerSpot - 1.5] + values[centerSpot - .5]
-                      + values[centerSpot + .5] + 0.5 * values[centerSpot + 1.5]) / 3
+                      + values[centerSpot + .5] 
+                      + 0.5 * values[centerSpot + 1.5]) / 3
         }else{#if binCount is odd, centerSpot is X.0
             #three middle bins
             midpoint = (values[centerSpot] + values[centerSpot + 1] 
@@ -369,7 +376,8 @@ binRegion = function(start, end, bins, idDF = NULL, strand = "*") {
             setorder(x = dt, id, binID)#setorder(dt, id) might also work?
         }
         
-        finalColNames = c(finalColNames, "strand")#included only if + /- are present
+        #included only if + /- are present
+        finalColNames = c(finalColNames, "strand")
         dt[, ubinID := 1:nrow(dt)] 
         
     }else { #some strand information is "*", don't flip bin directions
@@ -431,7 +439,8 @@ binRegion = function(start, end, bins, idDF = NULL, strand = "*") {
 #' @examples
 #' data("GM06990_1_ExampleSet") #exampleBSDT
 #' data("Gm12878Nrf1_Subset") #exampleRegionSet
-#' aggregateBins = BSBinAggregate(BSDT = exampleBSDT, rangeDT = exampleRegionSet, 
+#' aggregateBins = BSBinAggregate(BSDT = exampleBSDT, 
+#'                              rangeDT = exampleRegionSet, 
 #'                              binCount = 11, splitFactor = NULL)
 #' 
 #' @export
@@ -625,7 +634,8 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
 
     # Now actually do the aggregate:
     #message("Combining...");
-    bsCombined = BSDT[, eval(parse(text = jCommand)), by = eval(parse(text = byString))]
+    bsCombined = BSDT[, eval(parse(text = jCommand)), 
+                      by = eval(parse(text = byString))]
     setkey(bsCombined, regionID)
     # Now aggregate across groups.
     # I do this in 2 steps to avoid assigning regions to groups, 
@@ -703,10 +713,12 @@ plotMIRARegions <- function(binnedRegDT,
         warning("sampleType column must exist if it is desired to split up sample types by color")
     }
     if (plotType == "line") {
-        binPlot = binPlot + geom_line(aes(col = sampleType, group = sampleName)) + 
+        binPlot = binPlot + 
+            geom_line(aes(col = sampleType, group = sampleName)) + 
             facet_wrap(~featureID)
     }else if (plotType == "jitter") {
-        binPlot = binPlot + geom_jitter(aes(col = sampleType)) + facet_wrap(~featureID)
+        binPlot = binPlot + geom_jitter(aes(col = sampleType)) + 
+            facet_wrap(~featureID)
     }else {
         stop('The only supported values for plotType are "line" and "jitter"')
     }
@@ -724,8 +736,10 @@ plotMIRARegions <- function(binnedRegDT,
 # ##UPDATE example 
 plotMIRAScores <- function(scoreDT, featID = unique(scoreDT[, featureID])){
     setkey(scoreDT, featureID)
-    scorePlot = ggplot(data = scoreDT[featID], mapping = aes(x = sampleType, y = score)) + 
-              geom_boxplot() + geom_jitter() + facet_wrap(~featureID)  
+    scorePlot = ggplot(data = scoreDT[featID], 
+                       mapping = aes(x = sampleType, y = score)) + 
+                                 geom_boxplot() + geom_jitter() + 
+                                 facet_wrap(~featureID)  
     return(scorePlot)
 }
 
@@ -760,7 +774,8 @@ addMethCol <- function(BSDTList){
     #element of list
     #extra [] on the end is necessary for proper display/printing of the object
     BSDTList = lapply(X = BSDTList, 
-                    FUN = function(x) x[, methyl := round(hitCount / readCount, 3)][])
+                    FUN = function(x) x[, methyl := 
+                                            round(hitCount / readCount, 3)][])
 
     return(BSDTList)
 }
@@ -837,7 +852,8 @@ dtToGrInternal = function(DT, chr, start,
 # 
 # @return gr A genomic ranges object derived from DT
 dtToGr = function(DT, chr = "chr", start = "start", 
-                  end = NA, strand = NA, name = NA, splitFactor = NA, metaCols = NA) {
+                  end = NA, strand = NA, name = NA, 
+                  splitFactor = NA, metaCols = NA) {
     
     if (is.na(splitFactor)) {
         return(dtToGrInternal(DT, chr, start, end, strand, name, metaCols));
@@ -878,10 +894,10 @@ BSdtToGRanges = function(dtList) {
                              strand = rep("*", nrow(dtList[[i]])), 
                              hitCount = dtList[[i]]$hitCount, 
                              readCount = dtList[[i]]$readCount)
-        #I used to use end = start + 1, but this targets CG instead of just a C, and
-        #it's causing edge-effects problems when I assign Cs to tiled windows 
-        #using (within). Aug 2014 I'm changing to start/end at the same 
-        #coordinate.
+        #I used to use end = start + 1, but this targets CG instead of just 
+        #a C, and it's causing edge-effects problems when I assign Cs to 
+        #tiled windows using (within). Aug 2014 I'm changing to start/end at 
+        #the same coordinate.
     }
     return(gList);
 }
@@ -902,8 +918,8 @@ BSdtToGRanges = function(dtList) {
 #' @param returnAsList Whether to return the output as a list 
 #' or as one big data.table.
 #' @return Data from each input file joined together into one big data.table.
-#' If returnAsList = TRUE, then input from each file will be in its own data.table
-#' in a list.
+#' If returnAsList = TRUE, then input from each file will be 
+#' in its own data.table in a list.
 #'
 #' @export
 BSreadBiSeq = function(files, contrastList = NULL, 
@@ -1138,7 +1154,7 @@ BSFilter = function(BSDT, minReads = 10, excludeGR = NULL) {
 # @param bsseqObj An object of class bsseq
 # @return MIRAFormatBSDTList A list of data.tables in MIRA format
 # One data table for each sample column of the bsseq object.
-bsseqToMIRA <-function(bsseqObj){
+bsseqToMIRA <- function(bsseqObj){
     # if (hasBeenSmoothed(bsseqObj)) {
     #   warning("Raw (not smoothed) methylation and coverage values are being used.")
     # }

@@ -19,8 +19,11 @@ The Methylation-based Inference of Regulatory Activity package, MIRA for short, 
 library(MIRA)
 data(exampleBins)
 plotMIRARegions(exampleBins)
-exScores = exampleBins[, .(score = scoreDip(methyl, binCount = 11)), by = .(featureID, sampleName)]
-exScores[, sampleType := c("Condition1", "Condition2")][] #normally would do join with annoDF
+exScores = exampleBins[, .(score = scoreDip(methyl, binCount = 11)), 
+                       by = .(featureID, sampleName)]
+#normally would do join with annoDF 
+#but for this example we are manually adding sampleType column
+exScores[, sampleType := c("Condition1", "Condition2")][] 
 ```
 
 ## Input Data
@@ -52,9 +55,12 @@ First let's load the example data. exampleBSDT is a data.table containing genomi
 
 ```{r}
 library(MIRA)
-data("annoDF", package = "MIRA") #name "annoDF", class data.table/data.frame
-data("Gm12878Nrf1_Subset", package = "MIRA")#name "exampleRegionSet", class GRanges
-data("GM06990_1_ExampleSet", package = "MIRA")#name "exampleBSDT", class data.table/dataframe
+#name "annoDF", class data.table/data.frame
+data("annoDF", package = "MIRA")
+#name "exampleRegionSet", class GRanges
+data("Gm12878Nrf1_Subset", package = "MIRA")
+#name "exampleBSDT", class data.table/dataframe
+data("GM06990_1_ExampleSet", package = "MIRA")
 BSDTList = list(exampleBSDT)
 ```
 
@@ -62,7 +68,8 @@ BSDTList = list(exampleBSDT)
 Next let's divide each region into bins, find methylation that is contained in each bin in each region, and aggregate matching bins over all the regions. The binNum argument determines how many approximately equally sized bins each region is split into. Methylation in the first bin in each region will be aggregated together into one summary first bin, methylation in the second bin in each region will be aggregated together into one summary second bin etc. This will produce a MIRA signature for each set of regions. The MIRA signature will be symmetrical if no strand information is given for the regions (produced by averaging the signature with the reverse of the signature), because the orientation of the regions is arbitrary with respect to biological features (like a promoter for instance) that could be oriented directionally (e.g. 5' to 3'). If strand information is given, regions on the minus strand will be flipped before being aggregated with plus strand regions so the MIRA signature will be in 5' to 3' orientation. The minReads argument in returnMIRABins is used to screen out region sets that have any bins with less than a minimum number of reads. Here the default of 500 is used.
 
 ```{r Aggregate_methylation, message = FALSE}
-bigBin = lapply(X = BSDTList, FUN = returnMIRABins, GRList = exampleRegionSet, binNum = 11, sampleNameInBSDT = TRUE)
+bigBin = lapply(X = BSDTList, FUN = returnMIRABins, GRList = exampleRegionSet, 
+                binNum = 11, sampleNameInBSDT = TRUE)
 bigBinDT = bigBin[[1]]
 plotMIRARegions(binnedRegDT = bigBinDT)
 ```
@@ -71,7 +78,8 @@ plotMIRARegions(binnedRegDT = bigBinDT)
 To calculate MIRA scores based on the MIRA signatures, we will apply the scoring function, scoreDip, to the data.table containing the methylation aggregated in bins using data.table syntax. scoreDip calculates a score for each group of bins corresponding to a sample and region set. With MIRA's default scoring method--"logratio", scoreDip will first get the average of the methylation of the two outer bins as well as the average of the methylation of the three middle bins. The MIRA score is the log ratio of the outer average divided by the middle average which gives a measure of the deepness of dip in the middle of the MIRA signature. Higher MIRA scores are associated with deeper dips. A flat MIRA signature would have a score of 0.
 
 ```{r Scoring}
-sampleScores = bigBinDT[, .(score = scoreDip(methyl, binCount = 11)), by = .(featureID, sampleName)]
+sampleScores = bigBinDT[, .(score = scoreDip(methyl, binCount = 11)), 
+                        by = .(featureID, sampleName)]
 head(sampleScores)
 ```
 
@@ -79,4 +87,4 @@ head(sampleScores)
 For real uses of MIRA, samples and region sets should be annotated. The data.table for each sample should include a sampleName column while region sets should be given to MIRA in a named list/GRangesList. An annotation file that matches sample name with sample type (sampleType column) can be used to add sample type information to the data.table after aggregating methylation. A sampleType column is not required for the main functions but is used for the plotting functions. See "Applying MIRA to a Biological Question" vignette for a workflow including annotation.
 
 ## Interpreting the Results
-Regulatory information can be inferred from the MIRA scores and signatures but interpretation depends on the type of region set used. For example, for transcription factor region sets (non-methylation binding TFs),  lower dips in the signatures and higher scores in one condition compared to another suggests that there is more transcription factor binding in the condition with higher scores. The general trend of deeper dips being associated with increased activity may apply to other types of region sets as well.
+Regulatory information can be inferred from the MIRA scores and signatures but interpretation depends on the type of region set used. For example, for transcription factor region sets (non-methylation binding TFs), lower dips in the signatures and higher scores in one condition compared to another suggests that there is more transcription factor binding in the condition with higher scores. The general trend of deeper dips being associated with increased activity may apply to other types of region sets as well.
