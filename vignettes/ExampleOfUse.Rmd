@@ -9,6 +9,7 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+(Note: Only the second half of this vignette is evaluated because of the large files involved.)
 
 ## Biological Question
 Ewing sarcoma is a pediatric cancer characterized by the fusion of the EWS and FLI1 genes which results in a fusion transcription factor. We want to see if Ewing samples can be distinguished from muscle-related samples based on their respective MIRA scores. To accomplish that, we can compare MIRA scores for Ewing and non-Ewing samples using a set of Ewing-specific DNase hypersensitivity sites (DHSs). A set of muscle-specific DHSs will also be used for comparison.
@@ -23,11 +24,14 @@ The workflow is similar to the "Methylation-based Inference of Regulatory Activi
 1. Do the following steps for a few samples from each condition/sample type and use the results to pick appropriate parameters for the workflow.
     1.1. Split the regions into bins and aggregate methylation data in those bins to get a MIRA signature for each region set, sample combination.  
     1.2. Calculate MIRA score for each region set, sample combination based on the shape of the MIRA signature.
-2. Run the full MIRA analysis with chosen parameters.
-    2.1. Split the regions into bins and aggregate methylation data in those bins to get a MIRA signature for each region set, sample combination.
-    2.2. Calculate MIRA score for each region set, sample combination based on the shape of the MIRA signature.
+2. Choose parameters based on preliminary results:
+    2.1. Pick a region size for each region set based on what the MIRA signatures look like.
+    2.2. After binning again based on the new region sizes, you can pick what to count as outer edges of the dip for MIRA scoring (shoulderShift variable, discussed later).
+3. Run the full MIRA analysis with chosen parameters.
+    3.1. Split the regions into bins and aggregate methylation data in those bins to get a MIRA signature for each region set, sample combination.
+    3.2. Calculate MIRA score for each region set, sample combination based on the shape of the MIRA signature.
     
-The below code shows step 2 of the process (the step after choosing parameters that are appropriate for your data) although the same thing would be done for step 1, just with fewer samples and different parameters. Choosing appropriate parameters is discussed more below.
+The below code shows step 3 of the process (the step after choosing parameters that are appropriate for your data) although the same thing would be done for steps 1 and 2, just with fewer samples and different parameters. Choosing appropriate parameters is discussed more below.
 
 
 ```{r, eval = TRUE}
@@ -81,17 +85,18 @@ bigBinDT = merge(bigBinDT, exampleAnnoDF2, all.x = TRUE) #adding annotation
 plotMIRARegions(binnedRegDT = bigBinDT)
 ```
 
-Next we normalize the binned methylation data (the MIRA signature) and calculate MIRA scores for all samples. Normalizing by subtracting the minimum methylation bin value from each sample/region set combination generally brings the center MIRA signatures to a similar methylation value, making the MIRA score more about the shape of the signature and less about the average methylation. For the scoring step, the shoulderShift parameter is most important.
+Next we normalize the binned methylation data (the MIRA signature) and calculate MIRA scores for all samples. Normalizing by subtracting the minimum methylation bin value from each sample/region set combination generally brings the center MIRA signatures to a similar methylation value, making the MIRA score more about the shape of the signature and less about the average methylation. 
 
 ```{r, eval = TRUE}
 bigBinDT[, methyl := methyl - min(methyl) + .05, by = .(featureID, sampleName)]
 plotMIRARegions(binnedRegDT = bigBinDT)
 ```
 
+
 ```{r, eval = TRUE}
 sampleScores = bigBinDT[, .(score = scoreDip(methyl, 
                                              binCount = 21, 
-                                             shoulderShift = 5)), 
+                                             shoulderShift = "auto")), 
                         by = .(featureID, sampleName)]
 head(sampleScores)
 setkey(exampleAnnoDF2, sampleName)

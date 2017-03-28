@@ -16,7 +16,7 @@
 #' @importFrom ggplot2 ggplot aes facet_wrap geom_boxplot geom_jitter geom_line
 #' @import BiocGenerics S4Vectors IRanges
 #' @importFrom data.table ":=" setDT data.table setkey fread setnames 
-#'             setcolorder melt setkeyv rbindlist setattr setorder
+#'             setcolorder rbindlist setattr setorder
 #' @importFrom Biobase sampleNames
 #' @importFrom bsseq getBSseq hasBeenSmoothed
 NULL
@@ -1030,7 +1030,7 @@ parseBiseq = function(DT) {
     #split the '12/12' format of meth calls
     ll = unlist(strsplit(DT$meth, "/", fixed = TRUE))
     idx = seq(1, length(ll), by = 2)
-    DT[, `:=`(hitCount = as.integer(ll[idx]), 
+    DT[, `:=` (hitCount = as.integer(ll[idx]), 
               readCount = as.integer(ll[idx + 1]))]
     DT[, start := as.integer(start + 1)] #re-index
     DT[, c("rate", "end", "meth" ) := NULL] #remove unnecessary columns
