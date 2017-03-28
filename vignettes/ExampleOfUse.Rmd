@@ -12,33 +12,42 @@ vignette: >
 
 ## Biological Question
 Ewing sarcoma is a pediatric cancer characterized by the fusion of the EWS and FLI1 genes which results in a fusion transcription factor. We want to see if Ewing samples can be distinguished from muscle-related samples based on their respective MIRA scores. To accomplish that, we can compare MIRA scores for Ewing and non-Ewing samples using a set of Ewing-specific DNase hypersensitivity sites (DHSs). A set of muscle-specific DHSs will also be used for comparison.
-input: single-nucleotide resolution DNA methylation data (from reduced representation bisulfite sequencing) for samples from Ewing sarcoma and a collection of muscle related samples including human skeletal muscle myoblasts, myotubes differentiated from a skeletal muscle myoblasts cell line, primary myoblasts from patients with Facioscapulohumeral Muscular Dystrophy (FSHD), and myotubes from FSHD myoblasts.
-input: A set of Ewing-specific DNase hypersensitivity sites, muscle-specific DNase hypersensitivity sites.
+Input: single-nucleotide resolution DNA methylation data (from reduced representation bisulfite sequencing) for samples from Ewing sarcoma and a collection of muscle related samples including human skeletal muscle myoblasts, myotubes differentiated from a skeletal muscle myoblasts cell line, primary myoblasts from patients with Facioscapulohumeral Muscular Dystrophy (FSHD), and myotubes from FSHD myoblasts.
+Input: A set of Ewing-specific DNase hypersensitivity sites, muscle-specific DNase hypersensitivity sites.
+All samples and region sets correspond to the hg38 reference genome.
 
 ## Package workflow
 
-The workflow is the same as the "Methylation-based Inference of Regulatory Activity" vignette but this time we are adding annotation and using multiple samples and region sets:  
-1. Start with appropriately formatted single-nucleotide resolution methylation data, region sets -- each with genomic regions corresponding to some biological annotation, and an annotation file that has sample name (sampleName column) and sample type (sampleType column).  
-2. Split the regions into bins and aggregate methylation data in those bins to get a MIRA signature for each region set, sample combination.  
-3. Calculate MIRA score for each region set, sample combination based on shape of MIRA signature.
+The workflow is similar to the "Methylation-based Inference of Regulatory Activity" vignette but this time we are adding annotation and using multiple samples and region sets:  
+0. Start with appropriately formatted single-nucleotide resolution methylation data, region sets -- each with genomic regions corresponding to some biological annotation, and an annotation file that has sample name (sampleName column) and sample type (sampleType column).
+1. Do the following steps for a few samples from each condition/sample type and use the results to pick appropriate parameters for the workflow.
+    1.1. Split the regions into bins and aggregate methylation data in those bins to get a MIRA signature for each region set, sample combination.  
+    1.2. Calculate MIRA score for each region set, sample combination based on the shape of the MIRA signature.
+2. Run the full MIRA analysis with chosen parameters.
+    2.1. Split the regions into bins and aggregate methylation data in those bins to get a MIRA signature for each region set, sample combination.
+    2.2. Calculate MIRA score for each region set, sample combination based on the shape of the MIRA signature.
+    
+The below code shows step 2 of the process (the step after choosing parameters that are appropriate for your data) although the same thing would be done for step 1, just with fewer samples and different parameters. Choosing appropriate parameters is discussed more below.
 
 
 ```{r, eval = TRUE}
 library(MIRA)
 library(data.table) #fread, setkey, 
 library(GenomicRanges) #GRanges, resize
-#data(exampleAnnoDF2)#object name: "exampleAnnoDF2", data.table
+data(exampleAnnoDF2)#object name: "exampleAnnoDF2", data.table
 ```
 
 ```{r, eval = FALSE}
-caseFiles = c("RRBS_cpgMethylation_EWS_T1.bed", 
-              "RRBS_cpgMethylation_EWS_T2.bed", 
-              "RRBS_cpgMethylation_EWS_T3.bed")
-controlFiles = c("RRBS_cpgMethylation_Hsmmt_1.bed", 
-                 "RRBS_cpgMethylation_Hsmmt_2.bed", 
-                 "RRBS_cpgMethylation_Hsmmt_3.bed")
+# 12 Ewing samples: T1-T12
+caseFiles = paste0("RRBS_cpgMethylation_EWS_T", 1:12, ".bed") 
+controlFiles = c("RRBS_cpgMethylation_Hsmm_", 
+                 "RRBS_cpgMethylation_Hsmmt_", 
+                 "RRBS_cpgMethylation_Hsmmfshd_",
+                 "RRBS_cpgMethylation_Hsmmtubefshd_")
+# 12 muscle related samples, 3 of each type
+controlFiles=paste0(controlFiles, rep(1:3, each = 4), ".bed")
 RRBSFiles = c(caseFiles, controlFiles)
-regionSetFiles = c("sknmc_specific.bed", "muscle-specifichg38.bed")
+regionSetFiles = c("sknmc_specific.bed", "muscle-specific.bed")
 BSDTList = lapply(X = RRBSFiles, FUN = BSreadBiSeq)
 regionSets = lapply(X = regionSetFiles, FUN = fread)
 regionSets = lapply(X = regionSets, 
@@ -53,7 +62,7 @@ regionSets[[2]] = resize(regionSets[[2]], 1750, fix = "center")
 names(regionSets) <- c("Ewing_Specific", "Muscle_Specific")
 ```
 
-An important decision is how big to make each region
+An important decision is how big to make the regions of each region set. We made the muscle-specific regions smaller because we noticed that the dip in MIRA scores was much narrower for the muscle-related samples and we needed to make it wider in order to measure it with MIRA. The appropriate region size could be different for each region set so it may be necessary to run MIRA on a couple samples with large regions as a test case and then reduce the size of the regions if the dip part of the MIRA signature is really narrow.
 When it comes to MIRA, lapply is your friend. This allows for distributed computing with mclapply if desired. Next let's divide each region into bins and find methylation that is contained in each bin in each region. Then matching bins will be aggregated over all regions (all bin1's together, all bin2's together, etc.). The function returnMIRABins accomplishes all of this.
 
 
@@ -64,8 +73,7 @@ bigBinDT = rbindlist(bigBin)
 bigBinDT[, sampleName := gsub("RRBS_cpgMethylation_", "", sampleName)]
 ```
 
-```{r, eval = FALSE}
-#change to eval = TRUE
+```{r, eval = TRUE}
 data(ewingMyobigBinDT) #name: "bigBinDT", has binned data for this example
 setkey(exampleAnnoDF2, sampleName)
 setkey(bigBinDT, sampleName)
@@ -73,12 +81,14 @@ bigBinDT = merge(bigBinDT, exampleAnnoDF2, all.x = TRUE) #adding annotation
 plotMIRARegions(binnedRegDT = bigBinDT)
 ```
 
-Next we calculate MIRA scores based on the MIRA signatures for all samples.
+Next we normalize the binned methylation data (the MIRA signature) and calculate MIRA scores for all samples. Normalizing by subtracting the minimum methylation bin value from each sample/region set combination generally brings the center MIRA signatures to a similar methylation value, making the MIRA score more about the shape of the signature and less about the average methylation. For the scoring step, the shoulderShift parameter is most important.
 
-```{r, eval = FALSE}
-#change to eval = TRUE when vignette is working
+```{r, eval = TRUE}
 bigBinDT[, methyl := methyl - min(methyl) + .05, by = .(featureID, sampleName)]
 plotMIRARegions(binnedRegDT = bigBinDT)
+```
+
+```{r, eval = TRUE}
 sampleScores = bigBinDT[, .(score = scoreDip(methyl, 
                                              binCount = 21, 
                                              shoulderShift = 5)), 
