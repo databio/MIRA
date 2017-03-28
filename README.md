@@ -1,6 +1,6 @@
 # MIRA (Methylation-based Inference of Regulatory Activity)
-<a href="https://travis-ci.org/databio/MIRA"><img src="https://travis-ci.org/databio/MIRA.svg?branch=master" alt="Travis CI status"></img>
-</a>
+[![Build Status](https://travis-ci.org/databio/MIRA.svg?branch=master)](https://travis-ci.org/databio/MIRA)
+
 
 The MIRA package aggregates DNA methylation across the genome for instances of a genomic feature like histone ChIP peaks, transcription factor ChIP peaks, or open chromatin regions in order to give a single signature and score for that feature, which may be used to infer regulatory activity.
 
