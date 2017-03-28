@@ -730,10 +730,19 @@ plotMIRARegions <- function(binnedRegDT,
 #' @param scoreDT A datatable with the following columns: 
 #' score, featureID (names of regions), sampleType.
 #' @param featID Region set name/names in a single string or vector of strings.
-#' @return a plot of class "gg" / "ggplot" that shows MIRA scores 
+#' @return a plot of class "gg"/"ggplot" that shows MIRA scores 
 #' with geom_boxplot and geom_jitter.
 #' @export
-# ##UPDATE example 
+#' @examples
+#' data(ewingMyobigBinDT) # bigBinDT object
+#' exScores = bigBinDT[, .(score=scoreDip(methyl, 
+#'                                        binCount = 21, 
+#'                                        shoulderShift = 5)), 
+#'                     by = .(featureID, sampleName)]
+#' #adding annotation
+#' sampleType = rep(c("Ewing", "Muscle-related"), each = 24)
+#' exScores = cbind(exScores, sampleType)
+#' exScorePlot = plotMIRAScores(exScores)         
 plotMIRAScores <- function(scoreDT, featID = unique(scoreDT[, featureID])){
     setkey(scoreDT, featureID)
     scorePlot = ggplot(data = scoreDT[featID], 

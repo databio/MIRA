@@ -13,9 +13,20 @@ score, featureID (names of regions), sampleType.}
 \item{featID}{Region set name/names in a single string or vector of strings.}
 }
 \value{
-a plot of class "gg" / "ggplot" that shows MIRA scores 
+a plot of class "gg"/"ggplot" that shows MIRA scores 
 with geom_boxplot and geom_jitter.
 }
 \description{
 A function to plot MIRA scores and compare case/control.
+}
+\examples{
+data(ewingMyobigBinDT) # bigBinDT object
+exScores = bigBinDT[, .(score=scoreDip(methyl, 
+                                       binCount = 21, 
+                                       shoulderShift = 5)), 
+                    by = .(featureID, sampleName)]
+#adding annotation
+sampleType = rep(c("Ewing", "Muscle-related"), each = 24)
+exScores = cbind(exScores, sampleType)
+exScorePlot = plotMIRAScores(exScores)         
 }
