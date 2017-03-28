@@ -210,8 +210,12 @@ MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
 #' @param values A vector with proportion of methylation values for each bin. 
 #'  Between 0 and 1.
 #' @param binCount Number of bins, also length of "values" vector.
-#' @param shoulderShift The number of bins away from the center to use as the
-#' shoulders. I have used 5 or 3.
+#' @param shoulderShift Used to determine the number of bins away from the 
+#' center to use as the shoulders. Default value "auto" optimizes the 
+#' shoulderShift variable for each sample/region set combination to try find the 
+#' outside edges of the dip. shoulderShift may be manually set as an integer
+#' that will be used for all sample/region set combinations. "auto" does not 
+#' currently work with region sets that include strand info.
 #' @param method The scoring method. "logRatio" is the log of the ratio of
 #' the average of outside values (shoulders) divided by 
 #' the average of the middle values. 
@@ -229,17 +233,15 @@ MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
 #' exampleBins[, .(score = scoreDip(methyl, binCount)), 
 #'               by = .(featureID, sampleName)]
 scoreDip = function(values, binCount, 
-                    shoulderShift = floor((binCount - 1) / 2), 
+                    shoulderShift = "auto", 
                     method = "logRatio"){
+    
     if (!method %in% "logRatio") { #add new methods eventually
         stop("Invalid scoring method. Check spelling/capitalization.")
     }
     if (method == "logRatio") {
         centerSpot = (binCount + 1) / 2 # X.5 for even binCount
-        #floor and ceiling are only relevant when binCount is even 
-        #(which means centerSpot is X.5)
-        leftSide = floor(centerSpot - shoulderShift)  
-        rightSide = ceiling(centerSpot + shoulderShift)
+        
         if ((binCount %% 2) == 0) { #if binCount is even, centerSpot is X.5
             #includes 4 bins but outer two bins are weighted by half
             #approximates having 3 middle bins
@@ -251,6 +253,33 @@ scoreDip = function(values, binCount,
             midpoint = (values[centerSpot] + values[centerSpot + 1] 
                        + values[centerSpot - 1] ) / 3
         }
+        #automatically figuring out shoulderShift based on each signature
+        #only works for symmetric MIRA signatures
+        if (shoulderShift == "auto") {
+            
+            #first value that's not part of midpoint calculations
+            shoulderStart = ceiling(centerSpot) + 2 
+            shoulderSpot = shoulderStart
+            for (i in shoulderStart:(binCount - 2)) {
+                if (values[i + 1] > values[i]) {
+                    shoulderSpot = i + 1
+                } else if (((values[i + 2] + values[i + 1]) / 2) > values[i]) {
+                    shoulderSpot = i + 1
+                } else {
+                    break()
+                }
+            }
+            #should work for X.0 and X.5 values of centerSpot
+            #assuming calculations for leftSide and rightSide vars stay the same
+            shoulderShift = shoulderSpot - centerSpot
+        }
+        
+        
+        
+        #floor and ceiling are only relevant when binCount is even 
+        #(which means centerSpot is X.5)
+        leftSide = floor(centerSpot - shoulderShift)  
+        rightSide = ceiling(centerSpot + shoulderShift)
         shoulders = ((values[leftSide] + values[rightSide]) / 2)
         if (midpoint < .000001) {
             warning("Division by zero. Consider adding a small constant 

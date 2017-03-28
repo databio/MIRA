@@ -5,8 +5,7 @@
 \title{My dip scoring function for MIRA scores.
 That's Methylation-based Inference of Regulatory Activity}
 \usage{
-scoreDip(values, binCount, shoulderShift = floor((binCount - 1)/2),
-  method = "logRatio")
+scoreDip(values, binCount, shoulderShift = "auto", method = "logRatio")
 }
 \arguments{
 \item{values}{A vector with proportion of methylation values for each bin. 
@@ -14,8 +13,12 @@ Between 0 and 1.}
 
 \item{binCount}{Number of bins, also length of "values" vector.}
 
-\item{shoulderShift}{The number of bins away from the center to use as the
-shoulders. I have used 5 or 3.}
+\item{shoulderShift}{Used to determine the number of bins away from the 
+center to use as the shoulders. Default value "auto" optimizes the 
+shoulderShift variable for each sample/region set combination to try find the 
+outside edges of the dip. shoulderShift may be manually set as an integer
+that will be used for all sample/region set combinations. "auto" does not 
+currently work with region sets that include strand info.}
 
 \item{method}{The scoring method. "logRatio" is the log of the ratio of
 the average of outside values (shoulders) divided by 
