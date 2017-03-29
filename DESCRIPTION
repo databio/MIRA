@@ -1,7 +1,7 @@
 Package: MIRA
 Version: 0.99.0
-Date: 2016-09-12
-Title: Methylation-based inference of regulatory activity
+Date: 2016-03-30
+Title: Methylation-Based Inference of Regulatory Activity
 Description: measures the degree of "dip" in methylation
     level surrounding a regulatory site of interest, such as a 
     transcription factor binding site.
@@ -29,5 +29,5 @@ License: GPL-3
 biocViews: GeneRegulation, GenomeAnnotation, SystemsBiology,
     FunctionalGenomics, ChIPSeq, MethylSeq, Sequencing
 URL: http://databio.org/mira
-BugReports: http://github.com/nsheff/MIRA
+BugReports: https://github.com/databio/MIRA
 RoxygenNote: 6.0.1
