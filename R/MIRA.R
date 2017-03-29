@@ -9,6 +9,7 @@
 #' @docType package
 #' @name MIRA
 #' @author Nathan Sheffield
+#' @author John Lawson
 #'
 #' @references \url{http://github.com/databio}
 #' @importFrom GenomicRanges GRanges GRangesList elementMetadata strand seqnames 
@@ -267,6 +268,12 @@ scoreDip = function(values, binCount,
                     shoulderSpot = i + 1
                 } else {
                     break()
+                }
+            }
+            #testing the last/most outside point if appropriate
+            if (shoulderSpot == (binCount - 1)) {
+                if (values[shoulderSpot + 1] > values[shoulderSpot]) {
+                    shoulderSpot = shoulderSpot + 1
                 }
             }
             #should work for X.0 and X.5 values of centerSpot
