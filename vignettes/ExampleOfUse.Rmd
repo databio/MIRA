@@ -9,19 +9,22 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
-(Note: Only the second half of this vignette is evaluated because of the large files involved.)
+
+In this vignette, we are adding annotation and using multiple samples and region sets. Only the second half of this vignette is evaluated because of the large files involved.
+
+
 
 ## Biological Question
-Ewing sarcoma is a pediatric cancer characterized by the fusion of the EWS and FLI1 genes which results in a fusion transcription factor. We want to see if Ewing samples can be distinguished from muscle-related samples based on their respective MIRA scores. To accomplish that, we can compare MIRA scores for Ewing and muscle-related samples using a set of Ewing-specific DNase hypersensitivity sites (DHSs). A set of muscle-specific DHSs will also be used for comparison.
+Ewing sarcoma is a pediatric cancer defined by the fusion oncoprotein EWS-FLI1, a transcription factor. We have DNA methylation data for Ewing sarcoma samples and we want to use this data to see if Ewing samples can be distinguished from muscle-related samples. We will use MIRA to infer regulatory activity and compare MIRA scores for Ewing versus muscle samples in two region sets: First, Ewing-specific DNase hypersensitivity sites (DHSs), and second, muscle-specific DHSs.
 
-### Input: 
-* Single-nucleotide resolution DNA methylation data (from reduced representation bisulfite sequencing) for samples from Ewing sarcoma and a collection of muscle related samples including human skeletal muscle myoblasts, myotubes differentiated from a skeletal muscle myoblasts cell line, primary myoblasts from patients with Facioscapulohumeral Muscular Dystrophy (FSHD), and myotubes from FSHD myoblasts. These samples are part of the [ENCODE project](I couldn't find this data on their website: UPDATE). 
-* Two sets of regions -- one with Ewing-specific DHSs and a one with muscle-specific DHSs.
-All samples and region sets correspond to the hg38 reference genome.
+### Input:
+
+This vignette requires large input files, which can be dowloaded here: [MIRA_vignette_files.tgz](provide_link_here). This archive contains: 
+* Single-nucleotide resolution DNA methylation data (RRBS data) for 12 Ewing sarcoma samples and 12 myotube (muscle) samples recently analyzed in the paper [DNA methylation heterogeneity defines a disease spectrum in Ewing sarcoma](http://www.medical-epigenomics.org/papers/sheffield2017/).
+* Two sets of regions -- one with Ewing-specific DHSs and a one with muscle-specific DHSs, obtained from the [Regulatory Elements Database](http://db.databio.org/). All data is on the hg38 reference genome.
 
 ## Package workflow
-
-The workflow is similar to the "Methylation-based Inference of Regulatory Activity" vignette but this time we are adding annotation and using multiple samples and region sets:  
+  
 0. Start with appropriately formatted single-nucleotide resolution methylation data, region sets -- each with genomic regions corresponding to some biological annotation, and an annotation file that has sample name (sampleName column) and sample type (sampleType column).
 1. Do the following steps for a each region set with a few samples from each condition/sample type and use the results to pick appropriate parameters for the workflow.  
     1.1. Split the regions into bins and aggregate methylation data in those bins to get a MIRA signature for each region set, sample combination.  
@@ -63,7 +66,7 @@ regionSets = lapply(X = regionSets, FUN =
                                               ranges = IRanges(x$start, x$end)))
 regionSets[[1]] = resize(regionSets[[1]], 4000, fix = "center")
 regionSets[[2]] = resize(regionSets[[2]], 1750, fix = "center")
-names(regionSets) <- c("Ewing_Specific", "Muscle_Specific")
+names(regionSets) = c("Ewing_Specific", "Muscle_Specific")
 ```
 
 The resize function from the Genomic Ranges package was used to make the length of the Ewing DHS regions 4000 and the muscle DHS regions 1750. We made the muscle-specific regions smaller because we noticed that the dip in MIRA signatures was pretty narrow for some of the samples and we needed to stretch the dip out (make it wider) in order to accurately measure it with MIRA. Since MIRA scoring counts a few bins in the center of the MIRA signature as the bottom of the dip, the MIRA signature must be wide enough so that the middle 3-4 bins are at the bottom of the dip. If the regions are too small though, there might be more noise since there would be less methylation data for each bin. Also, the regions must be wide enough to capture the outer edges of the dip, where methylation levels stop increasing and level out or decrease, since the outer edges are used for the MIRA score. 
@@ -76,7 +79,7 @@ bigBin = lapply(X = BSDTList, FUN = returnMIRABins, GRList = regionSets,
 bigBinDT = rbindlist(bigBin)
 bigBinDT[, sampleName := gsub("RRBS_cpgMethylation_", "", sampleName)]
 ```
-(Note: code below is all evaluated)
+
 ```{r, eval = TRUE}
 data(ewingMyobigBinDT) #name: "bigBinDT", has binned data for this example
 # data.table functions are used to add info from annotation object to bigBinDT
