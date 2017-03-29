@@ -82,7 +82,7 @@ plotMIRARegions(binnedRegDT = bigBinDT)
 ```
 
 ### Calculating the MIRA Score
-To calculate MIRA scores based on the MIRA signatures, we will apply the scoring function, scoreDip, to the data.table containing the methylation aggregated in bins using data.table syntax. scoreDip calculates a score for each group of bins corresponding to a sample and region set. With MIRA's default scoring method--"logratio", scoreDip will first get the average of the methylation of the two outer bins as well as the average of the methylation of the three middle bins. The MIRA score is the log ratio of the outer average divided by the middle average which gives a measure of the deepness of dip in the middle of the MIRA signature. Higher MIRA scores are associated with deeper dips. A flat MIRA signature would have a score of 0.
+To calculate MIRA scores based on the MIRA signatures, we will apply the scoring function, `scoreDip`, to the `data.table` containing the methylation aggregated in bins using data.table syntax. scoreDip calculates a score for each group of bins corresponding to a sample and region set. With MIRA's default scoring method (`logratio`), scoreDip will first get the average of the methylation of the two outer bins as well as the average of the methylation of the three middle bins. The MIRA score is the log ratio of the outer average divided by the middle average which gives a measure of the deepness of dip in the middle of the MIRA signature. Higher MIRA scores are associated with deeper dips. A flat MIRA signature would have a score of 0.
 
 ```{r Scoring}
 sampleScores = bigBinDT[, .(score = scoreDip(methyl, binCount = 11)), 
