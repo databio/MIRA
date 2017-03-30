@@ -23,4 +23,6 @@ data across region sets, in bins.
 }
 \author{
 Nathan Sheffield
+
+John Lawson
 }

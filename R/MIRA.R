@@ -19,7 +19,6 @@
 #' @importFrom data.table ":=" setDT data.table setkey fread setnames 
 #'             setcolorder rbindlist setattr setorder
 #' @importFrom Biobase sampleNames
-#' @importFrom bsseq getBSseq hasBeenSmoothed
 NULL
 
 
@@ -81,7 +80,7 @@ returnMIRABins = function(BSDT, GRList, binNum = 11, minReads = 500,
     }
 
     #checking that input is in list format
-    if (!class(GRList) %in% c("list", "GRangesList")) {
+    if (!(class(GRList) %in% c("list", "GRangesList"))) {
         stop("GRList should be a named list/GRangesList.")
     }
 
@@ -111,13 +110,13 @@ returnMIRABins = function(BSDT, GRList, binNum = 11, minReads = 500,
     }
     
     if (sampleNameInBSDT) {
-        if (!"sampleName" %in% colnames(BSDT)) {
+        if (!("sampleName" %in% colnames(BSDT))) {
             stop("BSDT should have sampleName col if sampleNameInBSDT = TRUE")
         }
     }
 
     #adding a methyl column if it is not already in the BSDT
-    if (!"methyl" %in% names(BSDT)) {
+    if (!("methyl" %in% names(BSDT))) {
         BSDTList = addMethCol(list(BSDT))
         BSDT = BSDTList[[1]] 
     }
@@ -185,7 +184,7 @@ MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
                      sampleNameInBSDT = TRUE, minReads = 500){
 
     #making sure methyl column is part of input BSDT
-    if (!"methyl" %in% names(BSDT)) {
+    if (!("methyl" %in% names(BSDT))) {
         stop("BSDT must have a methyl column with proportion of methylation. 
              addMethCol() will add this.")
     }
@@ -237,7 +236,7 @@ scoreDip = function(values, binCount,
                     shoulderShift = "auto", 
                     method = "logRatio"){
     
-    if (!method %in% "logRatio") { #add new methods eventually
+    if (!(method %in% "logRatio")) { #add new methods eventually
         stop("Invalid scoring method. Check spelling/capitalization.")
     }
     if (method == "logRatio") {
@@ -355,13 +354,13 @@ scoreDip = function(values, binCount,
 #' #data.table "j command" using column names and numberOfBins variable
 #' binnedRegionDT = regionsToBinDT[, binRegion(start, end, numberOfBins, chr)]
 binRegion = function(start, end, bins, idDF = NULL, strand = "*") {
-    #if (!is.null(idDF) & ( ! "data.frame"  %in% class(idDF))) {
+    #if (!is.null(idDF) & (! ("data.frame"  %in% class(idDF)))) {
     #   stop("idDF should be a data.frame")
     #}
     
     #conditionally altered later
     finalColNames = c("chr", "start", "end", "id", "binID", "ubinID")
-    if (!"*" %in% strand) {
+    if (!("*" %in% strand)) {
         if ("+" %in% strand) {
             plusIndex = which(strand == "+")
             #once for plus strand coordinates
@@ -434,7 +433,7 @@ binRegion = function(start, end, bins, idDF = NULL, strand = "*") {
     
     }
     
-    if (!(is.null(idDF))) {
+    if (!is.null(idDF)) {
         chr = rep(idDF, each = bins)
         dt = dt[, chr := chr]
         setcolorder(dt, finalColNames)#putting chr first, does not copy
@@ -488,7 +487,7 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500,
         rangeDT = grToDt(GR = rangeDT, includeStrand = TRUE)
     }
     
-    if (! "data.table" %in% class(rangeDT)) {
+    if (! ("data.table" %in% class(rangeDT))) {
         stop("rangeDT must be a data.table")
     }
     seqnamesColName = "seqnames"  # default column name
@@ -500,7 +499,7 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500,
         stop("rangeDT must have a seqnames column")
     }
     
-    if (! "strand" %in% colnames(rangeDT)) {
+    if (! ("strand" %in% colnames(rangeDT))) {
         rangeDT[, strand := "*"]
         warning("Since strand not given, set to '*' ")
     }
@@ -530,50 +529,50 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500,
     return(binnedBSDT)
 }
 
-#' BSaggregate: Aggregate a BSDT across regions or region groups, 
-#' for multiple samples at a time.
-#' This function is as BScombineByRegion, but can handle not only multiple
-#' samples in BSDT, but also simultaneously multiple region sets by passing
-#' a regionsGRL (GRangesList object).However currently code for symmetrical 
-#' averaging will cause it to only work with one region set (which may be
-#' split up into multiple GRanges in a GRangesList).
-#' you can use jCommand to do other functions.
+# BSaggregate: Aggregate a BSDT across regions or region groups, 
+# for multiple samples at a time.
+# This function is as BScombineByRegion, but can handle not only multiple
+# samples in BSDT, but also simultaneously multiple region sets by passing
+# a regionsGRL (GRangesList object).However currently code for symmetrical 
+# averaging will cause it to only work with one region set (which may be
+# split up into multiple GRanges in a GRangesList).
+# you can use jCommand to do other functions.
 
-#' Given a bisulfite data table as input, with an identifier column for
-#' different samples; plus a GRanges objects with regions to aggregate.
-#'
-#' @param BSDT The bisulfite data.table (output from one of the parsing
-#' functions for methylation calls) that you wish to aggregate. It can
-#' be a combined table, with individual samples identified by column passed
-#' to splitFactor. To be safe, "chr", "start", "hitCount", "readCount", and 
-#' "methyl" columns should be in BSDT.
-#' @param regionsGRL Regions across which you want to aggregate.
-#' @param excludeGR A GenomicRanges object with regions you want to 
-#' exclude from the aggregation function. These regions will be eliminated
-#' from the input table and not counted.
-#' @param regionsGRL.length Vector with number of regions in each bin.
-#' From bin1 to binN. With default NULL value, it will be auto assigned.
-#' @param splitFactor Used to make "by string" to be plugged into a data.table
-#' "by=" statemnt. With default NULL value, by string will be "list(regionID)"
-#' @param keepCols Deprecated, NULL value should be used for MIRA aggregation.
-#' @param sumCols Deprecated, NULL value should be used for MIRA aggregation.
-#' @param jCommand You can pass a custom command in the j slot to data.table
-#' specifying which columns to aggregate, and which functions to use. You
-#' can use buildJ() to build a jCommand argument easily.
-#' @param byRegionGroup You can aggregate by regionID or by regionGroupID; 
-#' this reflects the regionsGRL that you pass; by default, BSAggregate will
-#' aggregate each region individually -- scores will then be contiguous, and
-#' the output is 1 row per region.
-#' Turn on this flag to aggregate across all region groups, making the result
-#' uncontiguous, and resulting in 1 row per *region group*.
-#' @param keep.na Not used in general MIRA context.
-#' 
-#' @return In context of MIRA, with byRegionGroup = TRUE and jCommand = 
-#' list( methyl = mean(methyl), readCount = sum(readCount) )", this function
-#' will return a data.table with binCount rows (parameter for BSBinAggregate)
-#' containing aggregated methylation from BSDT over binned regions from a region
-#' set.
-#'
+# Given a bisulfite data table as input, with an identifier column for
+# different samples; plus a GRanges objects with regions to aggregate.
+#
+# @param BSDT The bisulfite data.table (output from one of the parsing
+# functions for methylation calls) that you wish to aggregate. It can
+# be a combined table, with individual samples identified by column passed
+# to splitFactor. To be safe, "chr", "start", "hitCount", "readCount", and 
+# "methyl" columns should be in BSDT.
+# @param regionsGRL Regions across which you want to aggregate.
+# @param excludeGR A GenomicRanges object with regions you want to 
+# exclude from the aggregation function. These regions will be eliminated
+# from the input table and not counted.
+# @param regionsGRL.length Vector with number of regions in each bin.
+# From bin1 to binN. With default NULL value, it will be auto assigned.
+# @param splitFactor Used to make "by string" to be plugged into a data.table
+# "by=" statemnt. With default NULL value, by string will be "list(regionID)"
+# @param keepCols Deprecated, NULL value should be used for MIRA aggregation.
+# @param sumCols Deprecated, NULL value should be used for MIRA aggregation.
+# @param jCommand You can pass a custom command in the j slot to data.table
+# specifying which columns to aggregate, and which functions to use. You
+# can use buildJ() to build a jCommand argument easily.
+# @param byRegionGroup You can aggregate by regionID or by regionGroupID; 
+# this reflects the regionsGRL that you pass; by default, BSAggregate will
+# aggregate each region individually -- scores will then be contiguous, and
+# the output is 1 row per region.
+# Turn on this flag to aggregate across all region groups, making the result
+# uncontiguous, and resulting in 1 row per *region group*.
+# @param keep.na Not used in general MIRA context.
+# 
+# @return In context of MIRA, with byRegionGroup = TRUE and jCommand = 
+# list( methyl = mean(methyl), readCount = sum(readCount) )", this function
+# will return a data.table with binCount rows (parameter for BSBinAggregate)
+# containing aggregated methylation from BSDT over binned regions from a region
+# set.
+#
 BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL, 
                        regionsGRL.length = NULL, splitFactor = NULL, 
                        keepCols = NULL, sumCols = NULL, jCommand = NULL, 
@@ -583,12 +582,12 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
     # If regionsGRL is given as a GRanges, we convert to GRL
     if ("GRanges" %in% class(regionsGRL)) {
         regionsGRL = GRangesList(regionsGRL);
-    } else if (! "GRangesList" %in% class(regionsGRL)) {
+    } else if (! ("GRangesList" %in% class(regionsGRL))) {
         stop("regionsGRL is not a GRanges or GRangesList object");
     }
 
     #make sure methyl column is present
-    if (!"methyl" %in% colnames(BSDT)) {
+    if (!("methyl" %in% colnames(BSDT))) {
         stop("BSDT must have a methyl column.")
     }
     
@@ -682,7 +681,7 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
         # must set allow = TRUE here in case there are multiple IDs (splitCol)
         #adds regionGroupID column from region2group to bsCombined
         bsCombined[region2group, regionGroupID := regionGroupID, allow = TRUE]
-        if (! is.null(splitFactor) ) { 
+        if (! is.null(splitFactor)) { 
             byStringGroup = paste0("list(", 
                                    paste("regionGroupID", 
                                          paste0(splitFactor, collapse = ","), 
@@ -810,7 +809,7 @@ addMethCol <- function(BSDTList){
     }
 
     #stopping the function if the input was not data.table originally
-    if (!"data.table" %in% class(BSDTList[[1]])) {
+    if (!("data.table" %in% class(BSDTList[[1]]))) {
         stop('Input must be a single data.table object 
              or list of data.table objects')
     }
@@ -826,18 +825,18 @@ addMethCol <- function(BSDTList){
 }
 
 
-#' helper function
-#' given a vector of columns, and the equally-sized vector of functions
-#' to apply to those columns, constructs a j-expression for use in
-#' a data.table 
-#' (functions applied to columns in corresponding spot in "cols" string).
-#' One function may be given to be applied to multiple columns.
-#' use it in a DT[, eval(parse(text = buildJ(cols, funcs)))]
-#' @param cols A string/vector of strings containing columns 
-#' on which to use functions.
-#' @param funcs Functions to use on columns.
-#' @return A jcommand string. After performing function on column, column 
-#' is reassigned the same name.
+# helper function
+# given a vector of columns, and the equally-sized vector of functions
+# to apply to those columns, constructs a j-expression for use in
+# a data.table 
+# (functions applied to columns in corresponding spot in "cols" string).
+# One function may be given to be applied to multiple columns.
+# use it in a DT[, eval(parse(text = buildJ(cols, funcs)))]
+# @param cols A string/vector of strings containing columns 
+# on which to use functions.
+# @param funcs Functions to use on columns.
+# @return A jcommand string. After performing function on column, column 
+# is reassigned the same name.
 buildJ = function(cols, funcs) {
     r = paste("list(", paste(paste0(cols, "=", funcs, "(", cols, ")"), collapse = ","), ")")
     return(r);
@@ -878,7 +877,7 @@ dtToGrInternal = function(DT, chr, start,
                    ranges = IRanges(start = DT[[`start`]], end = DT[[`end`]]), 
                    strand = DT[[`strand`]])
     }
-    if (! is.na(name) ) {
+    if (! is.na(name)) {
         names(gr) = DT[[`name`]];
     } else {
         names(gr) = 1:length(gr);
@@ -917,15 +916,14 @@ dtToGr = function(DT, chr = "chr", start = "start",
 
 dtToGR = dtToGr;
 
-#' Converts a list of data.tables into GRanges.
-#' @param dtList A list of data.tables, 
-#' Each should have "chr", "start", "hitCount", and "readCount" columns.
-#' Error results if missing "chr", "start" but if hitCount and readCount are
-#' missing, it will still work, just not have that info in the output.
-
-#' @return a list of GRanges objects, strand has been set to "*", 
-#' "start" and "end" have both been set to "start" of the DT.
-#' hitCount and readCount info is preserved in GRanges object.
+# Converts a list of data.tables into GRanges.
+# @param dtList A list of data.tables, 
+# Each should have "chr", "start", "hitCount", and "readCount" columns.
+# Error results if missing "chr", "start" but if hitCount and readCount are
+# missing, it will still work, just not have that info in the output.
+# @return a list of GRanges objects, strand has been set to "*", 
+# "start" and "end" have both been set to "start" of the DT.
+# hitCount and readCount info is preserved in GRanges object.
 BSdtToGRanges = function(dtList) {
     
     gList = list();
@@ -974,7 +972,7 @@ BSreadBiSeq = function(files, contrastList = NULL,
     cores = min(length(files), cores); #not more cores than files!
     setLapplyAlias(cores);
     if (!is.null(contrastList)) {
-        if ( any(sapply(contrastList, length) != length(files))) {
+        if (any(sapply(contrastList, length) != length(files))) {
             stop("contrastList must be a list, 
                  with each value having the same number of elements as files.");
         }
@@ -1020,15 +1018,15 @@ BSreadBiSeq = function(files, contrastList = NULL,
     return(filteredList);
 }
 
-#' Takes a data.table from BSreadBiSeq and parses the strange x/y format
-#' of methylation calls, splitting them into individual columns
-#' @param DT data.table to parse
-#' "chr", "start", "end", "meth", "rate", "strand" columns expected
-#' in that order.
-#' @return data.table with separate methylated and unmethylated columns.
-#' Specific col names are set
-#' 
-#' 
+# Takes a data.table from BSreadBiSeq and parses the strange x/y format
+# of methylation calls, splitting them into individual columns
+# @param DT data.table to parse
+# "chr", "start", "end", "meth", "rate", "strand" columns expected
+# in that order.
+# @return data.table with separate methylated and unmethylated columns.
+# Specific col names are set
+# 
+# 
 parseBiseq = function(DT) {
     message(".", appendLF = FALSE);
     setnames(DT, paste0("V", 1:6), 
@@ -1050,12 +1048,12 @@ parseBiseq = function(DT) {
 }
 
 
-#' convert a GenomicRanges into a data.table
-#' 
-#' @param GR A GRanges object
-#' @param includeStrand Boolean, whether to include strand from GR in output DT
-#' @return A data.table object with columns:
-#' "chr", "start", and "end" (possibly strand)
+# convert a GenomicRanges into a data.table
+# 
+# @param GR A GRanges object
+# @param includeStrand Boolean, whether to include strand from GR in output DT
+# @return A data.table object with columns:
+# "chr", "start", and "end" (possibly strand)
 grToDt = function(GR, includeStrand = FALSE) {
     DF = as.data.frame(elementMetadata(GR))
     if ( ncol(DF) > 0) {
@@ -1086,20 +1084,19 @@ grToDt = function(GR, includeStrand = FALSE) {
     return(DT)
 }
 
-#' This function is a drop-in replacement for the base list() function, 
-#' which automatically names your list according to the names of the 
-#' variables used to construct it.
-#' It seemlessly handles lists with some names and others absent, 
-#' not overwriting specified names while naming any unnamed parameters.
-#'
-#' @param ...   arguments passed to list()
-#' @return A named list object.
-#' @export
-#' @examples
-#' x = 5
-#' y = 10
-#' nlist(x, y) # returns list(x = 5, y = 10)
-#' list(x, y) # returns unnamed list(5, 10)
+# This function is a drop-in replacement for the base list() function, 
+# which automatically names your list according to the names of the 
+# variables used to construct it.
+# It seemlessly handles lists with some names and others absent, 
+# not overwriting specified names while naming any unnamed parameters.
+#
+# @param ...   arguments passed to list()
+# @return A named list object.
+# @examples
+# x = 5
+# y = 10
+# nlist(x, y) # returns list(x = 5, y = 10)
+# list(x, y) # returns unnamed list(5, 10)
 nlist = function(...) {
     fcall = match.call(expand.dots = FALSE)
     l = list(...);
@@ -1111,14 +1108,14 @@ nlist = function(...) {
     return(l)
 }
 
-#' To make parallel processing a possibility but not required, 
-#' I use an lapply alias which can point at either the base lapply
-#' (for no multicore), or it can point to mclapply, 
-#' and set the options for the number of cores (what mclapply uses).
-#' With no argument given, returns intead the number of cpus currently selected.
-#'
-#' @param cores Number of cpus
-#' @return None
+# To make parallel processing a possibility but not required, 
+# I use an lapply alias which can point at either the base lapply
+# (for no multicore), or it can point to mclapply, 
+# and set the options for the number of cores (what mclapply uses).
+# With no argument given, returns intead the number of cpus currently selected.
+#
+# @param cores Number of cpus
+# @return None
 setLapplyAlias = function(cores = 0) {
     if (cores < 1) {
         return(getOption("mc.cores"))
@@ -1135,12 +1132,12 @@ setLapplyAlias = function(cores = 0) {
     }
 }
 
-#' Function to run lapply or mclapply, depending on the option set in
-#' getOption("mc.cores"), which can be set with setLapplyAlias().
-#'
-#' @param ... Arguments passed lapply() or mclapply()
-#' @param mc.preschedule Argument passed to mclapply
-#' @return Result from lapply or parallel::mclapply
+# Function to run lapply or mclapply, depending on the option set in
+# getOption("mc.cores"), which can be set with setLapplyAlias().
+#
+# @param ... Arguments passed lapply() or mclapply()
+# @param mc.preschedule Argument passed to mclapply
+# @return Result from lapply or parallel::mclapply
 lapplyAlias = function(..., mc.preschedule = TRUE) {
     if (is.null(getOption("mc.cores"))) { setLapplyAlias(1) }
     if (getOption("mc.cores") > 1) {
@@ -1150,14 +1147,14 @@ lapplyAlias = function(..., mc.preschedule = TRUE) {
     }
 }
 
-#' Given a BSDT (bisulfite data.table), remove any entries that overlap
-#' regions given in the excludeGR argument and/or filter out sites
-#' that have lower than a minimum number of reads.
-#' @param BSDT Bisulfite data.table to filter
-#' @param minReads Require at least this level of coverage at a cpg.
-#' @param excludeGR GRanges object with regions to filter.
-#' 
-#' @return The BSDT with appropriate regions removed.
+# Given a BSDT (bisulfite data.table), remove any entries that overlap
+# regions given in the excludeGR argument and/or filter out sites
+# that have lower than a minimum number of reads.
+# @param BSDT Bisulfite data.table to filter
+# @param minReads Require at least this level of coverage at a cpg.
+# @param excludeGR GRanges object with regions to filter.
+# 
+# @return The BSDT with appropriate regions removed.
 BSFilter = function(BSDT, minReads = 10, excludeGR = NULL) {
     # First, filter for minimum reads.
     if (minReads > 0) {
@@ -1165,7 +1162,7 @@ BSFilter = function(BSDT, minReads = 10, excludeGR = NULL) {
     }
     if (NROW(BSDT) == 0) { return(data.table(NULL)) }
     # Now, filter entries overlapping a region in excludeGR.
-    if ( !is.null(excludeGR) ) {
+    if (!is.null(excludeGR)) {
         gr = dtToGr(BSDT)
         fo = findOverlaps(gr, excludeGR)
         qh = unique(queryHits(fo))
@@ -1184,15 +1181,15 @@ BSFilter = function(BSDT, minReads = 10, excludeGR = NULL) {
 # @return MIRAFormatBSDTList A list of data.tables in MIRA format
 # One data table for each sample column of the bsseq object.
 bsseqToMIRA <- function(bsseqObj){
-    # if (hasBeenSmoothed(bsseqObj)) {
+    # if (bsseq::hasBeenSmoothed(bsseqObj)) {
     #   warning("Raw (not smoothed) methylation and coverage values are being used.")
     # }
     MIRAFormatBSDTList = list() #to store output
     #obtaining coordinates as GRanges obj. and changing to data.table
     coordinates = grToDt(granges(bsseqObj))
     for (i in 1:ncol(bsseqObj)) { #each column is a different sample
-        hitCount = getBSseq(BSseq = bsseqObj[, i], type = "M")
-        readCount = getBSseq(BSseq = bsseqObj[, i], type = "Cov")
+        hitCount = bsseq::getBSseq(BSseq = bsseqObj[, i], type = "M")
+        readCount = bsseq::getBSseq(BSseq = bsseqObj[, i], type = "Cov")
         #index for taking out rows with 0 coverage
         notCovered = which(readCount == 0)
         warning("Taking out rows with no coverage. Genomic coordinates may not have identical row numbers in different samples now.")
