@@ -3,7 +3,7 @@
 \name{MIRAScore}
 \alias{MIRAScore}
 \title{Function to take DNA methylation and region data and return a MIRA score;
-a wrapper for returnMIRABins and scoreDip}
+a wrapper for returnMIRABins and scoreDip.}
 \usage{
 MIRAScore(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
   sampleNameInBSDT = TRUE, minReads = 500)
@@ -36,7 +36,7 @@ A MIRA score for each region set in GRList. See ?scoreDip.
 }
 \description{
 Function to take DNA methylation and region data and return a MIRA score;
-a wrapper for returnMIRABins and scoreDip
+a wrapper for returnMIRABins and scoreDip.
 }
 \examples{
 data("GM06990_1_ExampleSet", package = "MIRA") #exampleBSDT

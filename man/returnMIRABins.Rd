@@ -3,7 +3,7 @@
 \name{returnMIRABins}
 \alias{returnMIRABins}
 \title{Function to aggregate methylation data into bins 
-over all regions in each region set;}
+over all regions in each region set.}
 \usage{
 returnMIRABins(BSDT, GRList, binNum = 11, minReads = 500,
   sampleNameInBSDT = TRUE)
@@ -35,10 +35,12 @@ Output contains sum of the all corresponding bins for the regions of each
 region set, ie for all regions in each region set: first bins summed, second 
 bins summed, etc. Columns of the output should be "regionGroupID", "methyl", 
 "readCount", "featureID", and possibly "sampleName".
+For information on symmetry of bins and output when a region set has
+strand info, see ?BSBinAggregate.
 }
 \description{
 Function to aggregate methylation data into bins 
-over all regions in each region set;
+over all regions in each region set.
 }
 \examples{
 data("GM06990_1_ExampleSet", package = "MIRA") #exampleBSDT

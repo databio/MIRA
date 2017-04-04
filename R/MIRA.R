@@ -36,7 +36,8 @@ if (getRversion() >= "2.15.1") {
 ##########################################################################
 
 #' Function to aggregate methylation data into bins 
-#' over all regions in each region set;
+#' over all regions in each region set.
+#' 
 #'
 #' @param BSDT A single data table that has DNA methylation data on individual 
 #' sites including a "chr" column with chromosome, a "start" column with the 
@@ -59,6 +60,8 @@ if (getRversion() >= "2.15.1") {
 #' region set, ie for all regions in each region set: first bins summed, second 
 #' bins summed, etc. Columns of the output should be "regionGroupID", "methyl", 
 #' "readCount", "featureID", and possibly "sampleName".
+#' For information on symmetry of bins and output when a region set has
+#' strand info, see ?BSBinAggregate.
 #' 
 #' @export
 #' @examples
@@ -214,9 +217,13 @@ MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
 #' outside edges of the dip. shoulderShift may be manually set as an integer
 #' that will be used for all sample/region set combinations. "auto" does not 
 #' currently work with region sets that include strand info.
-#' @param method The scoring method. "logRatio" is the log of the ratio of
-#' the average of outside values (shoulders) divided by 
-#' the average of the middle values. 
+#' @param method The scoring method. "logRatio" is the log of the ratio of outer
+#' edges to the middle. This ratio is the average of outside values 
+#' of the dip (shoulders) divided by the center value if 
+#' it is lower than the two surrounding values or if it is not lower, an 
+#' average of the three middle values. For an even binCount, the middle four
+#' values would be averaged with the 1st and 4th being weighted by half (as
+#' if there were 3 values). 
 #' A higher score with "logRatio" corresponds to a deeper dip. "logRatio" is the
 #' only scoring method currently but more methods may be added in the future.
 #' 

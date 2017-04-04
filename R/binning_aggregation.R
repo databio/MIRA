@@ -6,10 +6,10 @@
 
 
 
-#' A wrapper of BSAggregate that first bins regions and then aggregates
-#' each bin across a set of regions, individually.
+#' First bins regions and then aggregates methylation in
+#' each corresponding bin across a set of regions (ie all bin1's together,
+#' all bin2's together, etc.).
 #'
-#' Produced originally for binning Ewing RRBS data across various region sets
 #' 
 #' @param BSDT A single data table that has DNA methylation data 
 #' on individual sites including a "chr" column with chromosome, 
@@ -18,7 +18,8 @@
 #' a "hitCount" column with number of methylated reads for each site, and 
 #' a "readCount" column with total number of reads for each site.
 #' @param rangeDT A data table with the sets of regions to be binned, 
-#' with columns named "start", "end".
+#' with columns named "start", "end". Strand may also be given and will
+#' affect the output. See "Value" section.
 #' @param binCount Number of bins across the region.
 #' @param byRegionGroup Default TRUE will aggregate methylation over 
 #' corresponding bins for each region (all bin1's aggregated, all bin2's, etc).
@@ -35,6 +36,17 @@
 #' for the regions of each region set ie for all regions in each region set: 
 #' first bins summed, second bins summed, etc.
 #' Columns of the output should be "regionGroupID", "methyl", and "readCount"
+#' ###########################################################################
+#' Info about how strand of rangeDT affects output:
+#' The MIRA signature will be symmetrical if no strand information is given for 
+#' the regions (produced by averaging the signature with the reverse of the 
+#' signature), because the orientation of the regions is arbitrary with respect 
+#' to biological features (like a promoter for instance) that could be 
+#' oriented directionally (e.g. 5' to 3'). If strand information is given, 
+#' regions on the minus strand will be flipped before being aggregated 
+#' with plus strand regions so the MIRA signature will be in 
+#' 5' to 3' orientation.
+#' ###########################################################################
 #' @examples
 #' data("GM06990_1_ExampleSet") #exampleBSDT
 #' data("Gm12878Nrf1_Subset") #exampleRegionSet

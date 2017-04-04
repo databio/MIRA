@@ -2,8 +2,7 @@
 % Please edit documentation in R/MIRA.R
 \name{scoreDip}
 \alias{scoreDip}
-\title{My dip scoring function for MIRA scores.
-That's Methylation-based Inference of Regulatory Activity}
+\title{The dip scoring function for MIRA scores.}
 \usage{
 scoreDip(values, binCount, shoulderShift = "auto", method = "logRatio")
 }
@@ -20,9 +19,13 @@ outside edges of the dip. shoulderShift may be manually set as an integer
 that will be used for all sample/region set combinations. "auto" does not 
 currently work with region sets that include strand info.}
 
-\item{method}{The scoring method. "logRatio" is the log of the ratio of
-the average of outside values (shoulders) divided by 
-the average of the middle values. 
+\item{method}{The scoring method. "logRatio" is the log of the ratio of outer
+edges to the middle. This ratio is the average of outside values 
+of the dip (shoulders) divided by the center value if 
+it is lower than the two surrounding values or if it is not lower, an 
+average of the three middle values. For an even binCount, the middle four
+values would be averaged with the 1st and 4th being weighted by half (as
+if there were 3 values). 
 A higher score with "logRatio" corresponds to a deeper dip. "logRatio" is the
 only scoring method currently but more methods may be added in the future.}
 }
@@ -32,8 +35,7 @@ the MIRA signature which is an aggregation of methylation
 over all regions in a region set.
 }
 \description{
-My dip scoring function for MIRA scores.
-That's Methylation-based Inference of Regulatory Activity
+The dip scoring function for MIRA scores.
 }
 \examples{
 data("exampleBins")
