@@ -241,15 +241,33 @@ scoreDip = function(values, binCount,
         centerSpot = (binCount + 1) / 2 # X.5 for even binCount
         
         if ((binCount %% 2) == 0) { #if binCount is even, centerSpot is X.5
-            #includes 4 bins but outer two bins are weighted by half
-            #approximates having 3 middle bins
-            midpoint = (.5 * values[centerSpot - 1.5] + values[centerSpot - .5]
-                      + values[centerSpot + .5] 
-                      + 0.5 * values[centerSpot + 1.5]) / 3
-        }else{#if binCount is odd, centerSpot is X.0
-            #three middle bins
-            midpoint = (values[centerSpot] + values[centerSpot + 1] 
-                       + values[centerSpot - 1] ) / 3
+            #if one of middle 2 vals is lowest, use it, otherwise average
+            #order of midVals vector matters because of which.min
+            midVals=values[c(centerSpot - .5, centerSpot + .5, centerSpot - 1.5,
+                             centerSpot + 1.5)]
+            if (which.min(midVals) == 1) { #first middle bin
+                midpoint = midVals[1]
+            } else if (which.min(midVals) == 2) { #second middle bin
+                midpoint = midVals[2]
+            } else { #otherwise take average
+                #includes 4 bins but outer two bins are weighted by half
+                #approximates having 3 middle bins
+                midpoint = (.5 * values[centerSpot - 1.5] 
+                            + values[centerSpot - .5]
+                            + values[centerSpot + .5] 
+                            + 0.5 * values[centerSpot + 1.5]) / 3    
+            }
+        }else {#if binCount is odd, centerSpot is X.0
+            # if the middle is lowest use it, otherwise take average
+            # order matters in which.min (for ties) so centerSpot is first
+            if (which.min(values[c(centerSpot, centerSpot - 1, centerSpot + 1)])
+                == 1) {
+                midpoint = values[centerSpot]
+            } else { #if centerSpot does not have lowest value of the three
+                #average the three middle bins
+                midpoint = (values[centerSpot] + values[centerSpot + 1] 
+                            + values[centerSpot - 1] ) / 3
+            }
         }
         #automatically figuring out shoulderShift based on each signature
         #only works for symmetric MIRA signatures

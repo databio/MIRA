@@ -208,30 +208,49 @@ test_that("scoreDip", {
     
     #test with odd bin number
     x = -10:10
-    y = x^2
+    y = x^2 + 1
     binNumber = length(y) #21
     #default shoulderShift is based on length of input (number of bins)
     testScore = round(scoreDip(values = y, binCount = binNumber), 2)
-    expScore = round(log((mean(y[c(1, binNumber)])) / (mean(y[10:12]))), 2)
+    expScore = round(log((mean(y[c(1, binNumber)])) / (y[11])), 2)
     expect_equal(testScore, expScore)
     
-    testScore = scoreDip(values = y, binCount = length(y), shoulderShift = 9.5)
+    #testing that averaging will happen if middle is not lowest value
+    y[11] = 5
+    testScore = round(scoreDip(values = y, binCount = binNumber), 2)
+    expScore = round(log((mean(y[c(1, binNumber)])) / ((y[10] + y[11] + y[12]) / 3)), 2)
+    expect_equal(testScore, expScore)
+    
+    #testScore = scoreDip(values = y, binCount = length(y), shoulderShift = 9.5)
     #check by hand, expect_equal(round(testScore, 2), 3.62)
     
     #test with even bin number
     x = -4:5
-    y = x^2
+    y = x^2 + 1
     binNumber = length(y) #10
     testScore = round(scoreDip(values = y, binCount = binNumber), 2)
     expScore = round(log(mean(y[c(1, binNumber)])
-                        / ((0.5 * y[4] + y[5] + y[6] + .5 * y[7]) / 3)), 2)
+                        / y[5]), 2)
     expect_equal(testScore, expScore)
     #test with non default shoulderShift
     testScore = round(scoreDip(values = y, binCount = binNumber, shoulderShift = 3), 2)
-    expScore = round(log(mean(y[c(2, 9)]) / ((0.5 * y[4] + y[5] + y[6] + .5 * y[7]) / 3)), 2)
+    expScore = round(log(mean(y[c(2, 9)]) / y[5]), 2)
     expect_equal(testScore, expScore)
     
+    #testing results with automatic shoulder detection, symmetrical
+    #chooses pos. 12 because (14+16)/2 is not > 15
+    #this test will fail if standard is changed to >=
+    jagged = c(16, 14, 15, 11, 12, 7, 4, 4, 7, 12, 11, 15, 14, 16)
+    testScore = round(scoreDip(values = jagged, binCount = 14, shoulderShift = "auto"), 2)
+    expScore = round(log(mean(jagged[c(3, 12)]) / jagged[7]), 2)
+    expect_equal(testScore, expScore)
     
+    #testing that averaging will happen if middle point is not lowest
+    jagged[c(7, 8)] = 8 
+    testScore = round(scoreDip(values = jagged, binCount = 14, shoulderShift = "auto"), 2)
+    expMidpoint = (.5 * jagged[6] + jagged[7] + jagged[8] + .5 * jagged[9]) / 3
+    expScore = round(log(mean(jagged[c(3, 12)]) / expMidpoint), 2)
+    expect_equal(testScore, expScore)
 })
 
 ##########testing smaller functions##########
