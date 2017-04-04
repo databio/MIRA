@@ -85,7 +85,15 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500,
     if (byRegionGroup) {
         binnedBSDT = binnedBSDT[readCount >= minReads, ]
         if (nrow(binnedBSDT) < binCount) {
-            stop("Less than minReads. Unable to give MIRA score.")
+            # telling user what sample failed if sample name is in BSDT
+            if ("sampleName" %in% names(BSDT)) {
+                thisSample = BSDT[1, sampleName]
+            } else {
+                thisSample = "this sample"
+            }
+            
+            warning(paste0("Less than minReads. Unable to return bins for ", 
+                            thisSample, " for this region set."))
         }
     }
     
