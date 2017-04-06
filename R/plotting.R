@@ -27,7 +27,13 @@ plotMIRARegions <- function(binnedRegDT,
     
     setkey(binnedRegDT, featureID)
     binPlot = ggplot(data = binnedRegDT[featID], 
-                     mapping = aes(x = regionGroupID, y = methyl))
+                     mapping = aes(x = regionGroupID, y = methyl)) +
+                    theme_classic() + ylim(c(0, 1)) +
+                    geom_hline(yintercept=c(0), alpha=.2) +
+                    ylab("DNA Methylation (%)") + 
+                    xlab("Genome Regions Surrounding Sites") +
+                    scale_color_discrete(name = "Sample Type") 
+                    
     
     if (!("sampleType" %in% names(binnedRegDT))) {
         sampleType = "All samples" 
@@ -39,7 +45,7 @@ plotMIRARegions <- function(binnedRegDT,
             geom_line(aes(col = sampleType, group = sampleName)) + 
             facet_wrap(~featureID)
     }else if (plotType == "jitter") {
-        binPlot = binPlot + geom_jitter(aes(col = sampleType)) + 
+        binPlot = binPlot + geom_jitter(aes(col = sampleType), alpha = .4) + 
             facet_wrap(~featureID)
     }else {
         stop('The only supported values for plotType are "line" and "jitter"')
