@@ -24,15 +24,16 @@
 plotMIRARegions <- function(binnedRegDT, 
                             featID = unique(binnedRegDT[, featureID]), 
                             plotType = "line"){
-    
+    binNum = max(binnedRegDT[, regionGroupID])
     setkey(binnedRegDT, featureID)
     binPlot = ggplot(data = binnedRegDT[featID], 
-                     mapping = aes(x = regionGroupID, y = methyl)) +
+                     mapping = aes(x = factor(regionGroupID), y = methyl)) +
                     theme_classic() + ylim(c(0, 1)) +
                     geom_hline(yintercept=c(0), alpha=.2) +
                     ylab("DNA Methylation (%)") + 
                     xlab("Genome Regions Surrounding Sites") +
-                    scale_color_discrete(name = "Sample Type") 
+                    scale_color_discrete(name = "Sample Type") +
+                    scale_x_discrete(labels=xAxisForRegionPlots(binNum))
                     
     
     if (!("sampleType" %in% names(binnedRegDT))) {
@@ -53,7 +54,18 @@ plotMIRARegions <- function(binnedRegDT,
     return(binPlot)
 }
 
-
+# A function to get right x axis numbers on the plotMIRARegions() plots
+xAxisForRegionPlots <- function(binNum) {
+    if ((binNum %% 2) == 0) { #even binNum
+        xAxis = c((-1 * binNum / 2):-1, 1:(binNum / 2)) #no zero
+        xAxis = c(xAxis[1], rep("", (binNum - 4) / 2), -1, 1, rep("", (binNum - 4) / 2), xAxis[binNum])
+    } else if ((binNum %% 2) == 1) { #odd binNum
+        xAxis = (-1 * (binNum - 1) / 2):((binNum - 1) / 2)
+        xAxis = c(xAxis[1], rep("", (binNum - 3) / 2), 0, rep("", (binNum - 3) / 2), xAxis[binNum])
+        #rep("", ceiling(((binNum - 3) / 4) - 1)), #number#, rep("", floor((binNum - 3) / 4)), xAxis[binNum]
+    }
+    return(xAxis)
+}
 
 #' A function to plot MIRA scores and compare case/control.
 #' 
@@ -74,10 +86,17 @@ plotMIRARegions <- function(binnedRegDT,
 #' exScores = cbind(exScores, sampleType)
 #' exScorePlot = plotMIRAScores(exScores)         
 plotMIRAScores <- function(scoreDT, featID = unique(scoreDT[, featureID])){
+    sampleTypeNum = length(unique(scoreDT[, sampleType]))
     setkey(scoreDT, featureID)
     scorePlot = ggplot(data = scoreDT[featID], 
-                       mapping = aes(x = sampleType, y = score)) + 
-        geom_boxplot() + geom_jitter() + 
-        facet_wrap(~featureID)  
+                       mapping = aes(x = sampleType, y = score, col = sampleType)) + 
+            theme_classic() +
+            ylab("MIRA Score") + xlab("Sample Type") +
+            geom_boxplot(aes(fill = sampleType), alpha = 0.75) + 
+            scale_fill_brewer(name = "Sample Type", palette="Set1") +
+            geom_jitter(data = scoreDT[featID], 
+                        mapping = aes(x = sampleType, y = score)) + 
+            scale_color_manual(guide = FALSE, values = rep("black", sampleTypeNum)) +
+            facet_wrap(~featureID)  
     return(scorePlot)
 }
