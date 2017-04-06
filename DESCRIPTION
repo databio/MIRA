@@ -15,11 +15,14 @@ Imports:
     IRanges,
     GenomicRanges,
     data.table,
-    ggplot2
+    ggplot2,
+    Biobase,
+    bsseq
 Suggests:
     knitr,
     parallel,
     testthat,
+    BiocStyle,
     rmarkdown
 Enhances: simpleCache
 VignetteBuilder: knitr

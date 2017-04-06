@@ -8,14 +8,14 @@
 MIRA is a score that measures the degree of dip in methylation
 level surrounding a regulatory site of interest, such as a 
 transcription factor binding sites.
-This script provides functions for aggregating methylation 
+This package provides functions for aggregating methylation 
 data across region sets, in bins.}
 \description{
 Methylation-based Inference of Regulatory Activity (MIRA)
 MIRA is a score that measures the degree of dip in methylation
 level surrounding a regulatory site of interest, such as a 
 transcription factor binding sites.
-This script provides functions for aggregating methylation 
+This package provides functions for aggregating methylation 
 data across region sets, in bins.
 }
 \references{
@@ -23,4 +23,6 @@ data across region sets, in bins.
 }
 \author{
 Nathan Sheffield
+
+John Lawson
 }
