@@ -26,16 +26,17 @@ This vignette requires large input files, which can be dowloaded here: [MIRA_vig
 ## Package workflow
   
 0. Start with appropriately formatted single-nucleotide resolution methylation data, region sets -- each with genomic regions corresponding to some biological annotation, and an annotation file that has sample name (sampleName column) and sample type (sampleType column).
-1. Do the following steps for a each region set with a few samples from each condition/sample type and use the results to pick appropriate parameters for the workflow.  
-    1.1. Split the regions into bins and aggregate methylation data in those bins to get a MIRA signature for each region set, sample combination.  
+1. Do a quick run-through of the MIRA workflow with each region set with a few samples from each condition/sample type to make sure the region sizes are reasonable (discussed later).  
+    1.1. Aggregate methylation data in bins across all regions in each region set to get a MIRA signature for each region set, sample combination.  
     1.2. Calculate MIRA score for each region set, sample combination based on the shape of the MIRA signature.  
 2. Based on preliminary results, pick a region size for each region set depending on what the MIRA signatures look like.  
 3. Run the full MIRA analysis with chosen region sizes.  
     3.1. Split the regions into bins and aggregate methylation data in those bins to get a MIRA signature for each region set, sample combination.  
     3.2. Calculate MIRA score for each region set, sample combination based on the shape of the MIRA signature.  
-    
-The below code shows step 3 of the process (the step after choosing region sizes that are appropriate for your data) although the same thing would be done for steps 1 and 2, just with fewer samples and guesses for the region sizes. How to choose these sizes is discussed more below.
 
+### Initial Run-through
+
+First, let's load the libraries and read in the data files.
 
 ```{r, eval = TRUE, message = FALSE}
 library(MIRA)
@@ -43,7 +44,6 @@ library(data.table) #fread, setkey,
 library(GenomicRanges) #GRanges, resize
 data(exampleAnnoDF2)#object name: "exampleAnnoDF2", data.table
 ```
-
 ```{r, eval = FALSE}
 # 12 Ewing samples: T1-T12
 caseFiles = paste0("RRBS_cpgMethylation_EWS_T", 1:12, ".bed") 
@@ -57,6 +57,11 @@ RRBSFiles = c(caseFiles, controlFiles)
 regionSetFiles = c("sknmc_specific.bed", "muscle-specific.bed")
 BSDTList = lapply(X = RRBSFiles, FUN = BSreadBiSeq)
 regionSets = lapply(X = regionSetFiles, FUN = fread)
+```
+
+Now we just need to get the data in the right format and pick initial region sizes. To get the methylation profile around our sites of interest, we are resizing the regions to 5000 bp. This is a wide initial guess compared to the average region sizes for the region sets (around 151 bp for both region sets), but we will adjust this later on.
+
+```{r, eval = FALSE}
 regionSets = lapply(X = regionSets, 
                     FUN = function(x) setNames(x, c("chr", "start", "end")))
 #converting list items from data.table to GRanges objects
@@ -64,14 +69,38 @@ regionSets = lapply(X = regionSets,
 regionSets = lapply(X = regionSets, FUN = 
                         function(x) GRanges(seqnames = x$chr, 
                                               ranges = IRanges(x$start, x$end)))
-regionSets[[1]] = resize(regionSets[[1]], 4000, fix = "center")
-regionSets[[2]] = resize(regionSets[[2]], 1750, fix = "center")
+regionSets[[1]] = resize(regionSets[[1]], 5000, fix = "center")
+regionSets[[2]] = resize(regionSets[[2]], 5000, fix = "center")
 names(regionSets) = c("Ewing_Specific", "Muscle_Specific")
 ```
+
+Now we are ready to run MIRA on a subset of the samples. First, we aggregate the methylation data into bins with `returnMIRABins`.
+
+```{r, eval = FALSE}
+subBSDTList=BSDTList[c(1, 5, 9, 13, 17, 21)] # three of each type
+bigBin = lapply(X = subBSDTList, FUN = returnMIRABins, GRList = regionSets, 
+                binNum = 21, minReads = 0, sampleNameInBSDT = TRUE)
+bigBinDT = rbindlist(bigBin)
+bigBinDT[, sampleName := gsub("RRBS_cpgMethylation_", "", sampleName)]
+```
+
+Let's look at the MIRA signatures to see if we should change our region sizes.
+
+```{r, eval = TRUE}
+data(ewingMyobigBinDT) #name: "bigBinDT", has binned data for this example
+# data.table functions are used to add info from annotation object to bigBinDT
+setkey(exampleAnnoDF2, sampleName)
+setkey(bigBinDT, sampleName)
+bigBinDT = merge(bigBinDT, exampleAnnoDF2, all.x = TRUE) #adding annotation
+plotMIRARegions(binnedRegDT = bigBinDT)
+```
+
+### Choosing Appropriate Region Sizes
 
 The resize function from the Genomic Ranges package was used to make the length of the Ewing DHS regions 4000 and the muscle DHS regions 1750. We made the muscle-specific regions smaller because we noticed that the dip in MIRA signatures was pretty narrow for some of the samples and we needed to stretch the dip out (make it wider) in order to accurately measure it with MIRA. Since MIRA scoring counts a few bins in the center of the MIRA signature as the bottom of the dip, the MIRA signature must be wide enough so that the middle 3-4 bins are at the bottom of the dip. If the regions are too small though, there might be more noise since there would be less methylation data for each bin. Also, the regions must be wide enough to capture the outer edges of the dip, where methylation levels stop increasing and level out or decrease, since the outer edges are used for the MIRA score. 
 When it comes to MIRA, lapply is your friend (although this is generally true anyway). This allows for distributed computing with mclapply if desired. For the next step, we divide each region into bins and find methylation that is contained in each bin in each region. Then matching bins will be aggregated over all regions (all bin1's together, all bin2's together, etc.). The function returnMIRABins accomplishes all of this. For the sake of symmetry and MIRA scoring, an odd bin number is recommended.
 
+### Full MIRA Analysis
 
 ```{r, eval = FALSE}
 bigBin = lapply(X = BSDTList, FUN = returnMIRABins, GRList = regionSets, 

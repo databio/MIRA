@@ -148,7 +148,7 @@ returnMIRABins = function(BSDT, GRList, binNum = 11, minReads = 500,
     methylByBin = methylByBin[!(binNumScreen < binNum)]
 
     bigMethylByBin = rbindlist(methylByBin)
-    if (sampleNameInBSDT) {
+    if (sampleNameInBSDT && (ncol(bigMethylByBin) != 0)) {
         #creating new sampleName column
         bigMethylByBin[, sampleName := rep(BSDT[1, sampleName])][] 
     }
