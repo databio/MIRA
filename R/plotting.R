@@ -76,13 +76,13 @@ xAxisForRegionPlots <- function(binNum) {
 #' with geom_boxplot and geom_jitter.
 #' @export
 #' @examples
-#' data(ewingMyobigBinDT) # bigBinDT object
-#' exScores = bigBinDT[, .(score=scoreDip(methyl, 
+#' data(ewingMyobigBinDT2) # bigBinDT object
+#' exScores = bigBinDT2[, .(score=scoreDip(methyl, 
 #'                                        binCount = 21, 
 #'                                        shoulderShift = 5)), 
 #'                     by = .(featureID, sampleName)]
 #' #adding annotation
-#' sampleType = rep(c("Ewing", "Muscle-related"), each = 24)
+#' sampleType = rep(c("Ewing", "Muscle-related"), each = 12)
 #' exScores = cbind(exScores, sampleType)
 #' exScorePlot = plotMIRAScores(exScores)         
 plotMIRAScores <- function(scoreDT, featID = unique(scoreDT[, featureID])){
