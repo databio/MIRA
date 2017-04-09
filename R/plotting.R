@@ -82,7 +82,7 @@ xAxisForRegionPlots <- function(binNum) {
 #'                                        shoulderShift = 5)), 
 #'                     by = .(featureID, sampleName)]
 #' #adding annotation
-#' sampleType = rep(c("Ewing", "Muscle-related"), each = 12)
+#' sampleType = rep(c("Ewing", "Muscle-related"), each = 24)
 #' exScores = cbind(exScores, sampleType)
 #' exScorePlot = plotMIRAScores(exScores)         
 plotMIRAScores <- function(scoreDT, featID = unique(scoreDT[, featureID])){
