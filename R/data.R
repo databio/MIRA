@@ -40,16 +40,31 @@ NULL
 #' @format A data.table, data.frame object
 #' @return No return value.
 NULL
-#' A data.table with binned methylation data for the "Applying MIRA to a 
-#' Biological Question" vignette. Has data for 24 Ewing samples and 24
-#' muscle-related samples (human skeletal myoblasts and other related
-#' samples).
+#' A data.table with binned methylation data for the first part of
+#' the "Applying MIRA to a Biological Question" vignette. 
+#' Has data for 3 Ewing samples and 3 muscle-related 
+#' samples (human skeletal myoblasts and other related
+#' samples). It is the product of `returnMIRABins`.
 #'
 #'
 #' @docType data
 #' @keywords datasets
-#' @name bigBinDT
-#' @usage data(ewingMyobigBinDT)
+#' @name bigBinDT1
+#' @usage data(ewingMyobigBinDT1)
+#' @format A data.table, data.frame object
+#' @return No return value.
+NULL
+#' A data.table with binned methylation data for the second part
+#' of the "Applying MIRA to a Biological Question" vignette. 
+#' Has data for 12 Ewing samples and 12 muscle-related samples 
+#' (human skeletal myoblasts and other related
+#' samples). It is the product of `returnMIRABins`.
+#'
+#'
+#' @docType data
+#' @keywords datasets
+#' @name bigBinDT2
+#' @usage data(ewingMyobigBinDT2)
 #' @format A data.table, data.frame object
 #' @return No return value.
 NULL
