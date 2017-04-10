@@ -19,19 +19,19 @@ Ewing sarcoma is a pediatric cancer defined by the fusion oncoprotein EWS-FLI1, 
 
 ### Input:
 
-This vignette requires large input files, which can be dowloaded here: [MIRA_vignette_files.tgz](provide_link_here). This archive contains: 
+This vignette requires large input files, which can be dowloaded here: [MIRA_Ewing_Vignette_Files.tgz](provide_link_here). This archive contains: 
 * Single-nucleotide resolution DNA methylation data (RRBS data) for 12 Ewing sarcoma samples and 12 myotube (muscle) samples recently analyzed in the paper [DNA methylation heterogeneity defines a disease spectrum in Ewing sarcoma](http://www.medical-epigenomics.org/papers/sheffield2017/).
 * Two sets of regions -- one with Ewing-specific DHSs and a one with muscle-specific DHSs, obtained from the [Regulatory Elements Database](http://db.databio.org/). All data is on the hg38 reference genome.
 
 ## Package workflow
   
-0. Start with appropriately formatted single-nucleotide resolution methylation data, region sets -- each with genomic regions corresponding to some biological annotation, and an annotation file that has sample name (sampleName column) and sample type (sampleType column).
+0. Start with appropriately formatted single-nucleotide resolution methylation data, region sets -- each with genomic regions corresponding to some biological annotation, and a sample annotation file that has sample name (sampleName column) and sample type (sampleType column).
 1. Do a quick run-through of the MIRA workflow with each region set with a few samples from each condition/sample type to make sure the region sizes are reasonable (discussed later).  
-    1.1. Aggregate methylation data in bins across all regions in each region set to get a MIRA signature for each region set, sample combination.  
+    1.1. Aggregate methylation data across regions to get a MIRA signature for each region set, sample combination.  
     1.2. Calculate MIRA score for each region set, sample combination based on the shape of the MIRA signature.  
 2. Based on preliminary results, pick a region size for each region set depending on what the MIRA signatures look like.  
 3. Run the full MIRA analysis with chosen region sizes.  
-    3.1. Split the regions into bins and aggregate methylation data in those bins to get a MIRA signature for each region set, sample combination.  
+    3.1. Aggregate methylation data across regions to get a MIRA signature for each region set, sample combination.  
     3.2. Calculate MIRA score for each region set, sample combination based on the shape of the MIRA signature.  
 
 ### Initial Run-through
@@ -51,7 +51,7 @@ caseFiles = paste0("EWS_T", 1:12, ".bed")
 controlFiles = c("Hsmm_", "Hsmmt_", "Hsmmfshd_","Hsmmtubefshd_")
 controlFiles=paste0(controlFiles, rep(1:3, each = 4), ".bed")
 RRBSFiles = c(caseFiles, controlFiles)
-regionSetFiles = c("sknmc_specific.bed", "muscle-specific.bed")
+regionSetFiles = c("sknmc_specific.bed", "muscle_specific.bed")
 BSDTList = lapply(X = RRBSFiles, FUN = BSreadBiSeq)
 regionSets = lapply(X = regionSetFiles, FUN = fread)
 ```
@@ -100,7 +100,7 @@ plotMIRARegions(binnedRegDT = bigBinDT1)
 
 ### Choosing Appropriate Region Sizes
 
-While the methylation profiles looked pretty good, the dips are kind of narrow for the muscle-related samples when looking at the muscle-specific region set. The scoring function in MIRA could run into problems if the dips are too narrow since it expects the dips to be at least 5 bins wide from outside edge to outside edge (that number includes the outside edges). Let's use smaller region sizes for both region sets: 4000 bp for the Ewing DHS regions and 1750 bp for the muscle DHS regions although the exact choice is somewhat arbitrary. The size of the regions should not be decreased too much however. If the regions are too small, there might be more noise since there would be less methylation data for each bin. Also, the regions must be wide enough to capture the outer edges of the dip since the outer edges are used for the MIRA score.
+While the methylation profiles look pretty good, the dips are kind of narrow for the muscle-related samples when looking at the muscle-specific region set. The scoring function in MIRA could run into problems if the dips are too narrow since it expects the dips to be at least 5 bins wide from outside edge to outside edge (that number includes the outside edges). Let's use smaller region sizes for both region sets: 4000 bp for the Ewing DHS regions and 1750 bp for the muscle DHS regions although the exact choice is somewhat arbitrary. The size of the regions should not be decreased too much however. If the regions are too small, there might be more noise since there would be less methylation data for each bin. Also, the regions must be wide enough to capture the outer edges of the dip since the outer edges are used for the MIRA score.
 
 To implement our new region sizes:
 
@@ -168,7 +168,13 @@ plotMIRAScores(sampleScores)
 ```
 
 ## Interpreting the Results
-UPDATE: We found that the Ewing sarcoma samples had higher MIRA scores for the Ewing-specific DHSs. The muscle-specific DHSs require more interpretation. The results depended a lot on the size of the regions. With wider regions, the scores were about the same for Ewing and muscle samples (not shown in this vignette). However, the muscle samples did generally have higher MIRA scores with the smaller regions we used. In general, interpretation will depend on the samples and region sets being used.
+As expected, we found that the Ewing sarcoma samples had higher MIRA scores for the Ewing-specific DHSs. The muscle-specific DHSs require more interpretation. The muscle samples on average had higher MIRA scores but there was not complete separation between the groups. This suggests that the Ewing samples still have some activity in muscle-specific regions. 
+
+UPDATE: with the smaller regions we used. The results depended a lot on the size of the regions. With wider regions, the scores were about the same for Ewing and muscle samples (not shown in this vignette). 
+
+## General Interpretation Tips and Caveats
+In general, interpretation will depend on the samples and region sets being used. For transcription factor (TF) activity, the MIRA score does not directly tell you the absolute or even the relative activity of the TF. Since the dip in the methylation profile could be impacted by other TFs and regulatory elements as well as the TF of interest, it is possible that a sample could have a higher MIRA score for TF-binding regions than another sample yet still have less activity for that TF (but perhaps more activity for other regulatory elements that happen to also be in the same regions). In some cases, you may still be able to infer TF activity but it should just be kept in mind that other factors could affect the MIRA signatures/scores. With TF-binding region sets, it is easier to infer that the regions where the TF binds in one sample have altered activity relative to another sample, regardless of the activity of the TF itself. As a general rule, more care should be taken in interpretation when comparing very different sample types (like different tissues or cell types), than when comparing samples of the same overall type with some being experimentally perturbed (like drug-treated vs. control in the same cell type). This is because we would expect the overall epigenetic landscape to be more different between tissues/different cell types than between differently treated samples of the same type (although whether this holds will depend on the context).
+
 
 ## Other Tips for Using MIRA
 When it comes to MIRA, lapply is your friend (although this is generally true anyway). This allows for distributed computing with mclapply if desired. 
