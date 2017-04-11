@@ -32,7 +32,8 @@ plotMIRARegions <- function(binnedRegDT,
                     geom_hline(yintercept=c(0), alpha=.2) +
                     ylab("DNA Methylation (%)") + 
                     xlab("Genome Regions Surrounding Sites") +
-                    scale_color_discrete(name = "Sample Type") +
+                    scale_colour_brewer(name = "Sample Type", 
+                                        palette = "Dark2") +
                     scale_x_discrete(labels=xAxisForRegionPlots(binNum))
                     
     
@@ -93,7 +94,7 @@ plotMIRAScores <- function(scoreDT, featID = unique(scoreDT[, featureID])){
             theme_classic() +
             ylab("MIRA Score") + xlab("Sample Type") +
             geom_boxplot(aes(fill = sampleType), alpha = 0.75) + 
-            scale_fill_brewer(name = "Sample Type", palette="Set1") +
+            scale_fill_brewer(name = "Sample Type", palette="Dark2") +
             geom_jitter(data = scoreDT[featID], 
                         mapping = aes(x = sampleType, y = score)) + 
             scale_color_manual(guide = FALSE, values = rep("black", sampleTypeNum)) +
