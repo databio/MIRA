@@ -20,8 +20,8 @@ with geom_boxplot and geom_jitter.
 A function to plot MIRA scores and compare case/control.
 }
 \examples{
-data(ewingMyobigBinDT) # bigBinDT object
-exScores = bigBinDT[, .(score=scoreDip(methyl, 
+data(ewingMyobigBinDT2) # bigBinDT object
+exScores = bigBinDT2[, .(score=scoreDip(methyl, 
                                        binCount = 21, 
                                        shoulderShift = 5)), 
                     by = .(featureID, sampleName)]
