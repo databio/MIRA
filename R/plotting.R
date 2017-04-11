@@ -32,7 +32,7 @@ plotMIRARegions <- function(binnedRegDT,
                     geom_hline(yintercept=c(0), alpha=.2) +
                     ylab("DNA Methylation (%)") + 
                     xlab("Genome Regions Surrounding Sites") +
-                    scale_colour_brewer(name = "Sample Type", 
+                    scale_color_brewer(name = "Sample Type", 
                                         palette = "Dark2") +
                     scale_x_discrete(labels=xAxisForRegionPlots(binNum))
                     

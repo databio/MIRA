@@ -17,6 +17,7 @@
 #' @importFrom ggplot2 ggplot aes facet_wrap geom_boxplot geom_jitter geom_line
 #'             theme_classic xlab ylab geom_hline ylim scale_color_discrete
 #'             scale_x_discrete scale_fill_brewer scale_color_manual
+#'             scale_color_brewer
 #' @import BiocGenerics S4Vectors IRanges
 #' @importFrom data.table ":=" setDT data.table setkey fread setnames 
 #'             setcolorder rbindlist setattr setorder
