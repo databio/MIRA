@@ -62,6 +62,7 @@ First let's load the example data. `exampleBSDT` is a data.table containing geno
 
 ```{r}
 library(MIRA)
+library(GenomicRanges) #for the `resize` function
 #name "exampleRegionSet", class GRanges
 data("Gm12878Nrf1_Subset", package = "MIRA")
 #name "exampleBSDT", class data.table/dataframe
@@ -73,6 +74,7 @@ BSDTList = list(exampleBSDT)
 Next we aggregate the methylation across regions to get a summary methylation profile with the `returnMIRABins` function. MIRA divides each region into bins, finds methylation that is contained in each bin in each region, and aggregates matching bins over all the regions (all 1st bins together, 2nd bins together, etc.). A couple important parameters: The binNum argument determines how many approximately equally sized bins each region is split into. The minReads argument in returnMIRABins is used to screen out region sets that have any bins with fewer than a minimum number of reads. Here we use the default (500). Let's aggregate the methylation and then view the MIRA signature.
 
 ```{r Aggregate_methylation, message = FALSE, warning = FALSE}
+exampleRegionSet = resize(exampleRegionSet, 4000, fix = "center")
 bigBin = lapply(X = BSDTList, FUN = returnMIRABins, GRList = exampleRegionSet, 
                 binNum = 11, sampleNameInBSDT = TRUE)
 bigBinDT = bigBin[[1]]
