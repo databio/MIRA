@@ -50,6 +50,7 @@
 #' @examples
 #' data("GM06990_1_ExampleSet") #exampleBSDT
 #' data("Gm12878Nrf1_Subset") #exampleRegionSet
+#' exampleBSDT = addMethCol(exampleBSDT)
 #' aggregateBins = BSBinAggregate(BSDT = exampleBSDT, 
 #'                              rangeDT = exampleRegionSet, 
 #'                              binCount = 11, splitFactor = NULL)
@@ -57,6 +58,19 @@
 #' @export
 BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500, 
                           byRegionGroup = TRUE, splitFactor = NULL) {
+    
+    #BSDT should not be a list but can be converted
+    if ("list" %in% class(BSDT)) {
+        if (length(BSDT) == 1) {
+            BSDT = BSDT[[1]]
+        } else {
+            stop("Only one BSDT may be given to function. BSDT should not be a list.")
+        }
+    }
+    if (! ("data.table" %in% class(BSDT))) {
+        stop("BSDT must be a data.table")
+    }
+    
     
     #if given GRanges object, change to DT
     if ("GRanges" %in% class(rangeDT)) {

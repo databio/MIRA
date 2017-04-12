@@ -75,6 +75,18 @@ returnMIRABins = function(BSDT, GRList, binNum = 11, minReads = 500,
                           sampleNameInBSDT = TRUE){
   
     #########returnMIRABins:Preprocessing and formatting###############
+    #BSDT should not be a list but can be converted
+    if ("list" %in% class(BSDT)) {
+        if (length(BSDT) == 1) {
+            BSDT = BSDT[[1]]
+        } else {
+            stop("Only one BSDT may be given to function. BSDT should not be a list.")
+        }
+    }
+    if (! ("data.table" %in% class(BSDT))) {
+        stop("BSDT must be a data.table")
+    }
+    
     #converting to list format if GRList is a data.table or GRanges object
     if (class(GRList) %in% "GRanges") {
       GRList = GRangesList(GRList)
@@ -187,12 +199,6 @@ returnMIRABins = function(BSDT, GRList, binNum = 11, minReads = 500,
 #' @export
 MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio", 
                      sampleNameInBSDT = TRUE, minReads = 500){
-
-    #making sure methyl column is part of input BSDT
-    if (!("methyl" %in% names(BSDT))) {
-        stop("BSDT must have a methyl column with proportion of methylation. 
-             addMethCol() will add this.")
-    }
 
     MIRAresults = list()
 

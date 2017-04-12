@@ -60,7 +60,7 @@ The general workflow is as follows:
 ### The Input
 First let's load the example data. `exampleBSDT` is a data.table containing genomic location, methylation hit number, and read number from bisulfite sequencing of an Epstein Bar Virus-transformed B-lymphocyte cell line. exampleRegionSet is a GRanges object with regions that share a biological annotation, in this case Nrf1 binding in a different EBV-transformed B-lymphocyte cell line.
 
-```{r}
+```{r, message = FALSE}
 library(MIRA)
 library(GenomicRanges) #for the `resize` function
 #name "exampleRegionSet", class GRanges
@@ -75,6 +75,7 @@ Next we aggregate the methylation across regions to get a summary methylation pr
 
 ```{r Aggregate_methylation, message = FALSE, warning = FALSE}
 exampleRegionSet = resize(exampleRegionSet, 4000, fix = "center")
+BSDTList = addMethCol(BSDTList)
 bigBin = lapply(X = BSDTList, FUN = returnMIRABins, GRList = exampleRegionSet, 
                 binNum = 11, sampleNameInBSDT = TRUE)
 bigBinDT = bigBin[[1]]
