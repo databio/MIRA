@@ -13,7 +13,7 @@ vignette: >
 This vignette gives a broad overview of MIRA. For a more realistic example workflow, see the vignette "Applying MIRA to a Biological Question."
 
 ## MIRA Overview
-MIRA (Methylation-based Inference of Regulatory Activity) aggregates DNA methylation data from a set of region across the genome, producing a single aggregated summary profile of DNA methylation for those regions combined. MIRA then uses this profile to produce a score (the MIRA score) that infers the level of regulatory activity on the basis of the shape of the DNA methylation profile. The region set is provided by the user and should correspond to a shared feature, such as binding of a particular transcription factor. The shape of the resulting signature and the associated score can be used as a metric to compare regulatory activity in different samples and conditions. MIRA works with genome-scale, single-nucleotide-resolution methylation data, such as reduced representation bisulfite sequencing (RRBS) or whole genome bisulfite sequencing (WGBS) data. MIRA overcomes sparsity in DNA methylation data by aggregating across many regions. Since methylation will generally be lower at the location of transcription factor binding compared to surrounding regions (exceptions exist of course), MIRA can be used to infer differential transcription factor activity based on changes in the deepness of the dip in the MIRA signature, which implies increased or decreased binding. Below are example methylation profiles and associated MIRA scores for two samples. This vignette will show how to arrive at these outputs from the starting inputs of DNA methylation data and region sets.
+MIRA (Methylation-based Inference of Regulatory Activity) aggregates DNA methylation data from a set of regions across the genome, producing a single summary profile of DNA methylation for those regions. MIRA then uses this profile to produce a score (the MIRA score) that infers the level of regulatory activity on the basis of the shape of the DNA methylation profile. The region set is provided by the user and should contain regions that correspond to a shared feature, such as binding of a particular transcription factor or DNase hypersensitivity sites. Since methylation will generally be lower in active genomic regions where proteins such as transcription factors are binding compared to surrounding regions (exceptions may exist of course), the shape of the MIRA signature and the associated score can be used as a metric to compare regulatory activity in different samples and conditions. MIRA works with genome-scale, single-nucleotide-resolution methylation data, such as reduced representation bisulfite sequencing (RRBS) or whole genome bisulfite sequencing (WGBS) data. MIRA overcomes sparsity in DNA methylation data by aggregating across many regions. Below are examples of methylation profiles and associated MIRA scores for two (contrived) samples. This vignette will show obtain a methylation profile and MIRA score from the starting inputs of DNA methylation data and a region set.
 
 ```{r, echo = FALSE}
 library(MIRA)
@@ -44,7 +44,7 @@ head(exampleBSDT)
 ```
 
 ### Region Sets
-A region set is a set of genomic regions that share a biological annotation, like ChIP peaks for a transcription factor. Many types of region sets may be used with MIRA, including ChIP for transcription factors or histone modifications, promoters for a set of related genes, sites of motif matches, or DNase hypersensitivity sites. Many such region sets may be found in online repositories and we have pulled together some major sources at http://databio.org/regiondb. For use in MIRA, each region set should be a GRanges object and multiple region sets may be passed to MIRA as a GRangesList with each list element being a region set. Here is an example of a region set we will use in this vignette:
+A region set is a set of genomic regions that share a biological annotation, like ChIP peaks for a transcription factor. Many types of region sets may be used with MIRA, including ChIP regions for transcription factors or histone modifications, promoters for a set of related genes, sites of motif matches, or DNase hypersensitivity sites. Many such region sets may be found in online repositories and we have pulled together some major sources at http://databio.org/regiondb. You may also want to check out [the `AnnotationHub` Bioconductor package](https://www.bioconductor.org/packages/release/bioc/html/AnnotationHub.html) which gives access to many region sets in an R-friendly format. For use in MIRA, each region set should be a GRanges object and multiple region sets may be passed to MIRA as a GRangesList with each list element being a region set. Here is an example of a region set, which we will use in this vignette:
 
 ```{r, message = FALSE}
 data("Gm12878Nrf1_Subset", package = "MIRA")
@@ -54,11 +54,12 @@ head(exampleRegionSet)
 ## Package Workflow
 The general workflow is as follows:  
 1. Start with single-nucleotide resolution methylation data and one or more sets of genomic regions.   
-2. Aggregate methylation data across regions to get a MIRA signature.  
-3. Calculate MIRA score based on shape of MIRA signature.
+2. Expand the regions sizes so that MIRA will be able to get a broad methylation profile around your feature of interest.  
+3. Aggregate methylation data across regions to get a MIRA signature.  
+4. Calculate MIRA score based on shape of MIRA signature.
 
 ### The Input
-First let's load the example data. `exampleBSDT` is a data.table containing genomic location, methylation hit number, and read number from bisulfite sequencing of an Epstein Bar Virus-transformed B-lymphocyte cell line. exampleRegionSet is a GRanges object with regions that share a biological annotation, in this case Nrf1 binding in a different EBV-transformed B-lymphocyte cell line.
+First let's load the necessary libraries and example data. `exampleBSDT` is a data.table containing genomic location, methylation hit number, and read number from bisulfite sequencing of an Epstein Bar Virus-transformed B-lymphocyte cell line. exampleRegionSet is a GRanges object with regions that share a biological annotation, in this case Nrf1 binding in a different EBV-transformed B-lymphocyte cell line.
 
 ```{r, message = FALSE}
 library(MIRA)
@@ -70,11 +71,18 @@ data("GM06990_1_ExampleSet", package = "MIRA")
 BSDTList = list(exampleBSDT)
 ```
 
+### Expand Your Regions
+
+A short but important step. Let's use the `resize` function from the `GenomicRanges` package to increase the size of our regions. 
+
+```{r}
+exampleRegionSet = resize(exampleRegionSet, 4000, fix = "center")
+```
+
 ### Aggregation of Methylation across Regions
-Next we aggregate the methylation across regions to get a summary methylation profile with the `returnMIRABins` function. MIRA divides each region into bins, finds methylation that is contained in each bin in each region, and aggregates matching bins over all the regions (all 1st bins together, 2nd bins together, etc.). A couple important parameters: The binNum argument determines how many approximately equally sized bins each region is split into. The minReads argument in returnMIRABins is used to screen out region sets that have any bins with fewer than a minimum number of reads. Here we use the default (500). Let's aggregate the methylation and then view the MIRA signature.
+Next we aggregate the methylation across regions to get a summary methylation profile with the `returnMIRABins` function. MIRA divides each region into bins, finds methylation that is contained in each bin in each region, and aggregates matching bins over all the regions (all 1st bins together, 2nd bins together, etc.). A couple important parameters: The binNum argument determines how many approximately equally sized bins each region is split into. This could affect the resolution or noisiness of the MIRA signature because using more bins will result in smaller bin sizes (potentially increasing resolution) but also less reads per bin (potentially increasing noise). The minReads argument in returnMIRABins is used to screen out region sets that have any bins with fewer than a minimum number of reads. Here we use the default (500). Let's aggregate the methylation and then view the MIRA signature.
 
 ```{r Aggregate_methylation, message = FALSE, warning = FALSE}
-exampleRegionSet = resize(exampleRegionSet, 4000, fix = "center")
 BSDTList = addMethCol(BSDTList)
 bigBin = lapply(X = BSDTList, FUN = returnMIRABins, GRList = exampleRegionSet, 
                 binNum = 11, sampleNameInBSDT = TRUE)

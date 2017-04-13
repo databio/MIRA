@@ -61,6 +61,7 @@ all bin2's together, etc.).
 \examples{
 data("GM06990_1_ExampleSet") #exampleBSDT
 data("Gm12878Nrf1_Subset") #exampleRegionSet
+exampleBSDT = addMethCol(exampleBSDT)
 aggregateBins = BSBinAggregate(BSDT = exampleBSDT, 
                              rangeDT = exampleRegionSet, 
                              binCount = 11, splitFactor = NULL)
