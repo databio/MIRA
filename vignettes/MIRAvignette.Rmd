@@ -79,7 +79,13 @@ BSDTList = addMethCol(BSDTList)
 
 ### Expand Your Regions
 
-A short but important step. Let's use the `resize` function from the `GenomicRanges` package to increase the size of our regions. 
+A short but important step. Let's use the `resize` function from the `GenomicRanges` package to increase the size of our regions. The average size of our regions is about 500:
+
+```{r}
+mean(width(exampleRegionSet))
+```
+
+Since MIRA uses the broader methylation profile around the regions of interest to judge how deep the dips in the region of interest are, we want to expand our regions. For this vignette, 4000 bp regions should be wide enough to capture the dip:
 
 ```{r}
 exampleRegionSet = resize(exampleRegionSet, 4000, fix = "center")
