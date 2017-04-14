@@ -71,6 +71,12 @@ data("GM06990_1_ExampleSet", package = "MIRA")
 BSDTList = list(exampleBSDT)
 ```
 
+Since our input methylation data did not have a column for proportion of methylation at each site, we need to add this based on the methylation count and total coverage data.
+
+```{r}
+BSDTList = addMethCol(BSDTList)
+```
+
 ### Expand Your Regions
 
 A short but important step. Let's use the `resize` function from the `GenomicRanges` package to increase the size of our regions. 
@@ -83,7 +89,6 @@ exampleRegionSet = resize(exampleRegionSet, 4000, fix = "center")
 Next we aggregate the methylation across regions to get a summary methylation profile with the `returnMIRABins` function. MIRA divides each region into bins, finds methylation that is contained in each bin in each region, and aggregates matching bins over all the regions (all 1st bins together, 2nd bins together, etc.). A couple important parameters: The binNum argument determines how many approximately equally sized bins each region is split into. This could affect the resolution or noisiness of the MIRA signature because using more bins will result in smaller bin sizes (potentially increasing resolution) but also less reads per bin (potentially increasing noise). The minReads argument in returnMIRABins is used to screen out region sets that have any bins with fewer than a minimum number of reads. Here we use the default (500). Let's aggregate the methylation and then view the MIRA signature.
 
 ```{r Aggregate_methylation, message = FALSE, warning = FALSE}
-BSDTList = addMethCol(BSDTList)
 bigBin = lapply(X = BSDTList, FUN = returnMIRABins, GRList = exampleRegionSet, 
                 binNum = 11, sampleNameInBSDT = TRUE)
 bigBinDT = bigBin[[1]]
@@ -103,4 +108,4 @@ head(sampleScores)
 For real uses of MIRA, samples and region sets should be annotated. The `data.table` for each sample should include a `sampleName` column while region sets should be given to MIRA in a named list/GRangesList. An annotation file that matches sample name with sample type (`sampleType` column) can be used to add sample type information to the data.table after aggregating methylation. A sampleType column is not required for the main functions but is used for the plotting functions. See "Applying MIRA to a Biological Question" vignette for a workflow including annotation.
 
 ## Interpreting the Results
-Regulatory information can be inferred from the MIRA scores and signatures but interpretation depends on the type of region set used. For example, for transcription factor region sets (non-methylation binding TFs), lower dips in the signatures and higher scores in one condition compared to another suggests that there is more transcription factor binding in the condition with higher scores. The general trend of deeper dips being associated with increased activity may apply to other types of region sets as well.
+Regulatory information can be inferred from the MIRA scores and signatures but interpretation depends on the type of region set and samples used. The basic assumption is that deeper dips and higher MIRA scores would be associated with generally higher activity at the regions that were tested, which might also inform you about the activity of the regulatory feature that defines the region set (eg the activity of a transcription factor if using ChIP-seq regions). However, MIRA does not directly tell you the activity of the regulatory feature and, in some cases, higher MIRA scores will not be associated with higher activity of the regulatory feature. For example, samples with higher MIRA scores for a transcription factor binding region set could have more activity of that transcription factor but there could be other causes like increased activity of a different transcription factor that binds to many of the same regions or the fact that the samples with higher scores generally had more similar chromatin states to the samples from which the region set was derived than samples with lower scores did (eg when using MIRA on samples from multiple tissue/cell types and the region set was derived from the same tissue/cell type as some but not all of the samples). The general interpretation rule though is a higher MIRA score means more activity (although what kind of activity depends on the context). For more on interpreting the results, see the "Applying MIRA to a Biological Question" vignette.
