@@ -107,7 +107,7 @@ returnMIRABins = function(BSDT, GRList, binNum = 11, minReads = 500,
         warning("GRList should be a named list/GRangesList. 
                 Sequential names given according to order in object.")
         names(GRList) <- paste0(rep("RegionSet", length(GRList)), 
-                              1:length(GRList))
+                              seq_along(GRList))
     }
 
     #checking that all objects in GRList are the same type 
@@ -151,7 +151,7 @@ returnMIRABins = function(BSDT, GRList, binNum = 11, minReads = 500,
     names(methylByBin) = names(GRList)#preserving names
     #adding a feature ID column to each data.table that 
     #should identify what region set was used
-    for (i in 1:length(methylByBin)) {
+    for (i in seq_along(methylByBin)) {
         methylByBin[[i]][, featureID := rep(names(methylByBin)[i], 
                                            nrow(methylByBin[[i]]))][]
     }

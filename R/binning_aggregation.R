@@ -220,12 +220,12 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
     
     # Build a table to keep track of which regions belong to which group
     region2group = data.table(
-        regionID = 1:length(regionsGR), 
+        regionID = seq_along(regionsGR), 
         chr = as.vector(seqnames(regionsGR)), 
         start = as.vector(start(regionsGR)), 
         end = as.vector(end(regionsGR)), 
         withinGroupID = as.vector(unlist(sapply(regionsGRL.length, seq))), 
-        regionGroupID = rep(1:length(regionsGRL), regionsGRL.length))
+        regionGroupID = rep(seq_along(regionsGRL), regionsGRL.length))
     setkey(region2group, regionID)
     
     
@@ -428,9 +428,9 @@ binRegion = function(start, end, bins, idDF = NULL, strand = "*") {
         #do all regions in the same order
         dt = data.table(start = breaks[-endpoints], 
                         end = breaks[-startpoints], 
-                        id = rep((1:length(start)), each = bins), 
+                        id = rep((seq_along(start)), each = bins), 
                         binID = 1:bins, 
-                        ubinID = 1:length(breaks[-startpoints]), 
+                        ubinID = seq_along(breaks[-startpoints]), 
                         key = "id")
         
     }

@@ -159,7 +159,7 @@ dtToGrInternal = function(DT, chr, start,
     if (! is.na(name)) {
         names(gr) = DT[[`name`]];
     } else {
-        names(gr) = 1:length(gr);
+        names(gr) = seq_along(gr);
     }
     if (! is.na(metaCols)) {
         for(x in metaCols) {
@@ -182,7 +182,7 @@ dtToGrInternal = function(DT, chr, start,
 BSdtToGRanges = function(dtList) {
     
     gList = list();
-    for (i in 1:length(dtList)) {
+    for (i in seq_along(dtList)) {
         #dt = dtList[[i]];
         setkey(dtList[[i]], chr, start)
         #convert the data into granges object
