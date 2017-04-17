@@ -1,11 +1,11 @@
 ---
-title: "Getting started with Methylation-based Inference of Regulatory Activity"
+title: "Getting Started with Methylation-based Inference of Regulatory Activity"
 author: "John Lawson"
 date: "`r Sys.Date()`"
 output: 
   BiocStyle::html_document
 vignette: >
-  %\VignetteIndexEntry{Methylation-based Inference of Regulatory Activity}
+  %\VignetteIndexEntry{Getting Started with Methylation-based Inference of Regulatory Activity}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -15,12 +15,12 @@ This vignette gives a broad overview of MIRA. For a more realistic example workf
 ## MIRA Overview
 MIRA (Methylation-based Inference of Regulatory Activity) aggregates DNA methylation data from a set of regions across the genome, producing a single summary profile of DNA methylation for those regions. MIRA then uses this profile to produce a score (the MIRA score) that infers the level of regulatory activity on the basis of the shape of the DNA methylation profile. The region set is provided by the user and should contain regions that correspond to a shared feature, such as binding of a particular transcription factor or DNase hypersensitivity sites. Since methylation will generally be lower in active genomic regions where proteins such as transcription factors are binding compared to surrounding regions (exceptions may exist of course), the shape of the MIRA signature and the associated score can be used as a metric to compare regulatory activity in different samples and conditions. MIRA works with genome-scale, single-nucleotide-resolution methylation data, such as reduced representation bisulfite sequencing (RRBS) or whole genome bisulfite sequencing (WGBS) data. MIRA overcomes sparsity in DNA methylation data by aggregating across many regions. Below are examples of methylation profiles and associated MIRA scores for two (contrived) samples. This vignette will show obtain a methylation profile and MIRA score from the starting inputs of DNA methylation data and a region set.
 
-```{r, echo = FALSE}
+```{r, echo=FALSE}
 library(MIRA)
 data(exampleBins)
 plotMIRARegions(exampleBins)
-exScores = exampleBins[, .(score = scoreDip(methyl, binCount = 11)), 
-                       by = .(featureID, sampleName)]
+exScores = exampleBins[, .(score = scoreDip(methyl, binCount=11)), 
+                       by=.(featureID, sampleName)]
 #normally sampleType would come from annotation object 
 #but for this example we are manually adding sampleType column
 exScores[, sampleType := c("Condition1", "Condition2")][] 
@@ -39,15 +39,15 @@ Let's describe each one in more detail:
 MIRA requires DNA methylation data after methylation calling. For a given genomic coordinate (the location of the C in a CpG), MIRA needs  two values: the number of methylated reads, and the total number of reads. This data should be represented as a `data.table` for each sample with columns `chr`, `start` (the coordinate of the C of the CpG), `hitCount` (number of methylated reads), `readCount` (total number of reads covering this site), `methyl` (`hitCount/readCount`), and (optionally) `sampleName` (sample identifier). Here is an example of a `data.table` in the right format for input to MIRA:
 
 ```{r}
-data("GM06990_1_ExampleSet", package = "MIRA")
+data("GM06990_1_ExampleSet", package="MIRA")
 head(exampleBSDT)
 ```
 
 ### Region Sets
 A region set is a set of genomic regions that share a biological annotation, like ChIP peaks for a transcription factor. Many types of region sets may be used with MIRA, including ChIP regions for transcription factors or histone modifications, promoters for a set of related genes, sites of motif matches, or DNase hypersensitivity sites. Many such region sets may be found in online repositories and we have pulled together some major sources at http://databio.org/regiondb. You may also want to check out [the `AnnotationHub` Bioconductor package](https://www.bioconductor.org/packages/release/bioc/html/AnnotationHub.html) which gives access to many region sets in an R-friendly format. For use in MIRA, each region set should be a GRanges object and multiple region sets may be passed to MIRA as a GRangesList with each list element being a region set. Here is an example of a region set, which we will use in this vignette:
 
-```{r, message = FALSE}
-data("Gm12878Nrf1_Subset", package = "MIRA")
+```{r, message=FALSE}
+data("Gm12878Nrf1_Subset", package="MIRA")
 head(exampleRegionSet)
 ```
 
@@ -61,13 +61,13 @@ The general workflow is as follows:
 ### The Input
 First let's load the necessary libraries and example data. `exampleBSDT` is a data.table containing genomic location, methylation hit number, and read number from bisulfite sequencing of an Epstein Bar Virus-transformed B-lymphocyte cell line. exampleRegionSet is a GRanges object with regions that share a biological annotation, in this case Nrf1 binding in a different EBV-transformed B-lymphocyte cell line.
 
-```{r, message = FALSE}
+```{r, message=FALSE}
 library(MIRA)
 library(GenomicRanges) #for the `resize` function
 #name "exampleRegionSet", class GRanges
-data("Gm12878Nrf1_Subset", package = "MIRA")
+data("Gm12878Nrf1_Subset", package="MIRA")
 #name "exampleBSDT", class data.table/dataframe
-data("GM06990_1_ExampleSet", package = "MIRA")
+data("GM06990_1_ExampleSet", package="MIRA")
 BSDTList = list(exampleBSDT)
 ```
 
@@ -88,25 +88,25 @@ mean(width(exampleRegionSet))
 Since MIRA uses the broader methylation profile around the regions of interest to judge how deep the dips in the region of interest are, we want to expand our regions. For this vignette, 4000 bp regions should be wide enough to capture the dip:
 
 ```{r}
-exampleRegionSet = resize(exampleRegionSet, 4000, fix = "center")
+exampleRegionSet = resize(exampleRegionSet, 4000, fix="center")
 ```
 
 ### Aggregation of Methylation across Regions
 Next we aggregate the methylation across regions to get a summary methylation profile with the `returnMIRABins` function. MIRA divides each region into bins, finds methylation that is contained in each bin in each region, and aggregates matching bins over all the regions (all 1st bins together, 2nd bins together, etc.). A couple important parameters: The binNum argument determines how many approximately equally sized bins each region is split into. This could affect the resolution or noisiness of the MIRA signature because using more bins will result in smaller bin sizes (potentially increasing resolution) but also less reads per bin (potentially increasing noise). The minReads argument in returnMIRABins is used to screen out region sets that have any bins with fewer than a minimum number of reads. Here we use the default (500). Let's aggregate the methylation and then view the MIRA signature.
 
-```{r Aggregate_methylation, message = FALSE, warning = FALSE}
-bigBin = lapply(X = BSDTList, FUN = returnMIRABins, GRList = exampleRegionSet, 
-                binNum = 11, sampleNameInBSDT = TRUE)
+```{r Aggregate_methylation, message=FALSE, warning=FALSE}
+bigBin = lapply(X=BSDTList, FUN=returnMIRABins, GRList=exampleRegionSet, 
+                binNum=11, sampleNameInBSDT=TRUE)
 bigBinDT = bigBin[[1]]
-plotMIRARegions(binnedRegDT = bigBinDT)
+plotMIRARegions(binnedRegDT=bigBinDT)
 ```
 
 ### Calculating the MIRA Score
 To calculate MIRA scores based on the MIRA signatures, we will apply the scoring function, `scoreDip`, to the `data.table` containing the methylation aggregated in bins using data.table syntax. `scoreDip` calculates a score for each group of bins corresponding to a sample and region set, based on the degree of the dip in the signature. With MIRA's default scoring method (`logratio`), `scoreDip` will take the log of the ratio of the outside edges of the dip to the center of the dip. Higher MIRA scores are associated with deeper dips. A flat MIRA signature would have a score of 0.
 
-```{r Scoring, warning = FALSE}
-sampleScores = bigBinDT[, .(score = scoreDip(methyl, binCount = 11)), 
-                        by = .(featureID, sampleName)]
+```{r Scoring, warning=FALSE}
+sampleScores = bigBinDT[, .(score = scoreDip(methyl, binCount=11)), 
+                        by=.(featureID, sampleName)]
 head(sampleScores)
 ```
 
