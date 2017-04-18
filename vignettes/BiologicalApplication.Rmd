@@ -36,13 +36,14 @@ This vignette requires large input files, which can be dowloaded here: [MIRA_Ewi
 
 ### Initial Run-through
 
-First, let's load the libraries and read in the data files. For the libraries and the sample annotation file which was included in the built-in package data:
+First, let's load the libraries and read in the data files. For the libraries and the sample annotation file which was included with the package:
 
 ```{r, eval=TRUE, message=FALSE}
 library(MIRA)
 library(data.table) # for the functions: fread, setkey, merge
 library(GenomicRanges) # for the functions: GRanges, resize
-data(exampleAnnoDT2) # object name: "exampleAnnoDT2", data.table
+exampleAnnoDT2 = fread(system.file("extdata", "exampleAnnoDT2.txt", 
+                                   package="MIRA")) 
 ```
 
 Here we are getting file names for the DNA methylation samples and the region sets which were available for download through the link in the `Input` section.
@@ -63,6 +64,8 @@ Let's read the files into R:
 BSDTList = lapply(X=RRBSFiles, FUN=BSreadBiSeq)
 regionSets = lapply(X=regionSetFiles, FUN=fread)
 ```
+
+To read in the 
 
 We need to do a bit of preprocessing before we plug the data into MIRA. Let's convert the region sets from `data.table` objects to `GRanges` objects, including chromosome, start, and end info. In most cases, strand information is not needed by MIRA and should be omitted. 
 
