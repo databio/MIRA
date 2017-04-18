@@ -42,7 +42,7 @@ First, let's load the libraries and read in the data files. For the libraries an
 library(MIRA)
 library(data.table) # for the functions: fread, setkey, merge
 library(GenomicRanges) # for the functions: GRanges, resize
-data(exampleAnnoDF2) # object name: "exampleAnnoDF2", data.table
+data(exampleAnnoDT2) # object name: "exampleAnnoDT2", data.table
 ```
 
 Here we are getting file names for the DNA methylation samples and the region sets which were available for download through the link in the `Input` section.
@@ -82,11 +82,11 @@ regionSets[[2]] = resize(regionSets[[2]], 5000, fix="center")
 names(regionSets) = c("Ewing_Specific", "Muscle_Specific")
 ```
 
-Now we are ready to run MIRA on a subset of the samples -- three Ewing and three muscle samples. First, we aggregate the methylation data into bins with `returnMIRABins`. MIRA divides each region into bins and finds methylation that is contained in each bin in each region. Then matching bins are aggregated over all regions (all bin1's together, all bin2's together, etc.). The bin number (`binNum`) will affect the resolution or noisiness of the data -- a higher bin number will allow more resolution since each bin will correspond to a smaller genomic region but with the trade-off of possibly increasing noise due to less methylation data in each bin. An odd bin number is recommended for the sake of symmetry and MIRA scoring.
+Now we are ready to run MIRA on a subset of the samples -- three Ewing and three muscle samples. First, we aggregate the methylation data into bins with `aggregateMethyl`. MIRA divides each region into bins and finds methylation that is contained in each bin in each region. Then matching bins are aggregated over all regions (all bin1's together, all bin2's together, etc.). The bin number (`binNum`) will affect the resolution or noisiness of the data -- a higher bin number will allow more resolution since each bin will correspond to a smaller genomic region but with the trade-off of possibly increasing noise due to less methylation data in each bin. An odd bin number is recommended for the sake of symmetry and MIRA scoring.
 
 ```{r, eval=FALSE}
 subBSDTList = BSDTList[c(1, 5, 9, 13, 17, 21)]
-bigBin = lapply(X=subBSDTList, FUN=returnMIRABins, GRList=regionSets, 
+bigBin = lapply(X=subBSDTList, FUN=aggregateMethyl, GRList=regionSets, 
                 binNum=21, minReads=0, sampleNameInBSDT=TRUE)
 bigBinDT1 = rbindlist(bigBin)
 ```
@@ -101,15 +101,15 @@ data(ewingMyobigBinDT1)
 Next we add on annotation data: the experimental condition or sample type for each sample. This is needed in order to group samples by sample type, which we will do when plotting the methylation profiles and MIRA scores. We will use functions from the `data.table` package to do this, merging based on the `sampleName` column.
 
 ```{r, eval=TRUE}
-setkey(exampleAnnoDF2, sampleName)
+setkey(exampleAnnoDT2, sampleName)
 setkey(bigBinDT1, sampleName)
-bigBinDT1 = merge(bigBinDT1, exampleAnnoDF2, all.x=TRUE)
+bigBinDT1 = merge(bigBinDT1, exampleAnnoDT2, all.x=TRUE)
 ```
 
 Let's look at the MIRA signatures to see if we should change our region sizes.
 
 ```{r, eval=TRUE}
-plotMIRARegions(binnedRegDT=bigBinDT1)
+plotMIRAProfiles(binnedRegDT=bigBinDT1)
 ```
 
 ### Choosing Appropriate Region Sizes
@@ -126,10 +126,10 @@ regionSets[[2]] = resize(regionSets[[2]], 1750, fix="center") # muscle
 
 ### Full MIRA Analysis
 
-Now we can run MIRA with all our samples. Let's aggregate methylation data again with `returnMIRABins`.
+Now we can run MIRA with all our samples. Let's aggregate methylation data again with `aggregateMethyl`.
 
 ```{r, eval=FALSE}
-bigBin = lapply(X=BSDTList, FUN=returnMIRABins, GRList=regionSets, 
+bigBin = lapply(X=BSDTList, FUN=aggregateMethyl, GRList=regionSets, 
                 binNum=21, minReads=0, sampleNameInBSDT=TRUE)
 bigBinDT2 = rbindlist(bigBin)
 ```
@@ -145,30 +145,30 @@ We add annotation data using the same process as before:
 
 ```{r, eval=TRUE}
 # data.table functions are used to add info from annotation object to bigBinDT2
-setkey(exampleAnnoDF2, sampleName)
+setkey(exampleAnnoDT2, sampleName)
 setkey(bigBinDT2, sampleName)
-bigBinDT2 = merge(bigBinDT2, exampleAnnoDF2, all.x=TRUE)
+bigBinDT2 = merge(bigBinDT2, exampleAnnoDT2, all.x=TRUE)
 ```
 
 Let's look at the MIRA signatures.
 
 ```{r, eval=TRUE}
-plotMIRARegions(binnedRegDT=bigBinDT2)
+plotMIRAProfiles(binnedRegDT=bigBinDT2)
 ```
 
 Next we normalize the binned methylation data (the MIRA signature). Normalizing by subtracting the minimum methylation bin value from each sample/region set combination generally brings the center MIRA signatures to a similar methylation value, making the MIRA score more about the shape of the signature and less about the average methylation. We do this with `data.table` syntax. 
 
 ```{r, eval=TRUE, results="hide"}
-bigBinDT2[, methyl := methyl - min(methyl) + .05, by=.(featureID, sampleName)]
+bigBinDT2[, methylProp := methylProp - min(methylProp) + .05, by=.(featureID, sampleName)]
 ```
 ```{r, eval=TRUE}
-plotMIRARegions(binnedRegDT=bigBinDT2)
+plotMIRAProfiles(binnedRegDT=bigBinDT2)
 ```
 
 Now we can calculate MIRA scores for all samples with the `scoreDip` function, again using `data.table` syntax.
 
 ```{r, eval=TRUE}
-sampleScores = bigBinDT2[, .(score = scoreDip(methyl, 
+sampleScores = bigBinDT2[, .(score = scoreDip(methylProp, 
                                              binCount=21, 
                                              shoulderShift="auto")), 
                         by=.(featureID, sampleName)]
@@ -178,9 +178,9 @@ head(sampleScores)
 Finally, let's add the annotation data back on and take a look at the scores!
 
 ```{r, eval=TRUE}
-setkey(exampleAnnoDF2, sampleName)
+setkey(exampleAnnoDT2, sampleName)
 setkey(sampleScores, sampleName)
-sampleScores = merge(sampleScores, exampleAnnoDF2, all.x=TRUE)
+sampleScores = merge(sampleScores, exampleAnnoDT2, all.x=TRUE)
 plotMIRAScores(sampleScores)
 ```
 

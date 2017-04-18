@@ -7,7 +7,7 @@
 of the "Applying MIRA to a Biological Question" vignette. 
 Has data for 12 Ewing samples and 12 muscle-related samples 
 (human skeletal myoblasts and other related
-samples). It is the product of `returnMIRABins`.}
+samples). It is the product of `aggregateMethyl`.}
 \format{A data.table, data.frame object}
 \usage{
 data(ewingMyobigBinDT2)
@@ -20,6 +20,6 @@ A data.table with binned methylation data for the second part
 of the "Applying MIRA to a Biological Question" vignette. 
 Has data for 12 Ewing samples and 12 muscle-related samples 
 (human skeletal myoblasts and other related
-samples). It is the product of `returnMIRABins`.
+samples). It is the product of `aggregateMethyl`.
 }
 \keyword{datasets}

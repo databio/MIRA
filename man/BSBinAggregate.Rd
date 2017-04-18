@@ -13,9 +13,9 @@ BSBinAggregate(BSDT, rangeDT, binCount, minReads = 500,
 \item{BSDT}{A single data table that has DNA methylation data 
 on individual sites including a "chr" column with chromosome, 
 a "start" column with the coordinate number for the cytosine, 
-a "methyl" column with proportion of methylation (0 to 1), 
-a "hitCount" column with number of methylated reads for each site, and 
-a "readCount" column with total number of reads for each site.}
+a "methylProp" column with proportion of methylation (0 to 1), 
+a "methylCount" column with number of methylated reads for each site, and 
+a "coverage" column with total number of reads for each site.}
 
 \item{rangeDT}{A data table with the sets of regions to be binned, 
 with columns named "start", "end". Strand may also be given and will
@@ -40,7 +40,7 @@ Each region was split into bins; methylation was put in these bins;
 Output contains sum of the all corresponding bins 
 for the regions of each region set ie for all regions in each region set: 
 first bins summed, second bins summed, etc.
-Columns of the output should be "regionGroupID", "methyl", and "readCount"
+Columns of the output should be "regionGroupID", "methylProp", and "coverage"
 ###########################################################################
 Info about how strand of rangeDT affects output:
 The MIRA signature will be symmetrical if no strand information is given for 
@@ -59,8 +59,8 @@ each corresponding bin across a set of regions (ie all bin1's together,
 all bin2's together, etc.).
 }
 \examples{
-data("GM06990_1_ExampleSet") #exampleBSDT
-data("Gm12878Nrf1_Subset") #exampleRegionSet
+data("exampleBSDT") #exampleBSDT
+data("exampleRegionSet") #exampleRegionSet
 exampleBSDT = addMethCol(exampleBSDT)
 aggregateBins = BSBinAggregate(BSDT = exampleBSDT, 
                              rangeDT = exampleRegionSet, 

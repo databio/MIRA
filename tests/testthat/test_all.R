@@ -22,12 +22,12 @@ regionNum = 2 #changing will break code
 chr = rep("chr1", numCpG * regionNum)#numCpG times number of separate regions in start 
 #CpGs are 20 apart within region and first CpGs of each region are 1000 apart
 start = c((1:numCpG) * 20, ((1:numCpG) * 20 + 1000))
-readCount = rep(10000, numCpG * regionNum)
+coverage = rep(10000, numCpG * regionNum)
 #linear increase
-methyl = c(rep(1:numCpG / numCpG, regionNum))
-hitCount = readCount * methyl
+methylProp = c(rep(1:numCpG / numCpG, regionNum))
+methylCount = coverage * methylProp
 sampleName = rep("TestData", numCpG * regionNum)
-testBSDT = data.table(chr, start, hitCount, readCount, methyl, sampleName)
+testBSDT = data.table(chr, start, methylCount, coverage, methylProp, sampleName)
 origtestBSDT=copy(testBSDT) #so it can be the same for each test section
 
 #making fake region data to test
@@ -40,7 +40,7 @@ testGRDT = grToDt(testGR, includeStrand = TRUE)
 origtestGRDT=copy(testGRDT)
 origtestGR=copy(testGR)
 #cleaning up variables so they are not used by data.table j expressions later
-rm(list = c("chr", "start", "end", "strand", "methyl", "hitCount", "readCount"))
+rm(list = c("chr", "start", "end", "strand", "methylProp", "methylCount", "coverage"))
 rm("sampleName")
 
 #(re)setting test objects
@@ -115,41 +115,41 @@ test_that("BSAggregate", {
     #
     binnedBSDT <- 
         BSAggregate(BSDT = testBSDT, regionsGRL = GRangesList(binnedGR), 
-                    jCommand = buildJ(c("methyl", "readCount"), c("mean", "sum")), 
+                    jCommand = buildJ(c("methylProp", "coverage"), c("mean", "sum")), 
                     byRegionGroup = TRUE, splitFactor = NULL)
     #all should be the same since having opposite strands resulted in
     #flipping the second region
-    expect_equal(round(binnedBSDT[, methyl], 2), rep(.54, nrow(binnedBSDT)))
+    expect_equal(round(binnedBSDT[, methylProp], 2), rep(.54, nrow(binnedBSDT)))
     
     #now with no flipping of the second region (changing - to + )
     testGRDT[, strand := c("+", "+")]
-    #adding to readCount so that not all readCount values will be the same
+    #adding to coverage so that not all coverage values will be the same
     #should not affect methylation aggregation
-    testBSDT[numBins * 2, readCount := readCount * 2]
+    testBSDT[numBins * 2, coverage := coverage * 2]
     binnedDT = testGRDT[, binRegion(start, end, numBins, chr, strand)]
     binnedGR = sapply(split(binnedDT, binnedDT$binID), dtToGr)
     binnedBSDT <-
         BSAggregate(BSDT = testBSDT, regionsGRL = GRangesList(binnedGR), 
-                    jCommand = buildJ(c("methyl", "readCount"), c("mean", "sum")), 
+                    jCommand = buildJ(c("methylProp", "coverage"), c("mean", "sum")), 
                     byRegionGroup = TRUE, splitFactor = NULL)
     #all should be the same since having opposite strands resulted in
     #flipping the second region
-    expect_equal(round(binnedBSDT[, methyl], 2), round(1:numBins / numBins, 2))
-    #testing that expected readcount in each bin is obtained
-    expect_equal(binnedBSDT[, readCount], c(rep(20000, numBins - 1), 30000))
+    expect_equal(round(binnedBSDT[, methylProp], 2), round(1:numBins / numBins, 2))
+    #testing that expected coverage in each bin is obtained
+    expect_equal(binnedBSDT[, coverage], c(rep(20000, numBins - 1), 30000))
     
     #now with no strand info given
     #tests that no strand will be symmetrically averaged 
     #changing first value so symmetry comes from averaging, not from input shape
-    testBSDT[1, methyl := methyl * 2]
+    testBSDT[1, methylProp := methylProp * 2]
     binnedDT = testGRDT[, binRegion(start, end, numBins, chr)] #no strand
     binnedGR = sapply(split(binnedDT, binnedDT$binID), dtToGr)
     binnedBSDT <- 
         BSAggregate(BSDT = testBSDT, regionsGRL = GRangesList(binnedGR), 
-                    jCommand = buildJ(c("methyl", "readCount"), c("mean", "sum")), 
+                    jCommand = buildJ(c("methylProp", "coverage"), c("mean", "sum")), 
                     byRegionGroup = TRUE, splitFactor = NULL)
     #hard coded so may need to be updated later
-    expect_equal(round(binnedBSDT[, methyl], 2), 
+    expect_equal(round(binnedBSDT[, methylProp], 2), 
                  c(.56, rep(.54, numBins - 2), .56))
     
     #test more than two CpG sites in one bin
@@ -159,16 +159,16 @@ test_that("BSAggregate", {
     binnedGR = sapply(split(binnedDT, binnedDT$binID), dtToGr)
     binnedBSDT <-
         BSAggregate(BSDT = testBSDT, regionsGRL = GRangesList(binnedGR), 
-                    jCommand = buildJ(c("methyl", "readCount"), c("mean", "sum")), 
+                    jCommand = buildJ(c("methylProp", "coverage"), c("mean", "sum")), 
                     byRegionGroup = TRUE, splitFactor = NULL)
-    expect_equal(round(binnedBSDT[12, methyl], 2), 0.9)
+    expect_equal(round(binnedBSDT[12, methylProp], 2), 0.9)
     
-    #test that error is given if BSDT input does not have a "methyl"...
+    #test that error is given if BSDT input does not have a "methylProp"...
     #...column with proportion of reads methylated
-    testBSDT[, methyl := NULL]
+    testBSDT[, methylProp := NULL]
     expect_error(BSAggregate(BSDT = testBSDT, 
                              regionsGRL = GRangesList(binnedGR), 
-                             jCommand = buildJ(c("methyl", "readCount"), 
+                             jCommand = buildJ(c("methylProp", "coverage"), 
                                                c("mean", "sum")), 
                              byRegionGroup = TRUE, splitFactor = NULL))
 
@@ -179,16 +179,16 @@ test_that("BSAggregate", {
 testBSDT = copy(origtestBSDT)
 testGR = copy(origtestGR)
 testGRDT = copy(origtestGRDT)
-test_that("returnMIRABins and MIRAScore", {
+test_that("aggregateMethyl and MIRAScore", {
     #making sure input is as I expect
     expect_equal(testGRDT[, strand], c("+", "-"))
     
-    #testing returnMIRABins
-    binnedBSDT = returnMIRABins(BSDT = testBSDT, GRList = testGR, 
+    #testing aggregateMethyl
+    binnedBSDT = aggregateMethyl(BSDT = testBSDT, GRList = testGR, 
                               binNum = numBins, minReads = 0)
-    expect_equal(round(binnedBSDT[, methyl], 2), rep(0.54, numBins))
-    #testing that expected readcount in each bin is obtained
-    expect_equal(binnedBSDT[, readCount], c(rep(20000, numBins)))
+    expect_equal(round(binnedBSDT[, methylProp], 2), rep(0.54, numBins))
+    #testing that expected coverage in each bin is obtained
+    expect_equal(binnedBSDT[, coverage], c(rep(20000, numBins)))
     
     
     #testing MIRAScore
@@ -259,21 +259,21 @@ testBSDT = copy(origtestBSDT)
 testGR = copy(origtestGR)
 testGRDT = copy(origtestGRDT)
 test_that("addMethCol", {
-    #Note: this function assigns methyl column by reference ( := )
+    #Note: this function assigns methylProp column by reference ( := )
     #still returns object from function call though
     
     #making sure input is as I expect
     expect_equal(testGRDT[, strand], c("+", "-"))
     
-    #testing if it returns expected column names, only adds "methyl"
-    testBSDT = testBSDT[, methyl := NULL]#removing methyl column
+    #testing if it returns expected column names, only adds "methylProp"
+    testBSDT = testBSDT[, methylProp := NULL]#removing methylProp column
     oldColNames = colnames(copy(testBSDT))#copy avoids updating by reference
     addMethCol(testBSDT)#by reference, still returns object though
     newColNames = colnames(testBSDT)
     colDiff = base::setdiff(newColNames, oldColNames)
-    expect_equal(colDiff, "methyl")
-    #testing that methyl values are as expected
-    expect_equal(round(testBSDT$methyl, 2), rep(round(1:numCpG / numCpG, 2), 2))
+    expect_equal(colDiff, "methylProp")
+    #testing that methylProp values are as expected
+    expect_equal(round(testBSDT$methylProp, 2), rep(round(1:numCpG / numCpG, 2), 2))
 })
 
 #############cleaning up the environment after finishing tests##############

@@ -173,12 +173,12 @@ dtToGrInternal = function(DT, chr, start,
 
 # Converts a list of data.tables into GRanges.
 # @param dtList A list of data.tables, 
-# Each should have "chr", "start", "hitCount", and "readCount" columns.
-# Error results if missing "chr", "start" but if hitCount and readCount are
+# Each should have "chr", "start", "methylCount", and "coverage" columns.
+# Error results if missing "chr", "start" but if methylCount and coverage are
 # missing, it will still work, just not have that info in the output.
 # @return a list of GRanges objects, strand has been set to "*", 
 # "start" and "end" have both been set to "start" of the DT.
-# hitCount and readCount info is preserved in GRanges object.
+# methylCount and coverage info is preserved in GRanges object.
 BSdtToGRanges = function(dtList) {
     
     gList = list();
@@ -190,8 +190,8 @@ BSdtToGRanges = function(dtList) {
                              ranges = IRanges(start = dtList[[i]]$start, 
                                               end = dtList[[i]]$start), 
                              strand = rep("*", nrow(dtList[[i]])), 
-                             hitCount = dtList[[i]]$hitCount, 
-                             readCount = dtList[[i]]$readCount)
+                             methylCount = dtList[[i]]$methylCount, 
+                             coverage = dtList[[i]]$coverage)
         #I used to use end = start + 1, but this targets CG instead of just 
         #a C, and it's causing edge-effects problems when I assign Cs to 
         #tiled windows using (within). Aug 2014 I'm changing to start/end at 
@@ -243,7 +243,7 @@ grToDt = function(GR, includeStrand = FALSE) {
 #check whether object is smoothed
 #check for names in phenoData
 #fix names in data.table
-#add methyl column?, use addMethCol or bsseq built in getMeth()?
+#add methylProp column?, use addMethCol or bsseq built in getMeth()?
 # @param bsseqObj An object of class bsseq
 # @return MIRAFormatBSDTList A list of data.tables in MIRA format
 # One data table for each sample column of the bsseq object.
@@ -255,18 +255,18 @@ bsseqToMIRA <- function(bsseqObj){
     #obtaining coordinates as GRanges obj. and changing to data.table
     coordinates = grToDt(granges(bsseqObj))
     for (i in 1:ncol(bsseqObj)) { #each column is a different sample
-        hitCount = bsseq::getBSseq(BSseq = bsseqObj[, i], type = "M")
-        readCount = bsseq::getBSseq(BSseq = bsseqObj[, i], type = "Cov")
+        methylCount = bsseq::getBSseq(BSseq = bsseqObj[, i], type = "M")
+        coverage = bsseq::getBSseq(BSseq = bsseqObj[, i], type = "Cov")
         #index for taking out rows with 0 coverage
-        notCovered = which(readCount == 0)
+        notCovered = which(coverage == 0)
         warning("Taking out rows with no coverage. Genomic coordinates may not have identical row numbers in different samples now.")
         MIRAFormatBSDTList[[i]] = data.table(chr = coordinates[, chr], 
                                              start = coordinates[, start], 
-                                             hitCount = hitCount, 
-                                             readCount = readCount
+                                             methylCount = methylCount, 
+                                             coverage = coverage
         )[!notCovered]#filtering
         setnames(MIRAFormatBSDTList[[i]], 
-                 c("chr", "start", "hitCount", "readCount"))
+                 c("chr", "start", "methylCount", "coverage"))
     }
     #names for list (by reference)
     setattr(MIRAFormatBSDTList, "names", Biobase::sampleNames(bsseqObj))

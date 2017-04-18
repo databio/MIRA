@@ -40,6 +40,6 @@ The dip scoring function for MIRA scores.
 \examples{
 data("exampleBins")
 binCount = 11 #bin number for exampleBins 
-exampleBins[, .(score = scoreDip(methyl, binCount)), 
+exampleBins[, .(score = scoreDip(methylProp, binCount)), 
               by = .(featureID, sampleName)]
 }

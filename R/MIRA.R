@@ -31,8 +31,8 @@ NULL
 # in order to pass some R CMD check NOTES.
 if (getRversion() >= "2.15.1") {
     utils::globalVariables(c(
-    ".", "binID", "chr", "featureID", "hitCount", "id", "meth", 
-    "methyl", "readCount", "regionGroupID", "regionID", 
+    ".", "binID", "chr", "featureID", "methylCount", "id", "meth", 
+    "methylProp", "coverage", "regionGroupID", "regionID", 
     "sampleName", "sampleType", "ubinID", "V1"))
 }
 
@@ -44,9 +44,9 @@ if (getRversion() >= "2.15.1") {
 #'
 #' @param BSDT A single data table that has DNA methylation data on individual 
 #' sites including a "chr" column with chromosome, a "start" column with the 
-#' coordinate number for the cytosine, a "methyl" column with proportion of 
-#' methylation (0 to 1), a "hitCount" column with number of methylated reads for
-#' each site, and a "readCount" column with total number of reads for each site.
+#' coordinate number for the cytosine, a "methylProp" column with proportion of 
+#' methylation (0 to 1), a "methylCount" column with number of methylated reads for
+#' each site, and a "coverage" column with total number of reads for each site.
 #' A "sampleName" column is preferred.
 #' @param GRList A GRangesList object containing region sets, each set 
 #' corresponding to a regulatory element. Each regionSet in the list should be 
@@ -61,20 +61,20 @@ if (getRversion() >= "2.15.1") {
 #' Each region was split into bins; methylation was put in these bins; 
 #' Output contains sum of the all corresponding bins for the regions of each 
 #' region set, ie for all regions in each region set: first bins summed, second 
-#' bins summed, etc. Columns of the output should be "regionGroupID", "methyl", 
-#' "readCount", "featureID", and possibly "sampleName".
+#' bins summed, etc. Columns of the output should be "regionGroupID", "methylProp", 
+#' "coverage", "featureID", and possibly "sampleName".
 #' For information on symmetry of bins and output when a region set has
 #' strand info, see ?BSBinAggregate.
 #' 
 #' @export
 #' @examples
-#' data("GM06990_1_ExampleSet", package = "MIRA") #exampleBSDT
-#' data("Gm12878Nrf1_Subset", package = "MIRA") #exampleRegionSet
-#' exBinDT = returnMIRABins(exampleBSDT, exampleRegionSet)
-returnMIRABins = function(BSDT, GRList, binNum = 11, minReads = 500, 
+#' data("exampleBSDT", package = "MIRA")
+#' data("exampleRegionSet", package = "MIRA")
+#' exBinDT = aggregateMethyl(exampleBSDT, exampleRegionSet)
+aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500, 
                           sampleNameInBSDT = TRUE){
   
-    #########returnMIRABins:Preprocessing and formatting###############
+    #########aggregateMethyl:Preprocessing and formatting###############
     #BSDT should not be a list but can be converted
     if ("list" %in% class(BSDT)) {
         if (length(BSDT) == 1) {
@@ -133,13 +133,13 @@ returnMIRABins = function(BSDT, GRList, binNum = 11, minReads = 500,
         }
     }
 
-    #adding a methyl column if it is not already in the BSDT
-    if (!("methyl" %in% names(BSDT))) {
+    #adding a methylProp column if it is not already in the BSDT
+    if (!("methylProp" %in% names(BSDT))) {
         BSDTList = addMethCol(list(BSDT))
         BSDT = BSDTList[[1]] 
     }
 
-    ########returnMIRABins:Binning and processing output####################
+    ########aggregateMethyl:Binning and processing output####################
 
 
     methylByBin = lapply(X = GRDTList, 
@@ -171,13 +171,13 @@ returnMIRABins = function(BSDT, GRList, binNum = 11, minReads = 500,
 }
 
 #' Function to take DNA methylation and region data and return a MIRA score;
-#' a wrapper for returnMIRABins and scoreDip.
+#' a wrapper for aggregateMethyl and scoreDip.
 #'
 #' @param BSDT A single data table that has DNA methylation data on individual 
 #' sites including a "chr" column with chromosome, a "start" column with the 
-#' coordinate number for the cytosine, a "methyl" column with proportion of 
-#' methylation (0 to 1), a "hitCount" column with number of methylated reads 
-#' for each site, and a "readCount" column with total number of reads for each 
+#' coordinate number for the cytosine, a "methylProp" column with proportion of 
+#' methylation (0 to 1), a "methylCount" column with number of methylated reads 
+#' for each site, and a "coverage" column with total number of reads for each 
 #' site. A "sampleName" column is preferred.
 #' @param GRList A GRangesList object containing region sets, each set 
 #' corresponding to a regulatory element (or having regions with the 
@@ -192,8 +192,8 @@ returnMIRABins = function(BSDT, GRList, binNum = 11, minReads = 500,
 #' 
 #' @return A MIRA score for each region set in GRList. See ?scoreDip. 
 #' @examples 
-#' data("GM06990_1_ExampleSet", package = "MIRA") #exampleBSDT
-#' data("Gm12878Nrf1_Subset", package = "MIRA") #exampleRegionSet
+#' data("exampleBSDT", package = "MIRA") 
+#' data("exampleRegionSet", package = "MIRA") 
 #' MIRAScore(BSDT = exampleBSDT, GRList = exampleRegionSet)
 #' 
 #' @export
@@ -203,12 +203,12 @@ MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
     MIRAresults = list()
 
 
-    bigBin = returnMIRABins(BSDT = BSDT, GRList = GRList, binNum = binNum, 
+    bigBin = aggregateMethyl(BSDT = BSDT, GRList = GRList, binNum = binNum, 
                           sampleNameInBSDT = sampleNameInBSDT, 
                           minReads = minReads)
   
     #using binned methylation data to calculate MIRA score
-    scoreDT = bigBin[, .(score = scoreDip(methyl, binNum, 
+    scoreDT = bigBin[, .(score = scoreDip(methylProp, binNum, 
                                           method = scoringMethod)), 
                    by = .(featureID, sampleName)]
 
@@ -244,7 +244,7 @@ MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
 #' @examples
 #' data("exampleBins")
 #' binCount = 11 #bin number for exampleBins 
-#' exampleBins[, .(score = scoreDip(methyl, binCount)), 
+#' exampleBins[, .(score = scoreDip(methylProp, binCount)), 
 #'               by = .(featureID, sampleName)]
 scoreDip = function(values, binCount, 
                     shoulderShift = "auto", 
@@ -347,18 +347,18 @@ scoreDip = function(values, binCount,
 
 
 
-#' Adding methyl column that has proportion of reads that were methylated for 
+#' Adding methylProp column that has proportion of reads that were methylated for 
 #' each site.
-#' Note: Assigns methyl column by reference with ":="
+#' Note: Assigns methylProp column by reference with ":="
 #' 
 #' @param BSDTList A bisulfite datatable or list of datatables with a column for
-#' number of methylated reads (hitCount) and a column for number of total reads 
-#' (readCount) for each cytosine that was measured.
-#' @return The BSDTList but with extra methyl column on each data.table in list.
+#' number of methylated reads (methylCount) and a column for number of total reads 
+#' (coverage) for each cytosine that was measured.
+#' @return The BSDTList but with extra `methylProp` column on each data.table in list.
 #' @export
 #' @examples 
-#' data("GM06990_1_ExampleSet", package = "MIRA") #exampleBSDT
-#' exampleBSDT[, methyl := NULL] #removing methyl column
+#' data("exampleBSDT", package = "MIRA")
+#' exampleBSDT[, methylProp := NULL] #removing methylProp column
 #' addMethCol(list(exampleBSDT))
 addMethCol <- function(BSDTList){
 
@@ -373,12 +373,12 @@ addMethCol <- function(BSDTList){
              or list of data.table objects')
     }
 
-    #using anonymous function to apply operation that adds methyl column to each 
+    #using anonymous function to apply operation that adds methylProp column to each 
     #element of list
     #extra [] on the end is necessary for proper display/printing of the object
     BSDTList = lapply(X = BSDTList, 
-                    FUN = function(x) x[, methyl := 
-                                            round(hitCount / readCount, 3)][])
+                    FUN = function(x) x[, methylProp := 
+                                            round(methylCount / coverage, 3)][])
 
     return(BSDTList)
 }
@@ -475,14 +475,14 @@ parseBiseq = function(DT) {
     #split the '12/12' format of meth calls
     ll = unlist(strsplit(DT$meth, "/", fixed = TRUE))
     idx = seq(1, length(ll), by = 2)
-    DT[, `:=` (hitCount = as.integer(ll[idx]), 
-              readCount = as.integer(ll[idx + 1]))]
+    DT[, `:=` (methylCount = as.integer(ll[idx]), 
+              coverage = as.integer(ll[idx + 1]))]
     DT[, start := as.integer(start + 1)] #re-index
     DT[, c("rate", "end", "meth" ) := NULL] #remove unnecessary columns
     DT[, strand := NULL]
-    DT = DT[, list(hitCount = sum(hitCount), readCount = sum(readCount)), 
+    DT = DT[, list(methylCount = sum(methylCount), coverage = sum(coverage)), 
           by = list(chr, start)] #smash measurements
-    setcolorder(DT, c("chr", "start", "hitCount", "readCount"));
+    setcolorder(DT, c("chr", "start", "methylCount", "coverage"));
     DT = DT[ !grep("_", chr), ]; #clean Chrs
     return(DT)
 }
@@ -500,7 +500,7 @@ parseBiseq = function(DT) {
 BSFilter = function(BSDT, minReads = 10, excludeGR = NULL) {
     # First, filter for minimum reads.
     if (minReads > 0) {
-        BSDT = BSDT[readCount >= minReads, ]
+        BSDT = BSDT[coverage >= minReads, ]
     }
     if (NROW(BSDT) == 0) { return(data.table(NULL)) }
     # Now, filter entries overlapping a region in excludeGR.

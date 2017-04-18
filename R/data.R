@@ -6,7 +6,7 @@
 #' @docType data
 #' @keywords datasets
 #' @name exampleBSDT
-#' @usage data(GM06990_1_ExampleSet)
+#' @usage data(exampleBSDT)
 #' @format A data.table, data.frame object
 #' @return No return value.
 NULL
@@ -16,7 +16,7 @@ NULL
 #' @docType data
 #' @keywords datasets
 #' @name exampleRegionSet
-#' @usage data(Gm12878Nrf1_Subset)
+#' @usage data(exampleRegionSet)
 #' @format A GRanges object
 #' @return No return value.
 NULL
@@ -25,8 +25,8 @@ NULL
 #'
 #' @docType data
 #' @keywords datasets
-#' @name annoDF
-#' @usage data(annoDF)
+#' @name exampleAnnoDT1
+#' @usage data(exampleAnnoDT1)
 #' @format A data.table, data.frame object
 #' @return No return value.
 NULL
@@ -44,7 +44,7 @@ NULL
 #' the "Applying MIRA to a Biological Question" vignette. 
 #' Has data for 3 Ewing samples and 3 muscle-related 
 #' samples (human skeletal myoblasts and other related
-#' samples). It is the product of `returnMIRABins`.
+#' samples). It is the product of `aggregateMethyl`.
 #'
 #'
 #' @docType data
@@ -58,7 +58,7 @@ NULL
 #' of the "Applying MIRA to a Biological Question" vignette. 
 #' Has data for 12 Ewing samples and 12 muscle-related samples 
 #' (human skeletal myoblasts and other related
-#' samples). It is the product of `returnMIRABins`.
+#' samples). It is the product of `aggregateMethyl`.
 #'
 #'
 #' @docType data
@@ -76,8 +76,8 @@ NULL
 #'
 #' @docType data
 #' @keywords datasets
-#' @name exampleAnnoDF2
-#' @usage data(exampleAnnoDF2)
+#' @name exampleAnnoDT2
+#' @usage data(exampleAnnoDT2)
 #' @format A data.table, data.frame object
 #' @return No return value.
 NULL

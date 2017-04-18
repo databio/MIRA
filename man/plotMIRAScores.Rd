@@ -21,7 +21,7 @@ A function to plot MIRA scores and compare case/control.
 }
 \examples{
 data(ewingMyobigBinDT2) # bigBinDT object
-exScores = bigBinDT2[, .(score=scoreDip(methyl, 
+exScores = bigBinDT2[, .(score=scoreDip(methylProp, 
                                        binCount = 21, 
                                        shoulderShift = 5)), 
                     by = .(featureID, sampleName)]
