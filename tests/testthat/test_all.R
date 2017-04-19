@@ -183,7 +183,7 @@ test_that("aggregateMethyl and MIRAScore", {
     #making sure input is as I expect
     expect_equal(testGRDT[, strand], c("+", "-"))
     
-    #testing aggregateMethyl
+    #testing aggregateMethyl, warning about names is expected
     binnedBSDT = aggregateMethyl(BSDT = testBSDT, GRList = testGR, 
                               binNum = numBins, minReads = 0)
     expect_equal(round(binnedBSDT[, methylProp], 2), rep(0.54, numBins))
@@ -191,7 +191,7 @@ test_that("aggregateMethyl and MIRAScore", {
     expect_equal(binnedBSDT[, coverage], c(rep(20000, numBins)))
     
     
-    #testing MIRAScore
+    #testing MIRAScore, warning about names is expected
     scoreDT = MIRAScore(BSDT = testBSDT, GRList = testGR, binNum = numBins, minReads = 0, 
                       scoringMethod = "logRatio")
     #since the MIRA signature was flat, score = 0
@@ -253,7 +253,7 @@ test_that("scoreDip", {
     expect_equal(testScore, expScore)
 })
 
-##########testing smaller functions##########
+##########testing miscellaneous functions##########
 #resetting test objects
 testBSDT = copy(origtestBSDT)
 testGR = copy(origtestGR)
@@ -274,6 +274,20 @@ test_that("addMethCol", {
     expect_equal(colDiff, "methylProp")
     #testing that methylProp values are as expected
     expect_equal(round(testBSDT$methylProp, 2), rep(round(1:numCpG / numCpG, 2), 2))
+})
+
+#resetting test objects
+testBSDT = copy(origtestBSDT)
+testGR = copy(origtestGR)
+testGRDT = copy(origtestGRDT)
+test_that("BSreadBiSeq",{
+    
+    tRRBS = BSreadBiSeq(system.file("extdata", "shortRRBS.bed", package = "MIRA"))
+    tRRBSCols = c("chr", "start", "methylCount", "coverage", "sampleName")
+    expect_equal(tRRBSCols, colnames(tRRBS))
+    # coverage should be greater than or equal to methylCount, true for all
+    compareCounts = (tRRBS$coverage >= tRRBS$methylCount)
+    expect_true(all(compareCounts))
 })
 
 #############cleaning up the environment after finishing tests##############
