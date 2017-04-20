@@ -235,6 +235,14 @@ MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
 #' if there were 3 values). 
 #' A higher score with "logRatio" corresponds to a deeper dip. "logRatio" is the
 #' only scoring method currently but more methods may be added in the future.
+#' @param usedStrand If strand information is included as part of an
+#' input region set when aggregating methylation, 
+#' the MIRA signature will probably not be 
+#' symmetrical. In this case, the automatic 
+#' shoulderShift sensing (done when shoulderShift="auto") needs to
+#' be done for both sides of the dip instead of just one side so set
+#' usedStrand=TRUE if strand was included for a region set.
+#' usedStrand=TRUE only has an effect on the function when shoulderShift="auto".
 #' 
 #' @return A MIRA score. The MIRA score quantifies the "dip" of 
 #' the MIRA signature which is an aggregation of methylation 
@@ -248,7 +256,8 @@ MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
 #'               by = .(featureID, sampleName)]
 scoreDip = function(values, binCount, 
                     shoulderShift = "auto", 
-                    method = "logRatio"){
+                    method = "logRatio",
+                    usedStrand = FALSE){
     
     if (!(method %in% "logRatio")) { #add new methods eventually
         stop("Invalid scoring method. Check spelling/capitalization.")
@@ -286,38 +295,34 @@ scoreDip = function(values, binCount,
             }
         }
         #automatically figuring out shoulderShift based on each signature
-        #only works for symmetric MIRA signatures
         if (shoulderShift == "auto") {
-            
-            #first value that's not part of midpoint calculations
-            shoulderStart = ceiling(centerSpot) + 2 
-            shoulderSpot = shoulderStart
-            for (i in shoulderStart:(binCount - 2)) {
-                if (values[i + 1] > values[i]) {
-                    shoulderSpot = i + 1
-                } else if (((values[i + 2] + values[i + 1]) / 2) > values[i]) {
-                    shoulderSpot = i + 1
-                } else {
-                    break()
-                }
+            #signature will probably not be symmetrical if strand was used
+            if (usedStrand) { #probably not common but still an option
+                shoulderShiftL= findShoulder(values, binCount, centerSpot,
+                                             whichSide = "left")
+                shoulderShiftR = findShoulder(values, binCount, centerSpot, 
+                                             whichSide = "right")
+            } else { #most common use case, strand was not used
+                #either side would work since signature is symmetrical
+                shoulderShift = findShoulder(values, binCount, centerSpot, 
+                                             whichSide = "right")
             }
-            #testing the last/most outside point if appropriate
-            if (shoulderSpot == (binCount - 1)) {
-                if (values[shoulderSpot + 1] > values[shoulderSpot]) {
-                    shoulderSpot = shoulderSpot + 1
-                }
-            }
-            #should work for X.0 and X.5 values of centerSpot
-            #assuming calculations for leftSide and rightSide vars stay the same
-            shoulderShift = shoulderSpot - centerSpot
         }
         
         
         
         #floor and ceiling are only relevant when binCount is even 
         #(which means centerSpot is X.5)
-        leftSide = floor(centerSpot - shoulderShift)  
-        rightSide = ceiling(centerSpot + shoulderShift)
+        if (usedStrand && (shoulderShift == "auto")) { #probably uncommon case
+            #floor and ceiling should not matter when "auto" is used but
+            #I kept them just in case
+            leftSide = floor(centerSpot - shoulderShiftL)  
+            rightSide = ceiling(centerSpot + shoulderShiftR)
+        } else { #most common case, strand was not used,
+            #"auto" may or may not have been used
+            leftSide = floor(centerSpot - shoulderShift)  
+            rightSide = ceiling(centerSpot + shoulderShift)
+        }
         shoulders = ((values[leftSide] + values[rightSide]) / 2)
         if (midpoint < .000001) {
             warning("Division by zero. Consider adding a small constant 
@@ -344,6 +349,49 @@ scoreDip = function(values, binCount,
     # }
     return(score)
 }
+
+#helper function for automatic shoulder sensing
+#for unsymmetrical signatures this function should be run twice, once
+#with whichSide="right" and once with whichSide="left"
+#only finds the right shoulder so to find the left shoulder, flip the 
+#input values "values", then take length(values)-shoulderShift
+#used in scoreDip
+# @param whichSide the side of the signature to find the shoulder for
+# @param #for other params see ?scoreDip
+# @return The distance from the center of the signature to the shoulder.
+#         It may be X.0 (ie an integer) if centerSpot is an integer or 
+#         X.5 if centerSpot was X.5
+
+findShoulder <- function(values, binCount, centerSpot, whichSide="right"){
+    if (whichSide == "left") {
+        values = rev(values)
+    }
+    
+    #first value that's not part of midpoint calculations
+    shoulderStart = ceiling(centerSpot) + 2 
+    shoulderSpot = shoulderStart
+    for (i in shoulderStart:(binCount - 2)) {
+        if (values[i + 1] > values[i]) {
+            shoulderSpot = i + 1
+        } else if (((values[i + 2] + values[i + 1]) / 2) > values[i]) {
+            shoulderSpot = i + 1
+        } else {
+            break()
+        }
+    }
+    #testing the last/most outside point if appropriate
+    if (shoulderSpot == (binCount - 1)) {
+        if (values[shoulderSpot + 1] > values[shoulderSpot]) {
+            shoulderSpot = shoulderSpot + 1
+        }
+    }
+    #should work for X.0 and X.5 values of centerSpot
+    #assuming calculations for leftSide and rightSide vars stay the same
+    shoulderShift = shoulderSpot - centerSpot
+    
+    return(shoulderShift)
+}
+
 
 
 

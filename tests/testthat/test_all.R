@@ -204,7 +204,7 @@ test_that("aggregateMethyl and MIRAScore", {
 testBSDT = copy(origtestBSDT)
 testGR = copy(origtestGR)
 testGRDT = copy(origtestGRDT)
-test_that("scoreDip", {
+test_that("scoreDip and findShoulder", {
     
     #test with odd bin number
     x = -10:10
@@ -251,6 +251,27 @@ test_that("scoreDip", {
     expMidpoint = (.5 * jagged[6] + jagged[7] + jagged[8] + .5 * jagged[9]) / 3
     expScore = round(log(mean(jagged[c(3, 12)]) / expMidpoint), 2)
     expect_equal(testScore, expScore)
+    
+    #testing the findShoulder function with unsymmetrical input
+    unsymmetric = jagged
+    unsymmetric[1] = 17 #now the first spot should be counted as the shoulder
+    centerSpot = (1 + length(unsymmetric)) / 2
+    rShoulderShift = findShoulder(unsymmetric, length(unsymmetric), 
+                                  centerSpot, whichSide = "right")
+    expect_equal(rShoulderShift, 4.5)
+    #middle is 7.5 outer edge is 1, shoulderShift should be 6.5
+    lShoulderShift = findShoulder(unsymmetric, length(unsymmetric), 
+                                  centerSpot, whichSide = "left")
+    expect_equal(lShoulderShift, 6.5)
+    
+    #testing scoreDip function with unsymmetrical input
+    unSymScore = round(scoreDip(values = unsymmetric, binCount = 14, 
+                                shoulderShift = "auto", usedStrand = TRUE), 2)
+    expMidpoint = (.5 * unsymmetric[6] + unsymmetric[7] + 
+                       unsymmetric[8] + .5 * unsymmetric[9]) / 3
+    #if symmetrical, you would use values 1 and 14 or 3 and 12
+    expScore = round(log(mean(unsymmetric[c(1, 12)]) / expMidpoint), 2)
+    
 })
 
 ##########testing miscellaneous functions##########

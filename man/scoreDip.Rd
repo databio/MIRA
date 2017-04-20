@@ -4,7 +4,8 @@
 \alias{scoreDip}
 \title{The dip scoring function for MIRA scores.}
 \usage{
-scoreDip(values, binCount, shoulderShift = "auto", method = "logRatio")
+scoreDip(values, binCount, shoulderShift = "auto", method = "logRatio",
+  usedStrand = FALSE)
 }
 \arguments{
 \item{values}{A vector with proportion of methylation values for each bin. 
@@ -28,6 +29,15 @@ values would be averaged with the 1st and 4th being weighted by half (as
 if there were 3 values). 
 A higher score with "logRatio" corresponds to a deeper dip. "logRatio" is the
 only scoring method currently but more methods may be added in the future.}
+
+\item{usedStrand}{If strand information is included as part of an
+input region set when aggregating methylation, 
+the MIRA signature will probably not be 
+symmetrical. In this case, the automatic 
+shoulderShift sensing (done when shoulderShift="auto") needs to
+be done for both sides of the dip instead of just one side so set
+usedStrand=TRUE if strand was included for a region set.
+usedStrand=TRUE only has an effect on the function when shoulderShift="auto".}
 }
 \value{
 A MIRA score. The MIRA score quantifies the "dip" of 
