@@ -32,4 +32,4 @@ install.packages("path/to/MIRA/directory", repos=NULL, type="source")
 ### Learning how to use MIRA
 
 
-A couple of vignettes are included with the package. For an overview of the package see the "Methylation-based Inference of Regulatory Activty" vignette. A more realistic example of how to use MIRA may be found in the "Applying MIRA to a Biological Question" vignette.
+A couple of vignettes are included with the package. For an overview of the package see the "Getting Started" vignette. A more realistic example of how to use MIRA may be found in the "BiologicalApplication" vignette.
