@@ -65,8 +65,6 @@ BSDTList = lapply(X=RRBSFiles, FUN=BSreadBiSeq)
 regionSets = lapply(X=regionSetFiles, FUN=fread)
 ```
 
-To read in the 
-
 We need to do a bit of preprocessing before we plug the data into MIRA. Let's convert the region sets from `data.table` objects to `GRanges` objects, including chromosome, start, and end info. In most cases, strand information is not needed by MIRA and should be omitted. 
 
 ```{r, eval=FALSE}
