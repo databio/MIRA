@@ -59,15 +59,15 @@ setLapplyAlias = function(cores = 0) {
     if (cores < 1) {
         return(getOption("mc.cores"))
     }
-    if (cores > 1) { #use multicore?
+    if (cores > 1) { # use multicore?
         if (requireNamespace("parallel", quietly = TRUE)) {
             options(mc.cores = cores)
         } else {
             warning("You don't have package parallel installed. Setting cores to 1.")
-            options(mc.cores = 1) #reset cores option.
+            options(mc.cores = 1) # reset cores option.
         }
     } else {
-        options(mc.cores = 1) #reset cores option.
+        options(mc.cores = 1) # reset cores option.
     }
 }
 
@@ -137,7 +137,7 @@ dtToGrInternal = function(DT, chr, start,
         }
     }
     if (is.na(strand)) {
-        if ("strand" %in% colnames(DT)) { #checking if strand info is in DT
+        if ("strand" %in% colnames(DT)) { # checking if strand info is in DT
             strand = "strand"
         }
     }
@@ -183,19 +183,19 @@ BSdtToGRanges = function(dtList) {
     
     gList = list();
     for (i in seq_along(dtList)) {
-        #dt = dtList[[i]];
+        # dt = dtList[[i]];
         setkey(dtList[[i]], chr, start)
-        #convert the data into granges object
+        # convert the data into granges object
         gList[[i]] = GRanges(seqnames = dtList[[i]]$chr, 
                              ranges = IRanges(start = dtList[[i]]$start, 
                                               end = dtList[[i]]$start), 
                              strand = rep("*", nrow(dtList[[i]])), 
                              methylCount = dtList[[i]]$methylCount, 
                              coverage = dtList[[i]]$coverage)
-        #I used to use end = start + 1, but this targets CG instead of just 
-        #a C, and it's causing edge-effects problems when I assign Cs to 
-        #tiled windows using (within). Aug 2014 I'm changing to start/end at 
-        #the same coordinate.
+        # I used to use end = start + 1, but this targets CG instead of just 
+        # a C, and it's causing edge-effects problems when I assign Cs to 
+        # tiled windows using (within). Aug 2014 I'm changing to start/end at 
+        # the same coordinate.
     }
     return(gList);
 }
@@ -240,10 +240,10 @@ grToDt = function(GR, includeStrand = FALSE) {
 
 
 
-#check whether object is smoothed
-#check for names in phenoData
-#fix names in data.table
-#add methylProp column?, use addMethCol or bsseq built in getMeth()?
+# check whether object is smoothed
+# check for names in phenoData
+# fix names in data.table
+# add methylProp column?, use addMethCol or bsseq built in getMeth()?
 # @param bsseqObj An object of class bsseq
 # @return MIRAFormatBSDTList A list of data.tables in MIRA format
 # One data table for each sample column of the bsseq object.
@@ -251,13 +251,13 @@ bsseqToMIRA <- function(bsseqObj){
     # if (bsseq::hasBeenSmoothed(bsseqObj)) {
     #   warning("Raw (unsmoothed) methylation and coverage values are being used.")
     # }
-    MIRAFormatBSDTList = list() #to store output
-    #obtaining coordinates as GRanges obj. and changing to data.table
+    MIRAFormatBSDTList = list() # to store output
+    # obtaining coordinates as GRanges obj. and changing to data.table
     coordinates = grToDt(granges(bsseqObj))
-    for (i in 1:ncol(bsseqObj)) { #each column is a different sample
+    for (i in 1:ncol(bsseqObj)) { # each column is a different sample
         methylCount = bsseq::getBSseq(BSseq = bsseqObj[, i], type = "M")
         coverage = bsseq::getBSseq(BSseq = bsseqObj[, i], type = "Cov")
-        #index for taking out rows with 0 coverage
+        # index for taking out rows with 0 coverage
         notCovered = which(coverage == 0)
         warning(cleanws("Taking out rows with no coverage. Genomic coordinates may 
                          not have identical row numbers in different samples now."))
@@ -265,11 +265,11 @@ bsseqToMIRA <- function(bsseqObj){
                                              start = coordinates[, start], 
                                              methylCount = methylCount, 
                                              coverage = coverage
-        )[!notCovered]#filtering
+        )[!notCovered]  # filtering
         setnames(MIRAFormatBSDTList[[i]], 
                  c("chr", "start", "methylCount", "coverage"))
     }
-    #names for list (by reference)
+    # names for list (by reference)
     setattr(MIRAFormatBSDTList, "names", Biobase::sampleNames(bsseqObj))
     
     return(MIRAFormatBSDTList)

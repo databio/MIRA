@@ -1,5 +1,5 @@
-#Plotting functions to visualize outputs of MIRA
-#Visualize MIRA signatures and MIRA scores
+# Plotting functions to visualize outputs of MIRA
+# Visualize MIRA signatures and MIRA scores
 
 
 
@@ -39,7 +39,7 @@ plotMIRAProfiles <- function(binnedRegDT,
     
     if (!("sampleType" %in% names(binnedRegDT))) {
         sampleType = "All samples" 
-        #if no sampleType column then all lines/points will be black
+        # if no sampleType column then all lines/points will be black
         warning(cleanws("sampleType column must exist if it is 
                         desired to split up sample types by color"))
     }
@@ -59,7 +59,7 @@ plotMIRAProfiles <- function(binnedRegDT,
 # A function to get right x axis numbers on the plotMIRAProfiles() plots
 xAxisForRegionPlots <- function(binNum) {
     if ((binNum %% 2) == 0) { # even binNum
-        tmp = c((-1 * binNum / 2):-1, 1:(binNum / 2)) #no zero
+        tmp = c((-1 * binNum / 2):-1, 1:(binNum / 2)) # no zero
         xAxis = c(tmp[1], rep("", (binNum - 4) / 2), -1, 1, rep("", (binNum - 4) / 2), tmp[binNum])
     } else if ((binNum %% 2) == 1) { # odd binNum
         tmp = (-1 * (binNum - 1) / 2):((binNum - 1) / 2)
@@ -82,7 +82,7 @@ xAxisForRegionPlots <- function(binNum) {
 #'                                        binCount = 21, 
 #'                                        shoulderShift = 5)), 
 #'                     by = .(featureID, sampleName)]
-#' #adding annotation
+#' # adding annotation
 #' sampleType = rep(c("Ewing", "Muscle-related"), each = 24)
 #' exScores = cbind(exScores, sampleType)
 #' exScorePlot = plotMIRAScores(exScores)         
