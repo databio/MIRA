@@ -105,8 +105,8 @@ aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500,
 
     # checking if region sets have names
     if (is.null(names(GRList))) {
-        warning("GRList should be a named list/GRangesList. 
-                Sequential names given according to order in object.")
+        warning(cleanws("GRList should be a named list/GRangesList. 
+                Sequential names given according to order in object."))
         names(GRList) <- paste0(rep("RegionSet", length(GRList)), 
                               seq_along(GRList))
     }
