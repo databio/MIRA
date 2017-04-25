@@ -1,7 +1,8 @@
 # PACKAGE DOCUMENTATION
 #' Methylation-based Inference of Regulatory Activity (MIRA)
-#' MIRA is a score that measures the degree of dip in methylation
-#' level surrounding a regulatory site of interest, such as a 
+#' MIRA is a score that infers regulatory activity of genomic elements
+#' based on DNA methylation data. It assess the degree of dip in methylation
+#' level surrounding a regulatory site of interest, such as 
 #' transcription factor binding sites.
 #' This package provides functions for aggregating methylation 
 #' data across region sets, in bins.
@@ -12,8 +13,8 @@
 #' @author John Lawson
 #'
 #' @references \url{http://github.com/databio}
-#' @importFrom GenomicRanges GRanges GRangesList elementMetadata strand seqnames 
-#'             granges
+#' @importFrom GenomicRanges GRanges GRangesList elementMetadata strand
+#'             seqnames granges
 #' @importFrom ggplot2 ggplot aes facet_wrap geom_boxplot geom_jitter geom_line
 #'             theme_classic xlab ylab geom_hline ylim scale_color_discrete
 #'             scale_x_discrete scale_fill_brewer scale_color_manual
@@ -26,7 +27,7 @@ NULL
 
 
 # Because of some issues with CRAN submission, 
-#(see here: http://stackoverflow.com/questions/9439256/)
+# (see here: http://stackoverflow.com/questions/9439256/)
 # I have to register stuff used in data.table as non-standard evaluation, 
 # in order to pass some R CMD check NOTES.
 if (getRversion() >= "2.15.1") {
@@ -40,17 +41,17 @@ if (getRversion() >= "2.15.1") {
 
 #' Function to aggregate methylation data into bins 
 #' over all regions in each region set.
-#' 
 #'
-#' @param BSDT A single data table that has DNA methylation data on individual 
-#' sites including a "chr" column with chromosome, a "start" column with the 
-#' coordinate number for the cytosine, a "methylProp" column with proportion of 
-#' methylation (0 to 1), a "methylCount" column with number of methylated reads for
-#' each site, and a "coverage" column with total number of reads for each site.
-#' A "sampleName" column is preferred.
+#' @param BSDT A single data.table that has DNA methylation data on individual 
+#' sites. With columns: "chr" for chromosome, "start" for 
+#' cytosine coordinate, "methylProp" for proportion of 
+#' methylation (0 to 1), "methylCount" for number of methylated reads, and
+#' "coverage" for total number of reads.
+#' In addition, a "sampleName" column is preferred.
+
 #' @param GRList A GRangesList object containing region sets, each set 
-#' corresponding to a regulatory element. Each regionSet in the list should be 
-#' named. A named list of data.tables also works. 
+#' corresponding to a type of regulatory element. Each regionSet in the list should
+#' be named. A named list of data.tables also works. 
 #' @param binNum How many bins each region should be split into for aggregation 
 #' of the DNA methylation data.
 #' @param minReads Filter out bins with fewer than X reads before returning.
@@ -75,7 +76,7 @@ aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500,
                           sampleNameInBSDT = TRUE){
   
     #########aggregateMethyl:Preprocessing and formatting###############
-    #BSDT should not be a list but can be converted
+    # BSDT should not be a list but can be converted
     if ("list" %in% class(BSDT)) {
         if (length(BSDT) == 1) {
             BSDT = BSDT[[1]]
@@ -87,7 +88,7 @@ aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500,
         stop("BSDT must be a data.table")
     }
     
-    #converting to list format if GRList is a data.table or GRanges object
+    # converting to list format if GRList is a data.table or GRanges object
     if (class(GRList) %in% "GRanges") {
       GRList = GRangesList(GRList)
       message("Converting to GRangesList...")
@@ -97,12 +98,12 @@ aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500,
         message("Converting to list...")
     }
 
-    #checking that input is in list format
+    # checking that input is in list format
     if (!(class(GRList) %in% c("list", "GRangesList"))) {
         stop("GRList should be a named list/GRangesList.")
     }
 
-    #checking if region sets have names
+    # checking if region sets have names
     if (is.null(names(GRList))) {
         warning("GRList should be a named list/GRangesList. 
                 Sequential names given according to order in object.")
@@ -110,14 +111,14 @@ aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500,
                               seq_along(GRList))
     }
 
-    #checking that all objects in GRList are the same type 
-    #and converting to data.tables
+    # checking that all objects in GRList are the same type 
+    # and converting to data.tables
     if (all(sapply(X = GRList, FUN = class) %in% "GRanges")) {
-        #GRanges to data.tables
+        # GRanges to data.tables
         GRDTList = lapply(X = GRList, FUN = grToDt, includeStrand = TRUE)
-        #below statement will be true if all objects in the list are of 
-        #class data.table
-        #necessary since data.tables also include data.frame as a class
+        # below statement will be true if all objects in the list are of 
+        # class data.table
+        # necessary since data.tables also include data.frame as a class
     }else if (all(sapply(
         X = lapply(X = GRList, FUN = function(x) class(x) %in% "data.table"), 
         FUN = any))) {
@@ -133,13 +134,13 @@ aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500,
         }
     }
 
-    #adding a methylProp column if it is not already in the BSDT
+    # adding a methylProp column if it is not already in the BSDT
     if (!("methylProp" %in% names(BSDT))) {
         BSDTList = addMethCol(list(BSDT))
         BSDT = BSDTList[[1]] 
     }
 
-    ########aggregateMethyl:Binning and processing output####################
+    ######## aggregateMethyl:Binning and processing output####################
 
 
     methylByBin = lapply(X = GRDTList, 
@@ -149,20 +150,20 @@ aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500,
                                                         splitFactor = NULL, 
                                                         minReads = minReads))
     names(methylByBin) = names(GRList)#preserving names
-    #adding a feature ID column to each data.table that 
-    #should identify what region set was used
+    # adding a feature ID column to each data.table that 
+    # should identify what region set was used
     for (i in seq_along(methylByBin)) {
         methylByBin[[i]][, featureID := rep(names(methylByBin)[i], 
                                            nrow(methylByBin[[i]]))][]
     }
-    #screening out region sets that had incomplete binning
+    # screening out region sets that had incomplete binning
     binNumScreen = sapply(X = methylByBin, FUN = nrow)
-    #taking out incomplete region sets
+    # taking out incomplete region sets
     methylByBin = methylByBin[!(binNumScreen < binNum)]
 
     bigMethylByBin = rbindlist(methylByBin)
     if (sampleNameInBSDT && (ncol(bigMethylByBin) != 0)) {
-        #creating new sampleName column
+        # creating new sampleName column
         bigMethylByBin[, sampleName := rep(BSDT[1, sampleName])][] 
     }
 
@@ -402,7 +403,8 @@ findShoulder <- function(values, binCount, centerSpot, whichSide="right"){
 #' @param BSDTList A bisulfite datatable or list of datatables with a column for
 #' number of methylated reads (methylCount) and a column for number of total reads 
 #' (coverage) for each cytosine that was measured.
-#' @return The BSDTList but with extra `methylProp` column on each data.table in list.
+#' @return The BSDTList but with extra `methylProp` column on each 
+#' data.table in list.
 #' @export
 #' @examples 
 #' data("exampleBSDT", package = "MIRA")
@@ -468,7 +470,10 @@ BSreadBiSeq = function(files, contrastList = NULL,
     message("Reading ", length(files), " files..");
     freadList = lapplyAlias(files, fread, mc.preschedule = FALSE);
     colNames = names(contrastList)
-    message("File reading finished (", length(files), " files). Parsing Biseq format...", appendLF = FALSE);
+    message("File reading finished (",
+        length(files),
+        " files). Parsing Biseq format...",
+        appendLF = FALSE);
     # TODO: This parsing takes awhile, and could be done in parallel.
     freadListParsed = lapplyAlias(freadList, parseBiseq, mc.preschedule = FALSE)
 

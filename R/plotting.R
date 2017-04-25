@@ -40,7 +40,8 @@ plotMIRAProfiles <- function(binnedRegDT,
     if (!("sampleType" %in% names(binnedRegDT))) {
         sampleType = "All samples" 
         #if no sampleType column then all lines/points will be black
-        warning("sampleType column must exist if it is desired to split up sample types by color")
+        warning(cleanws("sampleType column must exist if it is 
+                        desired to split up sample types by color"))
     }
     if (plotType == "line") {
         binPlot = binPlot + 
@@ -57,13 +58,12 @@ plotMIRAProfiles <- function(binnedRegDT,
 
 # A function to get right x axis numbers on the plotMIRAProfiles() plots
 xAxisForRegionPlots <- function(binNum) {
-    if ((binNum %% 2) == 0) { #even binNum
-        xAxis = c((-1 * binNum / 2):-1, 1:(binNum / 2)) #no zero
-        xAxis = c(xAxis[1], rep("", (binNum - 4) / 2), -1, 1, rep("", (binNum - 4) / 2), xAxis[binNum])
-    } else if ((binNum %% 2) == 1) { #odd binNum
-        xAxis = (-1 * (binNum - 1) / 2):((binNum - 1) / 2)
-        xAxis = c(xAxis[1], rep("", (binNum - 3) / 2), 0, rep("", (binNum - 3) / 2), xAxis[binNum])
-        #rep("", ceiling(((binNum - 3) / 4) - 1)), #number#, rep("", floor((binNum - 3) / 4)), xAxis[binNum]
+    if ((binNum %% 2) == 0) { # even binNum
+        tmp = c((-1 * binNum / 2):-1, 1:(binNum / 2)) #no zero
+        xAxis = c(tmp[1], rep("", (binNum - 4) / 2), -1, 1, rep("", (binNum - 4) / 2), tmp[binNum])
+    } else if ((binNum %% 2) == 1) { # odd binNum
+        tmp = (-1 * (binNum - 1) / 2):((binNum - 1) / 2)
+        xAxis = c(tmp[1], rep("", (binNum - 3) / 2), 0, rep("", (binNum - 3) / 2), tmp[binNum])
     }
     return(xAxis)
 }
@@ -90,7 +90,7 @@ plotMIRAScores <- function(scoreDT, featID = unique(scoreDT[, featureID])){
     sampleTypeNum = length(unique(scoreDT[, sampleType]))
     setkey(scoreDT, featureID)
     scorePlot = ggplot(data = scoreDT[featID], 
-                       mapping = aes(x = sampleType, y = score, col = sampleType)) + 
+                    mapping = aes(x = sampleType, y = score, col = sampleType)) + 
             theme_classic() +
             ylab("MIRA Score") + xlab("Sample Type") +
             geom_boxplot(aes(fill = sampleType), alpha = 0.75) + 

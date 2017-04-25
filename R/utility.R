@@ -1,13 +1,13 @@
 #########################################################
-#Utility functions
-#Conversion functions in 2nd half of file
+# Utility functions
+# Conversion functions in 2nd half of file
 ########################################################
 
 
 # This function is a drop-in replacement for the base list() function, 
 # which automatically names your list according to the names of the 
 # variables used to construct it.
-# It seemlessly handles lists with some names and others absent, 
+# It seamlessly handles lists with some names and others absent, 
 # not overwriting specified names while naming any unnamed parameters.
 #
 # @param ...   arguments passed to list()
@@ -92,7 +92,7 @@ buildJ = function(cols, funcs) {
 
 
 ####################  Conversion Functions  ########################
-#Convert between different object types
+# Convert between different object types
 
 # Convert a data.table to GRanges object.
 # 
@@ -202,7 +202,7 @@ BSdtToGRanges = function(dtList) {
 
 
 
-# convert a GenomicRanges into a data.table
+# Convert a GenomicRanges into a data.table
 # 
 # @param GR A GRanges object
 # @param includeStrand Boolean, whether to include strand from GR in output DT
@@ -249,7 +249,7 @@ grToDt = function(GR, includeStrand = FALSE) {
 # One data table for each sample column of the bsseq object.
 bsseqToMIRA <- function(bsseqObj){
     # if (bsseq::hasBeenSmoothed(bsseqObj)) {
-    #   warning("Raw (not smoothed) methylation and coverage values are being used.")
+    #   warning("Raw (unsmoothed) methylation and coverage values are being used.")
     # }
     MIRAFormatBSDTList = list() #to store output
     #obtaining coordinates as GRanges obj. and changing to data.table
@@ -259,7 +259,8 @@ bsseqToMIRA <- function(bsseqObj){
         coverage = bsseq::getBSseq(BSseq = bsseqObj[, i], type = "Cov")
         #index for taking out rows with 0 coverage
         notCovered = which(coverage == 0)
-        warning("Taking out rows with no coverage. Genomic coordinates may not have identical row numbers in different samples now.")
+        warning(cleanws("Taking out rows with no coverage. Genomic coordinates may 
+                         not have identical row numbers in different samples now."))
         MIRAFormatBSDTList[[i]] = data.table(chr = coordinates[, chr], 
                                              start = coordinates[, start], 
                                              methylCount = methylCount, 
@@ -272,4 +273,14 @@ bsseqToMIRA <- function(bsseqObj){
     setattr(MIRAFormatBSDTList, "names", Biobase::sampleNames(bsseqObj))
     
     return(MIRAFormatBSDTList)
+}
+
+
+#' cleanws takes multi-line, code formatted strings and just formats them
+#' as simple strings
+#' @param string string to clean
+#' @return A string with all consecutive whitespace characters, including
+#' tabs and newlines, merged into a single space.
+cleanws = function(string) {
+    return(gsub('\\s+'," ", string))
 }

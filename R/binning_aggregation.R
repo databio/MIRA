@@ -212,7 +212,9 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
     
     if (is.null(regionsGRL.length)) {
         if (length(regionsGRL) > 100) {
-            message("BSAggregate: Calculating sizes. You can speed this up by supplying a regionsGRL.length vector...", appendLF = FALSE)
+            message(cleanws("BSAggregate: Calculating sizes. You can speed this
+                             up by supplying a regionsGRL.length vector..."),
+                             appendLF = FALSE)
         }
         regionsGRL.length = sapply(regionsGRL, length)
         #message("Done counting regionsGRL lengths.");

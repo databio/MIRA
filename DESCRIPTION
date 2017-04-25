@@ -3,7 +3,7 @@ Version: 0.99.0
 Date: 2017-03-30
 Title: Methylation-Based Inference of Regulatory Activity
 Description: measures the degree of "dip" in methylation
-    level surrounding a regulatory site of interest, such as a 
+    level surrounding a regulatory site of interest, such as a
     transcription factor binding site.
 Author: Nathan Sheffield <http://www.databio.org> [aut, cre],
     Christoph Bock [cre],
@@ -31,4 +31,4 @@ biocViews: GeneRegulation, GenomeAnnotation, SystemsBiology,
     FunctionalGenomics, ChIPSeq, MethylSeq, Sequencing
 URL: http://databio.org/mira
 BugReports: https://github.com/databio/MIRA
-RoxygenNote: 6.0.1
+RoxygenNote: 5.0.1
