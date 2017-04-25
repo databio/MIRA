@@ -8,7 +8,7 @@
 Also includes name of the sample it was derived from.}
 \format{A data.table, data.frame object}
 \usage{
-data(GM06990_1_ExampleSet)
+data(exampleBSDT)
 }
 \value{
 No return value.

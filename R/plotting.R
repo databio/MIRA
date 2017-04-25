@@ -8,7 +8,7 @@
 #' 
 #' @param binnedRegDT A datatable with specific column names containing:
 #' bin numbers(binnedRegionDT column), 
-#' aggregated methylation values (methyl column), 
+#' aggregated methylation values (methylProp column), 
 #' name of the region set (featureID column), 
 #' case/control column (sampleType column), 
 #' sample name (sampleName column).
@@ -18,21 +18,22 @@
 #' @return A plot of class "gg"/ "ggplot" that shows MIRA signatures
 #' @examples
 #' data("exampleBins", package = "MIRA")
-#' MIRAplot = plotMIRARegions(binnedRegDT = exampleBins)
+#' MIRAplot = plotMIRAProfiles(binnedRegDT = exampleBins)
 #' 
 #' @export
-plotMIRARegions <- function(binnedRegDT, 
+plotMIRAProfiles <- function(binnedRegDT, 
                             featID = unique(binnedRegDT[, featureID]), 
                             plotType = "line"){
     binNum = max(binnedRegDT[, regionGroupID])
     setkey(binnedRegDT, featureID)
     binPlot = ggplot(data = binnedRegDT[featID], 
-                     mapping = aes(x = factor(regionGroupID), y = methyl)) +
+                     mapping = aes(x = factor(regionGroupID), y = methylProp)) +
                     theme_classic() + ylim(c(0, 1)) +
                     geom_hline(yintercept=c(0), alpha=.2) +
                     ylab("DNA Methylation (%)") + 
                     xlab("Genome Regions Surrounding Sites") +
-                    scale_color_discrete(name = "Sample Type") +
+                    scale_color_brewer(name = "Sample Type", 
+                                        palette = "Dark2") +
                     scale_x_discrete(labels=xAxisForRegionPlots(binNum))
                     
     
@@ -54,7 +55,7 @@ plotMIRARegions <- function(binnedRegDT,
     return(binPlot)
 }
 
-# A function to get right x axis numbers on the plotMIRARegions() plots
+# A function to get right x axis numbers on the plotMIRAProfiles() plots
 xAxisForRegionPlots <- function(binNum) {
     if ((binNum %% 2) == 0) { #even binNum
         xAxis = c((-1 * binNum / 2):-1, 1:(binNum / 2)) #no zero
@@ -76,8 +77,8 @@ xAxisForRegionPlots <- function(binNum) {
 #' with geom_boxplot and geom_jitter.
 #' @export
 #' @examples
-#' data(ewingMyobigBinDT) # bigBinDT object
-#' exScores = bigBinDT[, .(score=scoreDip(methyl, 
+#' data(ewingMyobigBinDT2) # bigBinDT object
+#' exScores = bigBinDT2[, .(score=scoreDip(methylProp, 
 #'                                        binCount = 21, 
 #'                                        shoulderShift = 5)), 
 #'                     by = .(featureID, sampleName)]
@@ -93,7 +94,7 @@ plotMIRAScores <- function(scoreDT, featID = unique(scoreDT[, featureID])){
             theme_classic() +
             ylab("MIRA Score") + xlab("Sample Type") +
             geom_boxplot(aes(fill = sampleType), alpha = 0.75) + 
-            scale_fill_brewer(name = "Sample Type", palette="Set1") +
+            scale_fill_brewer(name = "Sample Type", palette="Dark2") +
             geom_jitter(data = scoreDT[featID], 
                         mapping = aes(x = sampleType, y = score)) + 
             scale_color_manual(guide = FALSE, values = rep("black", sampleTypeNum)) +

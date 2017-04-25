@@ -6,7 +6,7 @@
 \title{A GRanges object with a subset of ranges corresponding to Nrf1 binding}
 \format{A GRanges object}
 \usage{
-data(Gm12878Nrf1_Subset)
+data(exampleRegionSet)
 }
 \value{
 No return value.

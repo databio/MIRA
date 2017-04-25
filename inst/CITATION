@@ -1,0 +1,11 @@
+year <- sub("-.*", "", meta$Date)
+note <- sprintf("R package version %s", meta$Version)
+
+bibentry(bibtype = "Manual",
+         title = "DNA methylation heterogeneity defines a disease spectrum in Ewing sarcoma",
+         author = c(person("Nathan", "Sheffield", middle="C"),
+                    person("Christoph", "Bock"),
+		    person("John", "Lawson")),
+         year = year,
+         note = note,
+         url = "http://databio.org/mira")

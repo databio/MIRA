@@ -3,7 +3,7 @@
 \name{MIRAScore}
 \alias{MIRAScore}
 \title{Function to take DNA methylation and region data and return a MIRA score;
-a wrapper for returnMIRABins and scoreDip.}
+a wrapper for aggregateMethyl and scoreDip.}
 \usage{
 MIRAScore(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
   sampleNameInBSDT = TRUE, minReads = 500)
@@ -11,9 +11,9 @@ MIRAScore(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
 \arguments{
 \item{BSDT}{A single data table that has DNA methylation data on individual 
 sites including a "chr" column with chromosome, a "start" column with the 
-coordinate number for the cytosine, a "methyl" column with proportion of 
-methylation (0 to 1), a "hitCount" column with number of methylated reads 
-for each site, and a "readCount" column with total number of reads for each 
+coordinate number for the cytosine, a "methylProp" column with proportion of 
+methylation (0 to 1), a "methylCount" column with number of methylated reads 
+for each site, and a "coverage" column with total number of reads for each 
 site. A "sampleName" column is preferred.}
 
 \item{GRList}{A GRangesList object containing region sets, each set 
@@ -36,11 +36,11 @@ A MIRA score for each region set in GRList. See ?scoreDip.
 }
 \description{
 Function to take DNA methylation and region data and return a MIRA score;
-a wrapper for returnMIRABins and scoreDip.
+a wrapper for aggregateMethyl and scoreDip.
 }
 \examples{
-data("GM06990_1_ExampleSet", package = "MIRA") #exampleBSDT
-data("Gm12878Nrf1_Subset", package = "MIRA") #exampleRegionSet
+data("exampleBSDT", package = "MIRA") 
+data("exampleRegionSet", package = "MIRA") 
 MIRAScore(BSDT = exampleBSDT, GRList = exampleRegionSet)
 
 }
