@@ -40,8 +40,7 @@ plotMIRAProfiles <- function(binnedRegDT,
     if (!("sampleType" %in% names(binnedRegDT))) {
         sampleType = "All samples" 
         # if no sampleType column then all lines/points will be black
-        warning(cleanws("sampleType column must exist if it is 
-                        desired to split up sample types by color"))
+        warning(cleanws("sampleType column is required to split up sample types by color"))
     }
     if (plotType == "line") {
         binPlot = binPlot + 

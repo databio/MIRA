@@ -46,16 +46,17 @@ exampleAnnoDT2 = fread(system.file("extdata", "exampleAnnoDT2.txt",
                                    package="MIRA")) 
 ```
 
-Next, we construct file names for the DNA methylation samples and the region sets (downloaded through the link in the `Input` section).
+Next, construct file names for the DNA methylation samples and the region sets (downloaded through the link in the `Input` section).
 
 ```{r, eval=FALSE}
 # 12 Ewing samples: T1-T12
-caseFiles = paste0("EWS_T", 1:12, ".bed")
+pathToData="/path/to/MIRA_Ewing_Vignette_Files/"
+caseFiles = paste0(pathToData, "EWS_T", 1:12, ".bed")
 # 12 muscle related samples, 3 of each type
 controlFiles = c("Hsmm_", "Hsmmt_", "Hsmmfshd_","Hsmmtubefshd_")
-controlFiles = paste0(controlFiles, rep(1:3, each=4), ".bed")
+controlFiles = paste0(pathToData, controlFiles, rep(1:3, each=4), ".bed")
 RRBSFiles = c(caseFiles, controlFiles)
-regionSetFiles = c("sknmc_specific.bed", "muscle_specific.bed")
+regionSetFiles = paste0(pathToData, c("sknmc_specific.bed", "muscle_specific.bed"))
 ```
 
 Let's read the files into R:
@@ -115,7 +116,7 @@ plotMIRAProfiles(binnedRegDT=bigBinDT1)
 
 ### Choosing Appropriate Region Sizes
 
-While the methylation profiles look pretty good, the dips are kind of narrow for the muscle-related samples when looking at the muscle-specific region set. The scoring function in MIRA could run into problems if the dips are too narrow since it expects the dips to be at least 5 bins wide from outside edge to outside edge (that number includes the outside edges). Let's use smaller region sizes for both region sets: 4000 bp for the Ewing DHS regions and 1750 bp for the muscle DHS regions (the choice is somewhat arbitrary). The size of the regions should not be decreased too much; if the regions are too small, there might be more noise since there would be less methylation data for each bin. Also, the regions must be wide enough to capture the outer edges of the dip since the outer edges are used for the MIRA score.
+While the methylation profiles look pretty good, the dips are a bit too narrow for the muscle-related samples when looking at the muscle-specific region set. The scoring function in MIRA could run into problems if the dips are too narrow since it expects the dips to be at least 5 bins wide from outside edge to outside edge (that number includes the outside edges). Let's use smaller region sizes for both region sets: 4000 bp for the Ewing DHS regions and 1750 bp for the muscle DHS regions (the choice is somewhat arbitrary). The size of the regions should not be decreased too much; if the regions are too small, there might be more noise since there would be less methylation data for each bin. Also, the regions must be wide enough to capture the outer edges of the dip since the outer edges are used for the MIRA score.
 
 To implement our new region sizes:
 
