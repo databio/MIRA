@@ -10,6 +10,7 @@
 #' @format A data.table, data.frame object
 #' @return No return value.
 NULL
+
 #' A GRanges object with a subset of ranges corresponding to Nrf1 binding 
 #'
 #'
@@ -20,6 +21,7 @@ NULL
 #' @format A GRanges object
 #' @return No return value.
 NULL
+
 #' A data.table with annotation for a bisulfite sample (name and sample type) 
 #'
 #'
@@ -30,6 +32,7 @@ NULL
 #' @format A data.table, data.frame object
 #' @return No return value.
 NULL
+
 #' A data.table with artificial binned methylation data
 #'
 #'
@@ -40,6 +43,7 @@ NULL
 #' @format A data.table, data.frame object
 #' @return No return value.
 NULL
+
 #' A data.table with binned methylation data for the first part of
 #' the "Applying MIRA to a Biological Question" vignette. 
 #' Has data for 3 Ewing samples and 3 muscle-related 
@@ -54,6 +58,7 @@ NULL
 #' @format A data.table, data.frame object
 #' @return No return value.
 NULL
+
 #' A data.table with binned methylation data for the second part
 #' of the "Applying MIRA to a Biological Question" vignette. 
 #' Has data for 12 Ewing samples and 12 muscle-related samples 
@@ -68,6 +73,7 @@ NULL
 #' @format A data.table, data.frame object
 #' @return No return value.
 NULL
+
 #' A data.table with annotation data for the "Applying MIRA to a 
 #' Biological Question" vignette. Has annotation data (sampleName
 #' and sampleType columns) for 24 Ewing samples and 24 muscle-related

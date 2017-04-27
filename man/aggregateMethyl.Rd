@@ -5,27 +5,26 @@
 \title{Function to aggregate methylation data into bins 
 over all regions in each region set.}
 \usage{
-aggregateMethyl(BSDT, GRList, binNum = 11, minReads = 500,
-  sampleNameInBSDT = TRUE)
+aggregateMethyl(BSDT, GRList, binNum = 11, minReads = 500)
 }
 \arguments{
-\item{BSDT}{A single data table that has DNA methylation data on individual 
-sites including a "chr" column with chromosome, a "start" column with the 
-coordinate number for the cytosine, a "methylProp" column with proportion of 
-methylation (0 to 1), a "methylCount" column with number of methylated reads for
-each site, and a "coverage" column with total number of reads for each site.
-A "sampleName" column is preferred.}
+\item{BSDT}{A single data.table that has DNA methylation data on individual 
+sites. With columns: "chr" for chromosome, "start" for 
+cytosine coordinate, "methylProp" for proportion of 
+methylation (0 to 1), "methylCount" for number of methylated reads, and
+"coverage" for total number of reads.
+In addition, a "sampleName" column is strongly preferred (and required later
+for scoring multiple samples at the same time using 
+"scoreDip(..., by = .(featureID, sampleName))" in a MIRA workflow).}
 
 \item{GRList}{A GRangesList object containing region sets, each set 
-corresponding to a regulatory element. Each regionSet in the list should be 
-named. A named list of data.tables also works.}
+corresponding to a type of regulatory element. Each regionSet in the list should
+be named. A named list of data.tables also works.}
 
 \item{binNum}{How many bins each region should be split into for aggregation 
 of the DNA methylation data.}
 
-\item{minReads}{Filter out bins with fewer than X reads before returning.}
-
-\item{sampleNameInBSDT}{boolean for whether the BSDT has a sampleName column}
+\item{minReads}{Filter out bins with fewer than minReads reads.}
 }
 \value{
 a data.table with binNum rows for each region set containing
@@ -33,7 +32,7 @@ aggregated methylation data.
 Each region was split into bins; methylation was put in these bins; 
 Output contains sum of the all corresponding bins for the regions of each 
 region set, ie for all regions in each region set: first bins summed, second 
-bins summed, etc. Columns of the output should be "regionGroupID", "methylProp", 
+bins summed, etc. Columns of the output should be "bin", "methylProp", 
 "coverage", "featureID", and possibly "sampleName".
 For information on symmetry of bins and output when a region set has
 strand info, see ?BSBinAggregate.

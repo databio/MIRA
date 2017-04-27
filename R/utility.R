@@ -1,13 +1,13 @@
 #########################################################
-#Utility functions
-#Conversion functions in 2nd half of file
+# Utility functions
+# Conversion functions in 2nd half of file
 ########################################################
 
 
 # This function is a drop-in replacement for the base list() function, 
 # which automatically names your list according to the names of the 
 # variables used to construct it.
-# It seemlessly handles lists with some names and others absent, 
+# It seamlessly handles lists with some names and others absent, 
 # not overwriting specified names while naming any unnamed parameters.
 #
 # @param ...   arguments passed to list()
@@ -59,15 +59,16 @@ setLapplyAlias = function(cores = 0) {
     if (cores < 1) {
         return(getOption("mc.cores"))
     }
-    if (cores > 1) { #use multicore?
+    if (cores > 1) { # use multicore?
         if (requireNamespace("parallel", quietly = TRUE)) {
             options(mc.cores = cores)
         } else {
-            warning("You don't have package parallel installed. Setting cores to 1.")
-            options(mc.cores = 1) #reset cores option.
+            warning(cleanws("You don't have package parallel installed. 
+                    Setting cores to 1."))
+            options(mc.cores = 1) # reset cores option.
         }
     } else {
-        options(mc.cores = 1) #reset cores option.
+        options(mc.cores = 1) # reset cores option.
     }
 }
 
@@ -92,7 +93,7 @@ buildJ = function(cols, funcs) {
 
 
 ####################  Conversion Functions  ########################
-#Convert between different object types
+# Convert between different object types
 
 # Convert a data.table to GRanges object.
 # 
@@ -137,7 +138,7 @@ dtToGrInternal = function(DT, chr, start,
         }
     }
     if (is.na(strand)) {
-        if ("strand" %in% colnames(DT)) { #checking if strand info is in DT
+        if ("strand" %in% colnames(DT)) { # checking if strand info is in DT
             strand = "strand"
         }
     }
@@ -183,26 +184,26 @@ BSdtToGRanges = function(dtList) {
     
     gList = list();
     for (i in seq_along(dtList)) {
-        #dt = dtList[[i]];
+        # dt = dtList[[i]];
         setkey(dtList[[i]], chr, start)
-        #convert the data into granges object
+        # convert the data into granges object
         gList[[i]] = GRanges(seqnames = dtList[[i]]$chr, 
                              ranges = IRanges(start = dtList[[i]]$start, 
                                               end = dtList[[i]]$start), 
                              strand = rep("*", nrow(dtList[[i]])), 
                              methylCount = dtList[[i]]$methylCount, 
                              coverage = dtList[[i]]$coverage)
-        #I used to use end = start + 1, but this targets CG instead of just 
-        #a C, and it's causing edge-effects problems when I assign Cs to 
-        #tiled windows using (within). Aug 2014 I'm changing to start/end at 
-        #the same coordinate.
+        # I used to use end = start + 1, but this targets CG instead of just 
+        # a C, and it's causing edge-effects problems when I assign Cs to 
+        # tiled windows using (within). Aug 2014 I'm changing to start/end at 
+        # the same coordinate.
     }
     return(gList);
 }
 
 
 
-# convert a GenomicRanges into a data.table
+# Convert a GenomicRanges into a data.table
 # 
 # @param GR A GRanges object
 # @param includeStrand Boolean, whether to include strand from GR in output DT
@@ -240,36 +241,11 @@ grToDt = function(GR, includeStrand = FALSE) {
 
 
 
-#check whether object is smoothed
-#check for names in phenoData
-#fix names in data.table
-#add methylProp column?, use addMethCol or bsseq built in getMeth()?
-# @param bsseqObj An object of class bsseq
-# @return MIRAFormatBSDTList A list of data.tables in MIRA format
-# One data table for each sample column of the bsseq object.
-bsseqToMIRA <- function(bsseqObj){
-    # if (bsseq::hasBeenSmoothed(bsseqObj)) {
-    #   warning("Raw (not smoothed) methylation and coverage values are being used.")
-    # }
-    MIRAFormatBSDTList = list() #to store output
-    #obtaining coordinates as GRanges obj. and changing to data.table
-    coordinates = grToDt(granges(bsseqObj))
-    for (i in 1:ncol(bsseqObj)) { #each column is a different sample
-        methylCount = bsseq::getBSseq(BSseq = bsseqObj[, i], type = "M")
-        coverage = bsseq::getBSseq(BSseq = bsseqObj[, i], type = "Cov")
-        #index for taking out rows with 0 coverage
-        notCovered = which(coverage == 0)
-        warning("Taking out rows with no coverage. Genomic coordinates may not have identical row numbers in different samples now.")
-        MIRAFormatBSDTList[[i]] = data.table(chr = coordinates[, chr], 
-                                             start = coordinates[, start], 
-                                             methylCount = methylCount, 
-                                             coverage = coverage
-        )[!notCovered]#filtering
-        setnames(MIRAFormatBSDTList[[i]], 
-                 c("chr", "start", "methylCount", "coverage"))
-    }
-    #names for list (by reference)
-    setattr(MIRAFormatBSDTList, "names", Biobase::sampleNames(bsseqObj))
-    
-    return(MIRAFormatBSDTList)
+# cleanws takes multi-line, code formatted strings and just formats them
+# as simple strings
+# @param string string to clean
+# @return A string with all consecutive whitespace characters, including
+# tabs and newlines, merged into a single space.
+cleanws = function(string) {
+    return(gsub('\\s+'," ", string))
 }

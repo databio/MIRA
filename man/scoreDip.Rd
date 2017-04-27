@@ -2,7 +2,10 @@
 % Please edit documentation in R/MIRA.R
 \name{scoreDip}
 \alias{scoreDip}
-\title{The dip scoring function for MIRA scores.}
+\title{The dip scoring function for MIRA scores. This will take a vector
+describing the methylation pattern and return a single score summarizing
+that vector for how large the 'dip' in methylation is at the center of
+the vector.}
 \usage{
 scoreDip(values, binCount, shoulderShift = "auto", method = "logRatio",
   usedStrand = FALSE)
@@ -45,11 +48,14 @@ the MIRA signature which is an aggregation of methylation
 over all regions in a region set.
 }
 \description{
-The dip scoring function for MIRA scores.
+The dip scoring function for MIRA scores. This will take a vector
+describing the methylation pattern and return a single score summarizing
+that vector for how large the 'dip' in methylation is at the center of
+the vector.
 }
 \examples{
 data("exampleBins")
-binCount = 11 #bin number for exampleBins 
+binCount = 11 # bin number for exampleBins 
 exampleBins[, .(score = scoreDip(methylProp, binCount)), 
               by = .(featureID, sampleName)]
 }

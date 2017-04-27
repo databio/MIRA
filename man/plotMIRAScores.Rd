@@ -4,13 +4,17 @@
 \alias{plotMIRAScores}
 \title{A function to plot MIRA scores and compare case/control.}
 \usage{
-plotMIRAScores(scoreDT, featID = unique(scoreDT[, featureID]))
+plotMIRAScores(scoreDT, featID = unique(scoreDT[, featureID]),
+  colBlindOption = FALSE)
 }
 \arguments{
 \item{scoreDT}{A datatable with the following columns: 
 score, featureID (names of regions), sampleType.}
 
 \item{featID}{Region set name/names in a single string or vector of strings.}
+
+\item{colBlindOption}{If TRUE, function will plot with a color blind
+friendly palette which could be helpful when plotting multiple colors.}
 }
 \value{
 a plot of class "gg"/"ggplot" that shows MIRA scores 
@@ -25,7 +29,7 @@ exScores = bigBinDT2[, .(score=scoreDip(methylProp,
                                        binCount = 21, 
                                        shoulderShift = 5)), 
                     by = .(featureID, sampleName)]
-#adding annotation
+# adding annotation
 sampleType = rep(c("Ewing", "Muscle-related"), each = 24)
 exScores = cbind(exScores, sampleType)
 exScorePlot = plotMIRAScores(exScores)         

@@ -279,7 +279,7 @@ test_that("scoreDip and findShoulder", {
 testBSDT = copy(origtestBSDT)
 testGR = copy(origtestGR)
 testGRDT = copy(origtestGRDT)
-test_that("addMethCol", {
+test_that("addMethPropCol", {
     #Note: this function assigns methylProp column by reference ( := )
     #still returns object from function call though
     
@@ -289,7 +289,7 @@ test_that("addMethCol", {
     #testing if it returns expected column names, only adds "methylProp"
     testBSDT = testBSDT[, methylProp := NULL]#removing methylProp column
     oldColNames = colnames(copy(testBSDT))#copy avoids updating by reference
-    addMethCol(testBSDT)#by reference, still returns object though
+    addMethPropCol(testBSDT)#by reference, still returns object though
     newColNames = colnames(testBSDT)
     colDiff = base::setdiff(newColNames, oldColNames)
     expect_equal(colDiff, "methylProp")

@@ -5,7 +5,7 @@
 \title{A function to plot the binned methylation of samples over a region.}
 \usage{
 plotMIRAProfiles(binnedRegDT, featID = unique(binnedRegDT[, featureID]),
-  plotType = "line")
+  plotType = "line", colBlindOption = FALSE)
 }
 \arguments{
 \item{binnedRegDT}{A datatable with specific column names containing:
@@ -18,6 +18,9 @@ sample name (sampleName column).}
 \item{featID}{Region set names in a single string or vector of strings.}
 
 \item{plotType}{Line or jitter (ggplot2).}
+
+\item{colBlindOption}{If TRUE, function will plot with a color blind
+friendly palette which could be helpful when plotting multiple colors.}
 }
 \value{
 A plot of class "gg"/ "ggplot" that shows MIRA signatures

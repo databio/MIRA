@@ -35,7 +35,7 @@
 #' Output contains sum of the all corresponding bins 
 #' for the regions of each region set ie for all regions in each region set: 
 #' first bins summed, second bins summed, etc.
-#' Columns of the output should be "regionGroupID", "methylProp", and "coverage"
+#' Columns of the output should be "bin", "methylProp", and "coverage"
 #' ###########################################################################
 #' Info about how strand of rangeDT affects output:
 #' The MIRA signature will be symmetrical if no strand information is given for 
@@ -48,9 +48,9 @@
 #' 5' to 3' orientation.
 #' ###########################################################################
 #' @examples
-#' data("exampleBSDT") #exampleBSDT
-#' data("exampleRegionSet") #exampleRegionSet
-#' exampleBSDT = addMethCol(exampleBSDT)
+#' data("exampleBSDT") # exampleBSDT
+#' data("exampleRegionSet") # exampleRegionSet
+#' exampleBSDT = addMethPropCol(exampleBSDT)
 #' aggregateBins = BSBinAggregate(BSDT = exampleBSDT, 
 #'                              rangeDT = exampleRegionSet, 
 #'                              binCount = 11, splitFactor = NULL)
@@ -59,12 +59,13 @@
 BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500, 
                           byRegionGroup = TRUE, splitFactor = NULL) {
     
-    #BSDT should not be a list but can be converted
+    # BSDT should not be a list but can be converted
     if ("list" %in% class(BSDT)) {
         if (length(BSDT) == 1) {
             BSDT = BSDT[[1]]
         } else {
-            stop("Only one BSDT may be given to function. BSDT should not be a list.")
+            stop(cleanws("Only one BSDT may be given to function. 
+                 BSDT should not be a list."))
         }
     }
     if (! ("data.table" %in% class(BSDT))) {
@@ -72,7 +73,7 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500,
     }
     
     
-    #if given GRanges object, change to DT
+    # if given GRanges object, change to DT
     if ("GRanges" %in% class(rangeDT)) {
         rangeDT = grToDt(GR = rangeDT, includeStrand = TRUE)
     }
@@ -94,13 +95,13 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500,
         warning("Since strand not given, set to '*' ")
     }
     
-    ##if (!silent) {
-    #message("Binning...")
+    ## if (!silent) {
+    # message("Binning...")
     ##}
     binnedDT = rangeDT[, binRegion(start, end, 
                                    binCount, get(seqnamesColName), strand)]
     binnedGR = sapply(split(binnedDT, binnedDT$binID), dtToGr)
-    #message("Aggregating...")
+    # message("Aggregating...")
     binnedBSDT = BSAggregate(BSDT = BSDT, 
                              regionsGRL = GRangesList(binnedGR), 
                              jCommand = buildJ(c("methylProp", "coverage"), 
@@ -162,12 +163,18 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500,
 # aggregate each region individually -- scores will then be contiguous, and
 # the output is 1 row per region.
 # Turn on this flag to aggregate across all region groups, making the result
-# uncontiguous, and resulting in 1 row per *region group*.
+# uncontiguous, and resulting in 1 row per *region group*. 
+# (byRegionGroup=TRUE is used for normal MIRA behaviour that 
+# aggregates across regions by bins 
+# -- all bin1's together, all bin2's together etc.--, in which case
+# "region group" in the description above refers to bin number,
+# and you would have 1 row per bin)
 # @param keep.na Not used in general MIRA context.
 # 
 # @return In context of MIRA, with byRegionGroup = TRUE and jCommand = 
-# list( methylProp = mean(methylProp), coverage = sum(coverage) )", this function
-# will return a data.table with binCount rows (parameter for BSBinAggregate)
+# list( methylProp = mean(methylProp), coverage = sum(coverage) )", 
+# this function will return a data.table with 
+# binCount rows (parameter for BSBinAggregate)
 # containing aggregated methylation from BSDT over binned regions from a region
 # set.
 #
@@ -184,7 +191,7 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
         stop("regionsGRL is not a GRanges or GRangesList object");
     }
     
-    #make sure methylProp column is present
+    # make sure methylProp column is present
     if (!("methylProp" %in% colnames(BSDT))) {
         stop("BSDT must have a methylProp column.")
     }
@@ -212,10 +219,12 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
     
     if (is.null(regionsGRL.length)) {
         if (length(regionsGRL) > 100) {
-            message("BSAggregate: Calculating sizes. You can speed this up by supplying a regionsGRL.length vector...", appendLF = FALSE)
+            message(cleanws("BSAggregate: Calculating sizes. You can speed this
+                             up by supplying a regionsGRL.length vector..."),
+                             appendLF = FALSE)
         }
         regionsGRL.length = sapply(regionsGRL, length)
-        #message("Done counting regionsGRL lengths.");
+        # message("Done counting regionsGRL lengths.");
     }
     
     # Build a table to keep track of which regions belong to which group
@@ -229,15 +238,15 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
     setkey(region2group, regionID)
     
     
-    #message("Finding overlaps...");
+    # message("Finding overlaps...");
     fo = findOverlaps(bsgr[[1]], regionsGR)
     
     setkey(BSDT, chr, start)
     # Gut check:
     # stopifnot(all(elementMetadata(bsgr[[1]])$coverage == BSDT$coverage))
     
-    #message("Setting regionIDs...");
-    BSDT = BSDT[queryHits(fo), ] #restrict the table to CpGs in any region.
+    # message("Setting regionIDs...");
+    BSDT = BSDT[queryHits(fo), ] # restrict the table to CpGs in any region.
     
     if (NROW(BSDT) < 1) {
         warning("No BSDT sites in the given region list. 
@@ -245,8 +254,8 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
         return(NULL)
     }
     
-    BSDT[, regionID := subjectHits(fo)] #record which region they overlapped.
-    #if (!keep.na) {
+    BSDT[, regionID := subjectHits(fo)] # record which region they overlapped.
+    # if (!keep.na) {
     # BSDT = BSDT[queryHits(fo), ]
     #}
     
@@ -255,7 +264,7 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
         funcs = c(rep("sum", length(sumCols)), rep("unique", length(keepCols)))
         jCommand = buildJ(cols, funcs)
     }
-    #message("jCommand: ", jCommand)
+    # message("jCommand: ", jCommand)
     
     # Build the by string
     if (is.null(splitFactor)) {
@@ -266,7 +275,7 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
     }
     
     # Now actually do the aggregate:
-    #message("Combining...");
+    # message("Combining...");
     bsCombined = BSDT[, eval(parse(text = jCommand)), 
                       by = eval(parse(text = byString))]
     setkey(bsCombined, regionID)
@@ -277,7 +286,7 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
     # Define aggregation column. aggregate by region or by region group?
     if (byRegionGroup) {
         # must set allow = TRUE here in case there are multiple IDs (splitCol)
-        #adds regionGroupID column from region2group to bsCombined
+        # adds regionGroupID column from region2group to bsCombined
         bsCombined[region2group, regionGroupID := regionGroupID, allow = TRUE]
         if (! is.null(splitFactor)) { 
             byStringGroup = paste0("list(", 
@@ -288,23 +297,26 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
         } else {
             byStringGroup = "list(regionGroupID)"
         }
-        #actual aggregation operation
+        # actual aggregation operation
         bsCombined = bsCombined[, eval(parse(text = jCommand)), 
                                 by = eval(parse(text = byStringGroup))]
         
-        #if any strand information was not given, averaging the signatures 
-        #about the center to account for unknown strand orientation, 
-        #also averaging coverage about center
-        #ie if any "*" are present then average
+        # if any strand information was not given, averaging the signatures 
+        # about the center to account for unknown strand orientation, 
+        # also averaging coverage about center
+        # ie if any "*" are present then average
         if ("*" %in% unique(as.character(strand(regionsGR)))) {
             bsCombined[, methylProp := (methylProp + rev(methylProp)) / 2]
             bsCombined[, coverage := (coverage + rev(coverage)) / 2]
         }
         
+        # changing "regionGroupID" name to "Bin" which is less confusing
+        # for normal MIRA use cases
+        setnames(bsCombined, old = "regionGroupID", new = "bin")
         return(bsCombined[]);
     } else {
-        warning("Using byRegionGroup = FALSE may result in missing functionalities 
-                such as symmetrical averaging")
+        warning(cleanws("Using byRegionGroup = FALSE may 
+             result in missing functionalities such as symmetrical averaging"))
         e = region2group[bsCombined, ]
         setkey(e, regionID);
         return(e);
@@ -349,23 +361,23 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
 #' end = c(500, 1400, 3400)
 #' chr = c("chr1", "chr1", "chr2")
 #' strand = c("*", "*", "*")
-#' #strand not included in object 
-#' #since MIRA assumes "*" already unless given something else
+#' # strand not included in object 
+#' # since MIRA assumes "*" already unless given something else
 #' regionsToBinDT = data.table(chr, start, end)
 #' numberOfBins = 15
-#' #data.table "j command" using column names and numberOfBins variable
+#' # data.table "j command" using column names and numberOfBins variable
 #' binnedRegionDT = regionsToBinDT[, binRegion(start, end, numberOfBins, chr)]
 binRegion = function(start, end, bins, idDF = NULL, strand = "*") {
-    #if (!is.null(idDF) & (! ("data.frame"  %in% class(idDF)))) {
+    # if (!is.null(idDF) & (! ("data.frame"  %in% class(idDF)))) {
     #   stop("idDF should be a data.frame")
     #}
     
-    #conditionally altered later
+    # conditionally altered later
     finalColNames = c("chr", "start", "end", "id", "binID", "ubinID")
     if (!("*" %in% strand)) {
         if ("+" %in% strand) {
             plusIndex = which(strand == "+")
-            #once for plus strand coordinates
+            # once for plus strand coordinates
             plusStart = start[plusIndex]
             plusEnd = end[plusIndex]
             
@@ -382,7 +394,7 @@ binRegion = function(start, end, bins, idDF = NULL, strand = "*") {
                                 binID = 1:bins, 
                                 strand = "+", 
                                 key = "id")
-            dt = plusDT #placeholder but may be returned
+            dt = plusDT # placeholder but may be returned
         }
         if ("-" %in% strand) {
             minusIndex = which(strand == "-")
@@ -403,21 +415,21 @@ binRegion = function(start, end, bins, idDF = NULL, strand = "*") {
                                  binID = bins:1, 
                                  strand = "-", 
                                  key = "id")
-            dt = minusDT #placeholder but may be returned
+            dt = minusDT # placeholder but may be returned
         }
         
-        #if there are both + and - strands
-        #combining and sorting plus and minus data.tables 
+        # if there are both + and - strands
+        # combining and sorting plus and minus data.tables 
         if (("+" %in% strand) && ("-" %in% strand)) {
             dt = rbindlist(list(plusDT, minusDT))
-            setorder(x = dt, id, binID)#setorder(dt, id) might also work?
+            setorder(x = dt, id, binID)  # setorder(dt, id) might also work?
         }
         
-        #included only if + /- are present
+        # included only if + /- are present
         finalColNames = c(finalColNames, "strand")
         dt[, ubinID := 1:nrow(dt)] 
         
-    }else { #some strand information is "*", don't flip bin directions
+    }else { # some strand information is "*", don't flip bin directions
         
         binSize = (end - start) / (bins)
         breaks = round(rep(start, each = (bins + 1)) 
@@ -425,7 +437,7 @@ binRegion = function(start, end, bins, idDF = NULL, strand = "*") {
         
         endpoints = (bins + 1) * (1:(length(start)))
         startpoints = 1 + (bins + 1)  * (0:(length(start) - 1))
-        #do all regions in the same order
+        # do all regions in the same order
         dt = data.table(start = breaks[-endpoints], 
                         end = breaks[-startpoints], 
                         id = rep((seq_along(start)), each = bins), 
@@ -438,7 +450,7 @@ binRegion = function(start, end, bins, idDF = NULL, strand = "*") {
     if (!is.null(idDF)) {
         chr = rep(idDF, each = bins)
         dt = dt[, chr := chr]
-        setcolorder(dt, finalColNames)#putting chr first, does not copy
+        setcolorder(dt, finalColNames)  # putting chr first, does not copy
     }
     
     return(dt[])
