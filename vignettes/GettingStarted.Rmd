@@ -73,7 +73,7 @@ BSDTList = list(exampleBSDT)
 Since our input methylation data did not have a column for proportion of methylation at each site (`methylProp`), we need to add this based on the methylation count and total coverage data.
 
 ```{r}
-BSDTList = addMethCol(BSDTList)
+BSDTList = addMethPropCol(BSDTList)
 ```
 
 ### Expand Your Regions

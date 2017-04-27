@@ -9,21 +9,21 @@ aggregateMethyl(BSDT, GRList, binNum = 11, minReads = 500,
   sampleNameInBSDT = TRUE)
 }
 \arguments{
-\item{BSDT}{A single data table that has DNA methylation data on individual 
-sites including a "chr" column with chromosome, a "start" column with the 
-coordinate number for the cytosine, a "methylProp" column with proportion of 
-methylation (0 to 1), a "methylCount" column with number of methylated reads for
-each site, and a "coverage" column with total number of reads for each site.
-A "sampleName" column is preferred.}
+\item{BSDT}{A single data.table that has DNA methylation data on individual 
+sites. With columns: "chr" for chromosome, "start" for 
+cytosine coordinate, "methylProp" for proportion of 
+methylation (0 to 1), "methylCount" for number of methylated reads, and
+"coverage" for total number of reads.
+In addition, a "sampleName" column is preferred.}
 
 \item{GRList}{A GRangesList object containing region sets, each set 
-corresponding to a regulatory element. Each regionSet in the list should be 
-named. A named list of data.tables also works.}
+corresponding to a type of regulatory element. Each regionSet in the list should
+be named. A named list of data.tables also works.}
 
 \item{binNum}{How many bins each region should be split into for aggregation 
 of the DNA methylation data.}
 
-\item{minReads}{Filter out bins with fewer than X reads before returning.}
+\item{minReads}{Filter out bins with fewer than minReads reads.}
 
 \item{sampleNameInBSDT}{boolean for whether the BSDT has a sampleName column}
 }

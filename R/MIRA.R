@@ -136,7 +136,7 @@ aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500,
 
     # adding a methylProp column if it is not already in the BSDT
     if (!("methylProp" %in% names(BSDT))) {
-        BSDTList = addMethCol(list(BSDT))
+        BSDTList = addMethPropCol(list(BSDT))
         BSDT = BSDTList[[1]] 
     }
 
@@ -412,8 +412,8 @@ findShoulder <- function(values, binCount, centerSpot, whichSide="right"){
 #' @examples 
 #' data("exampleBSDT", package = "MIRA")
 #' exampleBSDT[, methylProp := NULL] # removing methylProp column
-#' addMethCol(list(exampleBSDT))
-addMethCol <- function(BSDTList){
+#' addMethPropCol(list(exampleBSDT))
+addMethPropCol <- function(BSDTList){
 
     # converting to a data.table list if it was a single data.table
     if ("data.table" %in% class(BSDTList)) {
@@ -456,6 +456,9 @@ addMethCol <- function(BSDTList){
 #' @return Data from each input file joined together into one big data.table.
 #' If returnAsList = TRUE, then input from each file will be 
 #' in its own data.table in a list.
+#' @examples
+#' shortBSDTFile = system.file("extdata", "shortRRBS.bed", package = "MIRA") 
+#' shortBSDT = BSreadBiSeq(shortBSDTFile)
 #'
 #' @export
 BSreadBiSeq = function(files, contrastList = NULL, 

@@ -32,3 +32,8 @@ in its own data.table in a list.
 \description{
 Read in files from biseq meth caller
 }
+\examples{
+shortBSDTFile = system.file("extdata", "shortRRBS.bed", package = "MIRA") 
+shortBSDT = BSreadBiSeq(shortBSDTFile)
+
+}

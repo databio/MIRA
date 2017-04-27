@@ -40,7 +40,7 @@ Each region was split into bins; methylation was put in these bins;
 Output contains sum of the all corresponding bins 
 for the regions of each region set ie for all regions in each region set: 
 first bins summed, second bins summed, etc.
-Columns of the output should be "regionGroupID", "methylProp", and "coverage"
+Columns of the output should be "bin", "methylProp", and "coverage"
 ###########################################################################
 Info about how strand of rangeDT affects output:
 The MIRA signature will be symmetrical if no strand information is given for 
@@ -59,9 +59,9 @@ each corresponding bin across a set of regions (ie all bin1's together,
 all bin2's together, etc.).
 }
 \examples{
-data("exampleBSDT") #exampleBSDT
-data("exampleRegionSet") #exampleRegionSet
-exampleBSDT = addMethCol(exampleBSDT)
+data("exampleBSDT") # exampleBSDT
+data("exampleRegionSet") # exampleRegionSet
+exampleBSDT = addMethPropCol(exampleBSDT)
 aggregateBins = BSBinAggregate(BSDT = exampleBSDT, 
                              rangeDT = exampleRegionSet, 
                              binCount = 11, splitFactor = NULL)

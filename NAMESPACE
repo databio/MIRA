@@ -3,7 +3,7 @@
 export(BSBinAggregate)
 export(BSreadBiSeq)
 export(MIRAScore)
-export(addMethCol)
+export(addMethPropCol)
 export(aggregateMethyl)
 export(binRegion)
 export(plotMIRAProfiles)

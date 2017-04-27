@@ -240,47 +240,11 @@ grToDt = function(GR, includeStrand = FALSE) {
 
 
 
-# check whether object is smoothed
-# check for names in phenoData
-# fix names in data.table
-# add methylProp column?, use addMethCol or bsseq built in getMeth()?
-# @param bsseqObj An object of class bsseq
-# @return MIRAFormatBSDTList A list of data.tables in MIRA format
-# One data table for each sample column of the bsseq object.
-bsseqToMIRA <- function(bsseqObj){
-    # if (bsseq::hasBeenSmoothed(bsseqObj)) {
-    #   warning("Raw (unsmoothed) methylation and coverage values are being used.")
-    # }
-    MIRAFormatBSDTList = list() # to store output
-    # obtaining coordinates as GRanges obj. and changing to data.table
-    coordinates = grToDt(granges(bsseqObj))
-    for (i in 1:ncol(bsseqObj)) { # each column is a different sample
-        methylCount = bsseq::getBSseq(BSseq = bsseqObj[, i], type = "M")
-        coverage = bsseq::getBSseq(BSseq = bsseqObj[, i], type = "Cov")
-        # index for taking out rows with 0 coverage
-        notCovered = which(coverage == 0)
-        warning(cleanws("Taking out rows with no coverage. Genomic coordinates may 
-                         not have identical row numbers in different samples now."))
-        MIRAFormatBSDTList[[i]] = data.table(chr = coordinates[, chr], 
-                                             start = coordinates[, start], 
-                                             methylCount = methylCount, 
-                                             coverage = coverage
-        )[!notCovered]  # filtering
-        setnames(MIRAFormatBSDTList[[i]], 
-                 c("chr", "start", "methylCount", "coverage"))
-    }
-    # names for list (by reference)
-    setattr(MIRAFormatBSDTList, "names", Biobase::sampleNames(bsseqObj))
-    
-    return(MIRAFormatBSDTList)
-}
-
-
-#' cleanws takes multi-line, code formatted strings and just formats them
-#' as simple strings
-#' @param string string to clean
-#' @return A string with all consecutive whitespace characters, including
-#' tabs and newlines, merged into a single space.
+# cleanws takes multi-line, code formatted strings and just formats them
+# as simple strings
+# @param string string to clean
+# @return A string with all consecutive whitespace characters, including
+# tabs and newlines, merged into a single space.
 cleanws = function(string) {
     return(gsub('\\s+'," ", string))
 }

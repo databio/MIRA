@@ -29,7 +29,7 @@ of the DNA methylation data.}
 
 \item{sampleNameInBSDT}{boolean for whether the BSDT has a sampleName column}
 
-\item{minReads}{Filter out bins with fewer than X reads before returning.}
+\item{minReads}{Filter out bins with fewer than minReads reads}
 }
 \value{
 A MIRA score for each region set in GRList. See ?scoreDip.

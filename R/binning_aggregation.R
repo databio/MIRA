@@ -35,7 +35,7 @@
 #' Output contains sum of the all corresponding bins 
 #' for the regions of each region set ie for all regions in each region set: 
 #' first bins summed, second bins summed, etc.
-#' Columns of the output should be "regionGroupID", "methylProp", and "coverage"
+#' Columns of the output should be "bin", "methylProp", and "coverage"
 #' ###########################################################################
 #' Info about how strand of rangeDT affects output:
 #' The MIRA signature will be symmetrical if no strand information is given for 
@@ -50,7 +50,7 @@
 #' @examples
 #' data("exampleBSDT") # exampleBSDT
 #' data("exampleRegionSet") # exampleRegionSet
-#' exampleBSDT = addMethCol(exampleBSDT)
+#' exampleBSDT = addMethPropCol(exampleBSDT)
 #' aggregateBins = BSBinAggregate(BSDT = exampleBSDT, 
 #'                              rangeDT = exampleRegionSet, 
 #'                              binCount = 11, splitFactor = NULL)
@@ -162,7 +162,12 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500,
 # aggregate each region individually -- scores will then be contiguous, and
 # the output is 1 row per region.
 # Turn on this flag to aggregate across all region groups, making the result
-# uncontiguous, and resulting in 1 row per *region group*.
+# uncontiguous, and resulting in 1 row per *region group*. 
+# (byRegionGroup=TRUE is used for normal MIRA behaviour that 
+# aggregates across regions by bins 
+# -- all bin1's together, all bin2's together etc.--, in which case
+# "region group" in the description above refers to bin number,
+# and you would have 1 row per bin)
 # @param keep.na Not used in general MIRA context.
 # 
 # @return In context of MIRA, with byRegionGroup = TRUE and jCommand = 
@@ -303,6 +308,9 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
             bsCombined[, coverage := (coverage + rev(coverage)) / 2]
         }
         
+        # changing "regionGroupID" name to "Bin" which is less confusing
+        # for normal MIRA use cases
+        setnames(bsCombined, old = "regionGroupID", new = "bin")
         return(bsCombined[]);
     } else {
         warning("Using byRegionGroup = FALSE may result in missing functionalities 
