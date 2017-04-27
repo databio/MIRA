@@ -197,4 +197,4 @@ In general, interpretation will depend on the samples and region sets being used
 
 
 ## Other Tips for Using MIRA
-When it comes to MIRA, lapply is your friend (although this is generally true anyway). This allows for distributed computing with mclapply if desired. 
+When it comes to MIRA, lapply is your friend (although this is generally true anyway). This allows for distributed computing with `mclapply` (`parallel` package) or `bplapply` ([`BiocParallel` package](http://bioconductor.org/packages/release/bioc/html/BiocParallel.html)) if desired. 
