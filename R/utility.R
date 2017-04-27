@@ -63,7 +63,8 @@ setLapplyAlias = function(cores = 0) {
         if (requireNamespace("parallel", quietly = TRUE)) {
             options(mc.cores = cores)
         } else {
-            warning("You don't have package parallel installed. Setting cores to 1.")
+            warning(cleanws("You don't have package parallel installed. 
+                    Setting cores to 1."))
             options(mc.cores = 1) # reset cores option.
         }
     } else {

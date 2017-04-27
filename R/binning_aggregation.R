@@ -64,7 +64,8 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500,
         if (length(BSDT) == 1) {
             BSDT = BSDT[[1]]
         } else {
-            stop("Only one BSDT may be given to function. BSDT should not be a list.")
+            stop(cleanws("Only one BSDT may be given to function. 
+                 BSDT should not be a list."))
         }
     }
     if (! ("data.table" %in% class(BSDT))) {
@@ -171,8 +172,9 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500,
 # @param keep.na Not used in general MIRA context.
 # 
 # @return In context of MIRA, with byRegionGroup = TRUE and jCommand = 
-# list( methylProp = mean(methylProp), coverage = sum(coverage) )", this function
-# will return a data.table with binCount rows (parameter for BSBinAggregate)
+# list( methylProp = mean(methylProp), coverage = sum(coverage) )", 
+# this function will return a data.table with 
+# binCount rows (parameter for BSBinAggregate)
 # containing aggregated methylation from BSDT over binned regions from a region
 # set.
 #
@@ -313,8 +315,8 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
         setnames(bsCombined, old = "regionGroupID", new = "bin")
         return(bsCombined[]);
     } else {
-        warning("Using byRegionGroup = FALSE may result in missing functionalities 
-                such as symmetrical averaging")
+        warning(cleanws("Using byRegionGroup = FALSE may 
+             result in missing functionalities such as symmetrical averaging"))
         e = region2group[bsCombined, ]
         setkey(e, regionID);
         return(e);

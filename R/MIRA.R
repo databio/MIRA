@@ -32,7 +32,7 @@ NULL
 # in order to pass some R CMD check NOTES.
 if (getRversion() >= "2.15.1") {
     utils::globalVariables(c(
-    ".", "binID", "chr", "featureID", "methylCount", "id", "meth", 
+    ".", "bin", "binID", "chr", "featureID", "methylCount", "id", "meth", 
     "methylProp", "coverage", "regionGroupID", "regionID", 
     "sampleName", "sampleType", "ubinID", "V1"))
 }
@@ -52,7 +52,8 @@ if (getRversion() >= "2.15.1") {
 #' "scoreDip(..., by = .(featureID, sampleName))" in a MIRA workflow).
 
 #' @param GRList A GRangesList object containing region sets, each set 
-#' corresponding to a type of regulatory element. Each regionSet in the list should
+#' corresponding to a type of regulatory element. 
+#' Each regionSet in the list should
 #' be named. A named list of data.tables also works. 
 #' @param binNum How many bins each region should be split into for aggregation 
 #' of the DNA methylation data.
@@ -81,7 +82,8 @@ aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500){
         if (length(BSDT) == 1) {
             BSDT = BSDT[[1]]
         } else {
-            stop("Only one BSDT may be given to function. BSDT should not be a list.")
+            stop(cleanws("Only one BSDT may be given to function. 
+                 BSDT should not be a list."))
         }
     }
     if (! ("data.table" %in% class(BSDT))) {
@@ -395,12 +397,13 @@ findShoulder <- function(values, binCount, centerSpot, whichSide="right"){
 
 
 
-#' Adding methylProp column that has proportion of reads that were methylated for 
-#' each site.
+#' Adding methylProp column that has proportion of reads that were 
+#' methylated for each site.
 #' Note: Assigns methylProp column by reference with ":="
 #' 
-#' @param BSDTList A bisulfite datatable or list of datatables with a column for
-#' number of methylated reads (methylCount) and a column for number of total reads 
+#' @param BSDTList A bisulfite datatable or list of datatables 
+#' with a column for number of methylated reads (methylCount) and 
+#' a column for number of total reads 
 #' (coverage) for each cytosine that was measured.
 #' @return The BSDTList but with extra `methylProp` column on each 
 #' data.table in list.
@@ -422,8 +425,8 @@ addMethPropCol <- function(BSDTList){
              or list of data.table objects')
     }
 
-    # using anonymous function to apply operation that adds methylProp column to each 
-    # element of list
+    # using anonymous function to apply operation 
+    # that adds methylProp column to each element of list
     # extra [] on the end is necessary for proper display/printing of the object
     BSDTList = lapply(X = BSDTList, 
                     FUN = function(x) x[, methylProp := 

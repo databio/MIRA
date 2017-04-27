@@ -69,10 +69,12 @@ plotMIRAProfiles <- function(binnedRegDT,
 xAxisForRegionPlots <- function(binNum) {
     if ((binNum %% 2) == 0) { # even binNum
         tmp = c((-1 * binNum / 2):-1, 1:(binNum / 2)) # no zero
-        xAxis = c(tmp[1], rep("", (binNum - 4) / 2), -1, 1, rep("", (binNum - 4) / 2), tmp[binNum])
+        xAxis = c(tmp[1], rep("", (binNum - 4) / 2), -1, 1, 
+                  rep("", (binNum - 4) / 2), tmp[binNum])
     } else if ((binNum %% 2) == 1) { # odd binNum
         tmp = (-1 * (binNum - 1) / 2):((binNum - 1) / 2)
-        xAxis = c(tmp[1], rep("", (binNum - 3) / 2), 0, rep("", (binNum - 3) / 2), tmp[binNum])
+        xAxis = c(tmp[1], rep("", (binNum - 3) / 2), 0, 
+                  rep("", (binNum - 3) / 2), tmp[binNum])
     }
     return(xAxis)
 }
@@ -104,13 +106,16 @@ plotMIRAScores <- function(scoreDT,
     sampleTypeNum = length(unique(scoreDT[, sampleType]))
     setkey(scoreDT, featureID)
     scorePlot = ggplot(data = scoreDT[featID], 
-                    mapping = aes(x = sampleType, y = score, col = sampleType)) + 
+                    mapping = aes(x = sampleType, 
+                                  y = score, 
+                                  col = sampleType)) + 
             theme_classic() +
             ylab("MIRA Score") + xlab("Sample Type") +
             geom_boxplot(aes(fill = sampleType), alpha = 0.75) + 
             geom_jitter(data = scoreDT[featID], 
                         mapping = aes(x = sampleType, y = score)) + 
-            scale_color_manual(guide = FALSE, values = rep("black", sampleTypeNum)) +
+            scale_color_manual(guide = FALSE, values = rep("black", 
+                                                           sampleTypeNum)) +
             facet_wrap(~featureID)
     if (colBlindOption) {
         scorePlot = scorePlot + scale_fill_brewer(name = "Sample Type", 
