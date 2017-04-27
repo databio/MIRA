@@ -47,7 +47,9 @@ if (getRversion() >= "2.15.1") {
 #' cytosine coordinate, "methylProp" for proportion of 
 #' methylation (0 to 1), "methylCount" for number of methylated reads, and
 #' "coverage" for total number of reads.
-#' In addition, a "sampleName" column is preferred.
+#' In addition, a "sampleName" column is strongly preferred (and required later
+#' for scoring multiple samples at the same time using 
+#' "scoreDip(..., by = .(featureID, sampleName))" in a MIRA workflow).
 
 #' @param GRList A GRangesList object containing region sets, each set 
 #' corresponding to a type of regulatory element. Each regionSet in the list should
@@ -55,14 +57,13 @@ if (getRversion() >= "2.15.1") {
 #' @param binNum How many bins each region should be split into for aggregation 
 #' of the DNA methylation data.
 #' @param minReads Filter out bins with fewer than minReads reads.
-#' @param sampleNameInBSDT boolean for whether the BSDT has a sampleName column
 #' 
 #' @return a data.table with binNum rows for each region set containing
 #' aggregated methylation data.
 #' Each region was split into bins; methylation was put in these bins; 
 #' Output contains sum of the all corresponding bins for the regions of each 
 #' region set, ie for all regions in each region set: first bins summed, second 
-#' bins summed, etc. Columns of the output should be "regionGroupID", "methylProp", 
+#' bins summed, etc. Columns of the output should be "bin", "methylProp", 
 #' "coverage", "featureID", and possibly "sampleName".
 #' For information on symmetry of bins and output when a region set has
 #' strand info, see ?BSBinAggregate.
@@ -72,8 +73,7 @@ if (getRversion() >= "2.15.1") {
 #' data("exampleBSDT", package = "MIRA")
 #' data("exampleRegionSet", package = "MIRA")
 #' exBinDT = aggregateMethyl(exampleBSDT, exampleRegionSet)
-aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500, 
-                          sampleNameInBSDT = TRUE){
+aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500){
   
     ######### aggregateMethyl:Preprocessing and formatting###############
     # BSDT should not be a list but can be converted
@@ -106,7 +106,8 @@ aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500,
     # checking if region sets have names
     if (is.null(names(GRList))) {
         warning(cleanws("GRList should be a named list/GRangesList. 
-                Sequential names given according to order in object."))
+                The region sets were assigned sequential names 
+                        based on their order in the list."))
         names(GRList) <- paste0(rep("RegionSet", length(GRList)), 
                               seq_along(GRList))
     }
@@ -128,11 +129,6 @@ aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500,
         stop("GRList should be a GRangesList or a list of data.tables")
     }
     
-    if (sampleNameInBSDT) {
-        if (!("sampleName" %in% colnames(BSDT))) {
-            stop("BSDT should have sampleName col if sampleNameInBSDT = TRUE")
-        }
-    }
 
     # adding a methylProp column if it is not already in the BSDT
     if (!("methylProp" %in% names(BSDT))) {
@@ -140,6 +136,7 @@ aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500,
         BSDT = BSDTList[[1]] 
     }
 
+    
     ######## aggregateMethyl:Binning and processing output####################
 
 
@@ -162,6 +159,7 @@ aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500,
     methylByBin = methylByBin[!(binNumScreen < binNum)]
 
     bigMethylByBin = rbindlist(methylByBin)
+    sampleNameInBSDT = "sampleName" %in% colnames(BSDT)
     if (sampleNameInBSDT && (ncol(bigMethylByBin) != 0)) {
         # creating new sampleName column
         bigMethylByBin[, sampleName := rep(BSDT[1, sampleName])][] 
@@ -178,8 +176,8 @@ aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500,
 #' sites including a "chr" column with chromosome, a "start" column with the 
 #' coordinate number for the cytosine, a "methylProp" column with proportion of 
 #' methylation (0 to 1), a "methylCount" column with number of methylated reads 
-#' for each site, and a "coverage" column with total number of reads for each 
-#' site. A "sampleName" column is preferred.
+#' for each site, a "coverage" column with total number of reads for each 
+#' site, and a "sampleName" column with a sample identifier/name (required).
 #' @param GRList A GRangesList object containing region sets, each set 
 #' corresponding to a regulatory element (or having regions with the 
 #' same biological annotation).
@@ -188,7 +186,6 @@ aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500,
 #' of the DNA methylation data.
 #' @param scoringMethod Method to calculate MIRA score after binning. 
 #' "logRatio" is currently the only option. See scoreDip function.
-#' @param sampleNameInBSDT boolean for whether the BSDT has a sampleName column
 #' @param minReads Filter out bins with fewer than minReads reads
 #' 
 #' @return A MIRA score for each region set in GRList. See ?scoreDip. 
@@ -199,14 +196,13 @@ aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500,
 #' 
 #' @export
 MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio", 
-                     sampleNameInBSDT = TRUE, minReads = 500){
+                     minReads = 500){
 
     MIRAresults = list()
 
 
     bigBin = aggregateMethyl(BSDT = BSDT, GRList = GRList, binNum = binNum, 
-                          sampleNameInBSDT = sampleNameInBSDT, 
-                          minReads = minReads)
+                             minReads = minReads)
   
     # using binned methylation data to calculate MIRA score
     scoreDT = bigBin[, .(score = scoreDip(methylProp, binNum, 

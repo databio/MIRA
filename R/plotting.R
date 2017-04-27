@@ -27,10 +27,10 @@ plotMIRAProfiles <- function(binnedRegDT,
                             featID = unique(binnedRegDT[, featureID]), 
                             plotType = "line",
                             colBlindOption = FALSE){
-    binNum = max(binnedRegDT[, regionGroupID])
+    binNum = max(binnedRegDT[, bin])
     setkey(binnedRegDT, featureID)
     binPlot = ggplot(data = binnedRegDT[featID], 
-                     mapping = aes(x = factor(regionGroupID), 
+                     mapping = aes(x = factor(bin), 
                                    y = methylProp * 100)) +
                     theme_classic() + ylim(c(0, 100)) +
                     geom_hline(yintercept=c(0), alpha=.2) +
