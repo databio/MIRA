@@ -18,7 +18,8 @@ for scoring multiple samples at the same time using
 "scoreDip(..., by = .(featureID, sampleName))" in a MIRA workflow).}
 
 \item{GRList}{A GRangesList object containing region sets, each set 
-corresponding to a type of regulatory element. Each regionSet in the list should
+corresponding to a type of regulatory element. 
+Each regionSet in the list should
 be named. A named list of data.tables also works.}
 
 \item{binNum}{How many bins each region should be split into for aggregation 

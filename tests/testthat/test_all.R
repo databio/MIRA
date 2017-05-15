@@ -204,7 +204,7 @@ test_that("aggregateMethyl and MIRAScore", {
 testBSDT = copy(origtestBSDT)
 testGR = copy(origtestGR)
 testGRDT = copy(origtestGRDT)
-test_that("scoreDip and findShoulder", {
+test_that("scoreDip, findShoulder, and isProfileConcaveUp", {
     
     #test with odd bin number
     x = -10:10
@@ -272,6 +272,24 @@ test_that("scoreDip and findShoulder", {
     #if symmetrical, you would use values 1 and 14 or 3 and 12
     expScore = round(log(mean(unsymmetric[c(1, 12)]) / expMidpoint), 2)
     
+    # testing isProfileConcaveUp
+    jagged = c(16, 14, 15, 11, 12, 7, 4, 4, 7, 12, 11, 15, 14, 16)
+    expect_true(isProfileConcaveUp(jagged, 14))
+    invJagged = 1 - jagged
+    expect_true(!isProfileConcaveUp(invJagged, 14))
+    miniDip = c(1, 3, 5, 8, 7, 5, 4, 5, 7, 8, 5, 3, 1)
+    expect_true(!isProfileConcaveUp(miniDip, 13))
+    miniDip2 = c(1, miniDip, 1)
+    expect_true(isProfileConcaveUp(miniDip2, 15))
+    
+    # testing that scoreDip will give expected score
+    testScore = round(scoreDip(miniDip2, 15), 3)
+    expScore = round(log(mean(miniDip2[c(5,11)])/miniDip2[8]), 3)
+    expect_equal(testScore, expScore)
+    invMiniDip2 = 10 - miniDip2
+    testScore = round(scoreDip(invMiniDip2, 15), 3)
+    expScore = round(log(mean(invMiniDip2[c(5,11)])/invMiniDip2[8]), 3)
+    expect_equal(testScore, expScore)
 })
 
 ##########testing miscellaneous functions##########
