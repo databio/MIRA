@@ -1,5 +1,5 @@
 Package: MIRA
-Version: 0.99.1
+Version: 0.99.2
 Date: 2017-04-27
 Title: Methylation-Based Inference of Regulatory Activity
 Description: MIRA measures the degree of "dip" in methylation
@@ -18,7 +18,8 @@ Imports:
     GenomicRanges,
     data.table,
     ggplot2,
-    Biobase
+    Biobase,
+    stats
 Suggests:
     knitr,
     parallel,
