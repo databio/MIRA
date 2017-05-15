@@ -23,6 +23,7 @@
 #' @importFrom data.table ":=" setDT data.table setkey fread setnames 
 #'             setcolorder rbindlist setattr setorder
 #' @importFrom Biobase sampleNames
+#' @importFrom stats lm coefficients poly
 NULL
 
 
@@ -264,8 +265,15 @@ scoreDip = function(values, binCount,
     if (!(method %in% "logRatio")) { # add new methods eventually
         stop("Invalid scoring method. Check spelling/capitalization.")
     }
+    # determining whether signature is concave up or down in general
+    # because values for finding shoulder need to be altered if concave
+    # down ('logratio scoring') 
+    # also it matters for getting middle value for 'logratio' scoring
+    concaveUp = isProfileConcaveUp(values, binCount)
+    
     if (method == "logRatio") {
         centerSpot = (binCount + 1) / 2 # X.5 for even binCount
+        
         
         if ((binCount %% 2) == 0) { # if binCount is even, centerSpot is X.5
             # if one of middle 2 vals is lowest, use it, otherwise average
@@ -285,28 +293,55 @@ scoreDip = function(values, binCount,
                             + 0.5 * values[centerSpot + 1.5]) / 3    
             }
         }else {# if binCount is odd, centerSpot is X.0
-            # if the middle is lowest use it, otherwise take average
-            # order matters in which.min (for ties) so centerSpot is first
-            if (which.min(values[c(centerSpot, centerSpot - 1, centerSpot + 1)])
-                == 1) {
+            
+            # if the middle is lowest for concave up/highest for concave down
+            # use it, otherwise average will be taken
+            if (concaveUp) {
+                # order matters in which.min (for ties) so centerSpot is first
+                useMiddlePoint = (which.min(values[c(centerSpot, 
+                                                      centerSpot - 1, 
+                                                      centerSpot + 1)]) == 1)
+            } else {
+                # if concave down, see if middle point is the max of 
+                # the three middle points
+                useMiddlePoint = (which.max(values[c(centerSpot, 
+                                                      centerSpot - 1, 
+                                                      centerSpot + 1)]) == 1)
+            }
+            
+            if (useMiddlePoint) {
                 midpoint = values[centerSpot]
-            } else { # if centerSpot does not have lowest value of the three
-                # average the three middle bins
+            } else { # if centerSpot does not have lowest/highest value of 
+                # the three, average the three middle bins
                 midpoint = (values[centerSpot] + values[centerSpot + 1] 
                             + values[centerSpot - 1] ) / 3
             }
         }
         # automatically figuring out shoulderShift based on each signature
         if (shoulderShift == "auto") {
+            
+            
+            
+            if (concaveUp) {
+                values2 = values 
+            } else {
+                # converts to concave up so same `findShoulder` algorithm 
+                # can be used for both cases
+                # values2 is not used for scoring, just for finding shoulders
+                values2 = 1 - values 
+            }
+            
+            
+            
             # signature will probably not be symmetrical if strand was used
             if (usedStrand) { # probably not common but still an option
-                shoulderShiftL= findShoulder(values, binCount, centerSpot,
+                shoulderShiftL= findShoulder(values2, binCount, centerSpot,
                                              whichSide = "left")
-                shoulderShiftR = findShoulder(values, binCount, centerSpot, 
+                shoulderShiftR = findShoulder(values2, binCount, centerSpot, 
                                              whichSide = "right")
             } else { # most common use case, strand was not used
                 # either side would work since signature is symmetrical
-                shoulderShift = findShoulder(values, binCount, centerSpot, 
+                shoulderShift = findShoulder(values2, binCount, centerSpot, 
                                              whichSide = "right")
             }
         }
@@ -352,6 +387,48 @@ scoreDip = function(values, binCount,
     return(score)
 }
 
+# helper function for determining concavity of MIRA signature
+# fits a parabola to the values then looks at the x^2 coefficient to 
+# determine concavity (+ is concave up, - is concave down)
+# if number of bins is high enough, a wide parabola is fit using all the data
+# and then a narrow parabola is fit using the middle 50% or so values. The
+# fit with the best adjusted R^2 value is used. This could help when the
+# dip is mostly in the middle half but is somewhat arbitrary and 
+# there might be a better way to do this.
+# @return TRUE if concave up, FALSE if concave down
+isProfileConcaveUp <- function(values, binCount) {
+    wideFit = lm(values ~ poly(seq_along(values), 2))
+    wideX2Coef = coefficients(wideFit)[3]
+    wideR2 = summary(wideFit)$adj.r.squared
+    # if x2 coef is positive, it is concave up
+    concaveUp = (wideX2Coef >= 0) # up is preferred so inclusive of 0
+    
+    # only do a narrow fit if enough bins are used
+    # want at least 7 bins to be a part of the narrow fit (smallerHalf)
+    # floor(15 / 2) = 7
+    # because 3 bins can be used for center in scoring (with odd binCount) 
+    # and we want at least 2 bins on each side of those center bins
+    if (binCount >= 15) {
+        # using middle 50% or so for this fit
+        smallerHalf = floor(binCount / 2)
+        endFirstQuarter = ceiling((binCount - smallerHalf) / 2)
+        narrowInd = c(endFirstQuarter + seq(smallerHalf)) # middle ~half
+        
+        narrowFit = lm(values[narrowInd] ~ 
+                           poly(seq_along(values[narrowInd]), 2))
+        narrowX2Coef = coefficients(narrowFit)[3] # the x^2 coefficient
+        narrowR2 = summary(narrowFit)$adj.r.squared
+        
+        # use narrow fit if it has a better R2
+        if (narrowR2 > wideR2) {
+            concaveUp = (narrowX2Coef >= 0)
+        }
+        
+    }
+    
+    return(concaveUp)
+}
+
 # helper function for automatic shoulder sensing
 # for unsymmetrical signatures this function should be run twice, once
 # with whichSide="right" and once with whichSide="left"
@@ -360,7 +437,7 @@ scoreDip = function(values, binCount,
 # used in scoreDip
 # @param whichSide the side of the signature to find the shoulder for
 # @param for other params see ?scoreDip
-# @return The distance from the center of the signature to the shoulder.
+# @return shoulderShift The distance from the center of the signature to the shoulder.
 #         It may be X.0 (ie an integer) if centerSpot is an integer or 
 #         X.5 if centerSpot was X.5
 

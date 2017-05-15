@@ -276,6 +276,10 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
     
     # Now actually do the aggregate:
     # message("Combining...");
+    # for MIRA: average methylProp and sum coverage within each instance of 
+    # each bin (ie average methylProp's in bin1 of first region, average 
+    # methylProp's in bin1 of second region etc. for all bins and all regions
+    # separately)
     bsCombined = BSDT[, eval(parse(text = jCommand)), 
                       by = eval(parse(text = byString))]
     setkey(bsCombined, regionID)
@@ -298,6 +302,9 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
             byStringGroup = "list(regionGroupID)"
         }
         # actual aggregation operation
+        # for normal MIRA use: averaging methyProp's and summing
+        # coverage for all bins with the same number (ie all
+        # bin1's together, all bin2's together, etc.)
         bsCombined = bsCombined[, eval(parse(text = jCommand)), 
                                 by = eval(parse(text = byStringGroup))]
         
@@ -310,7 +317,7 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
             bsCombined[, coverage := (coverage + rev(coverage)) / 2]
         }
         
-        # changing "regionGroupID" name to "Bin" which is less confusing
+        # changing "regionGroupID" name to "bin" which is less confusing
         # for normal MIRA use cases
         setnames(bsCombined, old = "regionGroupID", new = "bin")
         return(bsCombined[]);
