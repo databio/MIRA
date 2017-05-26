@@ -2,9 +2,7 @@
 % Please edit documentation in R/binning_aggregation.R
 \name{BSBinAggregate}
 \alias{BSBinAggregate}
-\title{First bins regions and then aggregates methylation in
-each corresponding bin across a set of regions (ie all bin1's together,
-all bin2's together, etc.).}
+\title{Bins regions and aggregates methylation data across the regions by bin}
 \usage{
 BSBinAggregate(BSDT, rangeDT, binCount, minReads = 500,
   byRegionGroup = TRUE, splitFactor = NULL)
@@ -54,9 +52,13 @@ with plus strand regions so the MIRA signature will be in
 ###########################################################################
 }
 \description{
-First bins regions and then aggregates methylation in
-each corresponding bin across a set of regions (ie all bin1's together,
-all bin2's together, etc.).
+First bins regions and averages the proportion of methylation for
+all methylation sites within each bin (ie  the methylation of 
+all sites within region 1, bin 1 are averaged, then all sites 
+within region 1, bin 2 are averaged, etc.)
+Then aggregates methylation across all regions by bin by averaging
+the proportion of methylation in each corresponding 
+bin (ie all bin1's together, all bin2's together, etc.).
 }
 \examples{
 data("exampleBSDT") # exampleBSDT

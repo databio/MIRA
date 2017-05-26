@@ -2,8 +2,8 @@
 % Please edit documentation in R/MIRA.R
 \name{aggregateMethyl}
 \alias{aggregateMethyl}
-\title{Function to aggregate methylation data into bins 
-over all regions in each region set.}
+\title{Aggregate methylation data to get
+a summary methylation profile for each region set}
 \usage{
 aggregateMethyl(BSDT, GRList, binNum = 11, minReads = 500)
 }
@@ -39,8 +39,18 @@ For information on symmetry of bins and output when a region set has
 strand info, see ?BSBinAggregate.
 }
 \description{
-Function to aggregate methylation data into bins 
-over all regions in each region set.
+The main function for aggregating methylation data in MIRA analysis. 
+Aggregates methylation across all regions in a given region set to
+give a summary methylation profile for each region set.
+}
+\details{
+Each region is split into bins. For a given set of regions, 
+methylation is first aggregated (averaged) within each 
+bin in each region. Then methylation from corresponding bins from each
+region are aggregated (averaged) across all regions 
+(all first bins together, all second bins together, etc.), 
+giving a summary methylation profile.
+This process is done for each region set.
 }
 \examples{
 data("exampleBSDT", package = "MIRA")

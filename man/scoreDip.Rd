@@ -2,10 +2,7 @@
 % Please edit documentation in R/MIRA.R
 \name{scoreDip}
 \alias{scoreDip}
-\title{The dip scoring function for MIRA scores. This will take a vector
-describing the methylation pattern and return a single score summarizing
-that vector for how large the 'dip' in methylation is at the center of
-the vector.}
+\title{Score methylation profile based on its shape}
 \usage{
 scoreDip(values, binCount, shoulderShift = "auto", method = "logRatio",
   usedStrand = FALSE)
@@ -26,7 +23,9 @@ currently work with region sets that include strand info.}
 \item{method}{The scoring method. "logRatio" is the log of the ratio of outer
 edges to the middle. This ratio is the average of outside values 
 of the dip (shoulders) divided by the center value if 
-it is lower than the two surrounding values or if it is not lower, an 
+it is lower than the two surrounding values (lower for concave up profiles or
+higher for concave down profiles) or if it is not lower (higher for
+concave down profiles), an 
 average of the three middle values. For an even binCount, the middle four
 values would be averaged with the 1st and 4th being weighted by half (as
 if there were 3 values). 
@@ -51,7 +50,7 @@ over all regions in a region set.
 The dip scoring function for MIRA scores. This will take a vector
 describing the methylation pattern and return a single score summarizing
 that vector for how large the 'dip' in methylation is at the center of
-the vector.
+the vector. See `method` parameter for details on scoring calculations.
 }
 \examples{
 data("exampleBins")

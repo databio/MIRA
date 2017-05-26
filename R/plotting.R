@@ -4,7 +4,12 @@
 
 
 
-#' A function to plot the binned methylation of samples over a region.
+#' Plot summary methylation profile
+#' 
+#' Plot one or multiple methylation profiles. Displays each region set
+#' in a different subplot.
+#' If you only want to plot certain region sets,
+#' subset with the `featID` parameter.
 #' 
 #' @param binnedRegDT A datatable with specific column names containing:
 #' bin numbers(binnedRegionDT column), 
@@ -79,7 +84,12 @@ xAxisForRegionPlots <- function(binNum) {
     return(xAxis)
 }
 
-#' A function to plot MIRA scores and compare case/control.
+#' Plot MIRA scores and compare different conditions
+#' 
+#' Splits up samples by sample type. Displays each region set
+#' in a different subplot.
+#' If you only want to plot certain region sets,
+#' subset with the `featID` parameter.
 #' 
 #' @param scoreDT A datatable with the following columns: 
 #' score, featureID (names of regions), sampleType.

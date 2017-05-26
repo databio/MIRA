@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotting.R
 \name{plotMIRAProfiles}
 \alias{plotMIRAProfiles}
-\title{A function to plot the binned methylation of samples over a region.}
+\title{Plot summary methylation profile}
 \usage{
 plotMIRAProfiles(binnedRegDT, featID = unique(binnedRegDT[, featureID]),
   plotType = "line", colBlindOption = FALSE)
@@ -26,7 +26,10 @@ friendly palette which could be helpful when plotting multiple colors.}
 A plot of class "gg"/ "ggplot" that shows MIRA signatures
 }
 \description{
-A function to plot the binned methylation of samples over a region.
+Plot one or multiple methylation profiles. Displays each region set
+in a different subplot.
+If you only want to plot certain region sets,
+subset with the `featID` parameter.
 }
 \examples{
 data("exampleBins", package = "MIRA")
