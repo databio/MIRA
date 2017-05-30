@@ -8,9 +8,6 @@
 \usage{
 data(exampleBins)
 }
-\value{
-No return value.
-}
 \description{
 A data.table with artificial binned methylation data
 }
