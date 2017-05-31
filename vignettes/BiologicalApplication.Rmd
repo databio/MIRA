@@ -98,7 +98,7 @@ If you are running the actual samples on your own device, you can skip the follo
 
 ```{r, eval=TRUE}
 # from data included with MIRA package
-data(ewingMyobigBinDT1)
+data(bigBinDT1)
 ```
 
 Next we add on annotation data: the experimental condition or sample type for each sample. This is needed in order to group samples by sample type, which we will do when plotting the methylation profiles and MIRA scores. We will use functions from the `data.table` package to do this, merging based on the `sampleName` column.
@@ -141,7 +141,7 @@ If you are running the actual samples on your own device, you can skip the follo
 
 ```{r, eval=TRUE}
 # from data included with MIRA package
-data(ewingMyobigBinDT2)
+data(bigBinDT2)
 ```
 
 We add annotation data using the same process as before:
