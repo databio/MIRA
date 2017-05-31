@@ -100,7 +100,7 @@ xAxisForRegionPlots <- function(binNum) {
 #' with geom_boxplot and geom_jitter.
 #' @export
 #' @examples
-#' data(ewingMyobigBinDT2) # bigBinDT object
+#' data(bigBinDT2)
 #' exScores = bigBinDT2[, .(score=scoreDip(methylProp, 
 #'                                        binCount = 21, 
 #'                                        shoulderShift = 5)), 

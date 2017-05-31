@@ -27,7 +27,7 @@ If you only want to plot certain region sets,
 subset with the `featID` parameter.
 }
 \examples{
-data(ewingMyobigBinDT2) # bigBinDT object
+data(bigBinDT2)
 exScores = bigBinDT2[, .(score=scoreDip(methylProp, 
                                        binCount = 21, 
                                        shoulderShift = 5)), 
