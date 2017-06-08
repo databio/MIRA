@@ -279,7 +279,7 @@ cleanws = function(string) {
 #' @param sample_names A character vector with sample names in the same
 #' order as the columns of methylCountDF/coverageDF/methylPropDF
 #' samples in the columns
-#' @value MIRAFormatBSDTList A list of data.tables containing
+#' @return MIRAFormatBSDTList A list of data.tables containing
 #' the methylation data. One data.table per sample with the column
 #' names: 'chr', 'start' (methylation loci), 'methylCount' (number of
 #' methylated reads), 'coverage' (total number of reads), and 
@@ -295,7 +295,7 @@ cleanws = function(string) {
 #'     methylCountDF = getCoverage(BSseq = exampleBSseqObj, type = "M"), 
 #'     coverageDF = getCoverage(BSseq = exampleBSseqObj, type = "Cov"),
 #'     methylPropDF = getMeth(BSseq = exampleBSseqObj, type = "raw"),
-#'     sample_names = sampleNames(exampleBSseqObj))
+#'     sample_names = bsseq::sampleNames(exampleBSseqObj))
 SumExpToMIRA = function(coordinates, methylCountDF=NULL, 
                         coverageDF=NULL, methylPropDF=NULL, 
                         sample_names=NULL) {
@@ -482,7 +482,7 @@ SumExpToMIRA = function(coordinates, methylCountDF=NULL,
 #' 
 #' @param BSseqObj An object of class BSseq, can have smoothed or raw
 #' methylation data.
-#' @value MIRAFormatBSDTList A list of data.tables containing
+#' @return MIRAFormatBSDTList A list of data.tables containing
 #' the methylation data. One data.table per sample with the column
 #' names: 'chr', 'start' (methylation loci), 'methylCount' (number of
 #' methylated reads), 'coverage' (total number of reads), and 

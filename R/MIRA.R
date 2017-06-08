@@ -24,6 +24,7 @@
 #'             setcolorder rbindlist setattr setorder
 #' @importFrom Biobase sampleNames
 #' @importFrom stats lm coefficients poly
+#' @importFrom bsseq getCoverage getMeth
 NULL
 
 

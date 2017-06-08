@@ -19,7 +19,8 @@ Imports:
     data.table,
     ggplot2,
     Biobase,
-    stats
+    stats,
+    bsseq
 Suggests:
     knitr,
     parallel,
