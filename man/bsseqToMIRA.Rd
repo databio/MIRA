@@ -27,5 +27,4 @@ per sample. A wrapper of the SumExpToMIRA function.
 \examples{
 data("exampleBSseqObj")
 MIRAFormatBSDTList = bsseqToMIRA(exampleBSseqObj)
-
 }

@@ -291,11 +291,12 @@ cleanws = function(string) {
 #' a named list will be returned. 
 #' @examples  
 #' data("exampleBSseqObj")
-#' MIRAFormatBSDTList = SumExpToMIRA(coordinates = granges(exampleBSseqObj), 
-#'     methylCountDF = getCoverage(BSseq = exampleBSseqObj, type = "M"), 
-#'     coverageDF = getCoverage(BSseq = exampleBSseqObj, type = "Cov"),
-#'     methylPropDF = getMeth(BSseq = exampleBSseqObj, type = "raw"),
+#' MIRAFormatBSDTList = SumExpToMIRA(coordinates = bsseq::granges(exampleBSseqObj), 
+#'     methylCountDF = bsseq::getCoverage(BSseq = exampleBSseqObj, type = "M"), 
+#'     coverageDF = bsseq::getCoverage(BSseq = exampleBSseqObj, type = "Cov"),
+#'     methylPropDF = bsseq::getMeth(BSseq = exampleBSseqObj, type = "raw"),
 #'     sample_names = bsseq::sampleNames(exampleBSseqObj))
+#' @export
 SumExpToMIRA = function(coordinates, methylCountDF=NULL, 
                         coverageDF=NULL, methylPropDF=NULL, 
                         sample_names=NULL) {
@@ -493,7 +494,7 @@ SumExpToMIRA = function(coordinates, methylCountDF=NULL,
 #' @examples 
 #' data("exampleBSseqObj")
 #' MIRAFormatBSDTList = bsseqToMIRA(exampleBSseqObj)
-#' 
+#' @export
 bsseqToMIRA <- function(BSseqObj) {
     
     if (bsseq::hasBeenSmoothed(BSseqObj)) {
@@ -503,7 +504,7 @@ bsseqToMIRA <- function(BSseqObj) {
     }
     
     # use accessor functions from bsseq to get needed data
-    MIRAFormatBSDTList = SumExpToMIRA(coordinates = granges(BSseqObj), 
+    MIRAFormatBSDTList = SumExpToMIRA(coordinates = bsseq::granges(BSseqObj), 
                  methylCountDF = getCoverage(BSseq = BSseqObj, type = "M"), 
                  coverageDF = getCoverage(BSseq = BSseqObj, type = "Cov"),
                  methylPropDF = getMeth(BSseq = BSseqObj, type = rawSmooth),

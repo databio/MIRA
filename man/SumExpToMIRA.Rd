@@ -56,9 +56,9 @@ data.frame, data.table, matrix, and DelayedMatrix classes.
 \examples{
  
 data("exampleBSseqObj")
-MIRAFormatBSDTList = SumExpToMIRA(coordinates = granges(exampleBSseqObj), 
-    methylCountDF = getCoverage(BSseq = exampleBSseqObj, type = "M"), 
-    coverageDF = getCoverage(BSseq = exampleBSseqObj, type = "Cov"),
-    methylPropDF = getMeth(BSseq = exampleBSseqObj, type = "raw"),
+MIRAFormatBSDTList = SumExpToMIRA(coordinates = bsseq::granges(exampleBSseqObj), 
+    methylCountDF = bsseq::getCoverage(BSseq = exampleBSseqObj, type = "M"), 
+    coverageDF = bsseq::getCoverage(BSseq = exampleBSseqObj, type = "Cov"),
+    methylPropDF = bsseq::getMeth(BSseq = exampleBSseqObj, type = "raw"),
     sample_names = bsseq::sampleNames(exampleBSseqObj))
 }
