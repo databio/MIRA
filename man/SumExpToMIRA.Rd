@@ -45,6 +45,9 @@ or can be derived from other arguments to the function then
 a named list will be returned.
 }
 \description{
+Packages that use SummarizedExperiment-based classes for DNA methylation
+data which could be converted with this function 
+include "bsseq", "methylPipe", and "BiSeq" packages. 
 Of the methylCountDF, coverageDF, and methylPropDF arguments, either 
 methylPropDF must be given or both methylCountDF and coverageDF must
 be given. After that, whichever is not given will be calculated 
@@ -52,6 +55,8 @@ from the others. If coverageDF and methylCountDF are both not given,
 coverage will be assumed to be 1 at each site with a methylProp value.
 Acceptable formats for the three "DF" parameters include:
 data.frame, data.table, matrix, and DelayedMatrix classes.
+If converting a BSseq object, see ?bsseqToMIRA for a convenient
+wrapper of this function.
 }
 \examples{
  
