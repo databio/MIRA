@@ -5,10 +5,15 @@
 
 
 
-
-#' First bins regions and then aggregates methylation in
-#' each corresponding bin across a set of regions (ie all bin1's together,
-#' all bin2's together, etc.).
+#' Bins regions and aggregates methylation data across the regions by bin
+#' 
+#' First bins regions and averages the proportion of methylation for
+#' all methylation sites within each bin (ie  the methylation of 
+#' all sites within region 1, bin 1 are averaged, then all sites 
+#' within region 1, bin 2 are averaged, etc.)
+#' Then aggregates methylation across all regions by bin by averaging
+#' the proportion of methylation in each corresponding 
+#' bin (ie all bin1's together, all bin2's together, etc.). 
 #'
 #' 
 #' @param BSDT A single data table that has DNA methylation data 

@@ -184,6 +184,7 @@ test_that("aggregateMethyl and MIRAScore", {
     expect_equal(testGRDT[, strand], c("+", "-"))
     
     #testing aggregateMethyl, warning about names is expected
+    # ignore warning about needing a named list/GrangesList
     binnedBSDT = aggregateMethyl(BSDT = testBSDT, GRList = testGR, 
                               binNum = numBins, minReads = 0)
     expect_equal(round(binnedBSDT[, methylProp], 2), rep(0.54, numBins))
@@ -192,6 +193,7 @@ test_that("aggregateMethyl and MIRAScore", {
     
     
     #testing MIRAScore, warning about names is expected
+    # ignore warning about needing a named list/GrangesList
     scoreDT = MIRAScore(BSDT = testBSDT, GRList = testGR, binNum = numBins, minReads = 0, 
                       scoringMethod = "logRatio")
     #since the MIRA signature was flat, score = 0
@@ -211,6 +213,7 @@ test_that("scoreDip, findShoulder, and isProfileConcaveUp", {
     y = x^2 + 1
     binNumber = length(y) #21
     #default shoulderShift is based on length of input (number of bins)
+    # ignore warning about "essentially perfect fit"
     testScore = round(scoreDip(values = y, binCount = binNumber), 2)
     expScore = round(log((mean(y[c(1, binNumber)])) / (y[11])), 2)
     expect_equal(testScore, expScore)
@@ -228,11 +231,13 @@ test_that("scoreDip, findShoulder, and isProfileConcaveUp", {
     x = -4:5
     y = x^2 + 1
     binNumber = length(y) #10
+    # ignore warning about "essentially perfect fit"
     testScore = round(scoreDip(values = y, binCount = binNumber), 2)
     expScore = round(log(mean(y[c(1, binNumber)])
                         / y[5]), 2)
     expect_equal(testScore, expScore)
     #test with non default shoulderShift
+    # ignore warning about "essentially perfect fit"
     testScore = round(scoreDip(values = y, binCount = binNumber, shoulderShift = 3), 2)
     expScore = round(log(mean(y[c(2, 9)]) / y[5]), 2)
     expect_equal(testScore, expScore)
@@ -327,6 +332,39 @@ test_that("BSreadBiSeq",{
     # coverage should be greater than or equal to methylCount, true for all
     compareCounts = (tRRBS$coverage >= tRRBS$methylCount)
     expect_true(all(compareCounts))
+})
+
+#resetting test objects
+testBSDT = copy(origtestBSDT)
+testGR = copy(origtestGR)
+testGRDT = copy(origtestGRDT)
+test_that("SumExpToMIRA and bsseqToMIRA",{
+    data("exampleBSseqObj")
+    MIRAFormatBSDTList = SumExpToMIRA(coordinates = bsseq::granges(exampleBSseqObj), 
+                                      methylCountDF = bsseq::getCoverage(BSseq = exampleBSseqObj, type = "M"), 
+                                      coverageDF = bsseq::getCoverage(BSseq = exampleBSseqObj, type = "Cov"), 
+                                      methylPropDF = bsseq::getMeth(BSseq = exampleBSseqObj, type = "raw"), 
+                                      sample_names = bsseq::sampleNames(exampleBSseqObj))
+    numLoci = nrow(exampleBSseqObj)
+    # checking that screening out noncovered C's is working
+    # also accomplishes basic check that general length of output is as expected
+    numNotCovered1 = sum(getCoverage(exampleBSseqObj[, 1]) == 0)
+    numNotCovered2 = sum(getCoverage(exampleBSseqObj[, 2]) == 0)
+    expect_equal(nrow(MIRAFormatBSDTList[[1]]), numLoci - numNotCovered1)
+    expect_equal(nrow(MIRAFormatBSDTList[[2]]), numLoci - numNotCovered2)
+    withinRange = all((MIRAFormatBSDTList[[1]][, methylProp] <= 1) &
+                          (MIRAFormatBSDTList[[1]][, methylProp] >= 0))
+    # checking that methylProp values are within expected range
+    expect_true(withinRange)
+    # making sure coverage is greater than/equal to methylCount
+    isCovGreater = all(MIRAFormatBSDTList[[1]][, coverage] >= 
+                           MIRAFormatBSDTList[[1]][, methylCount])
+    expect_true(isCovGreater)
+    
+    
+    # quick check of bsseqToMIRA
+    MIRAFormatBSDTList2 = bsseqToMIRA(exampleBSseqObj)
+    expect_equal(MIRAFormatBSDTList, MIRAFormatBSDTList2)
 })
 
 #############cleaning up the environment after finishing tests##############

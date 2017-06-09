@@ -249,3 +249,276 @@ grToDt = function(GR, includeStrand = FALSE) {
 cleanws = function(string) {
     return(gsub('\\s+'," ", string))
 }
+
+#' Make MIRA-compatible data.tables using information 
+#' from SummarizedExperiment-based classes
+#' 
+#' Packages that use SummarizedExperiment-based classes for DNA methylation
+#' data which could be converted with this function 
+#' include "bsseq", "methylPipe", and "BiSeq" packages. 
+#' Of the methylCountDF, coverageDF, and methylPropDF arguments, either 
+#' methylPropDF must be given or both methylCountDF and coverageDF must
+#' be given. After that, whichever is not given will be calculated 
+#' from the others. If coverageDF and methylCountDF are both not given,
+#' coverage will be assumed to be 1 at each site with a methylProp value.
+#' Acceptable formats for the three "DF" parameters include:
+#' data.frame, data.table, matrix, and DelayedMatrix classes.
+#' If converting a BSseq object, see ?bsseqToMIRA for a convenient
+#' wrapper of this function.
+#' 
+#' @param coordinates Coordinates for the methylation loci as a GRanges object 
+#' (in same order as methylCountDF/coverageDF/methylPropDF, whichever is given).
+#' The start coordinate should be the coordinate of the cytosine.
+#' @param methylCountDF An object of matrix/data.frame/similar format
+#' that contains the number of reads with methylated C's for the loci in
+#' 'coordinates' argument. It should have one column per sample with
+#' rows that correspond to 'coordinates'.
+#' @param coverageDF An object of matrix/data.frame/similar format
+#' that contains the total number of reads for the loci in
+#' 'coordinates' argument. It should have one column per sample with
+#' rows that correspond to 'coordinates'.
+#' @param methylPropDF An object of matrix/data.frame/similar format
+#' that contains the total number of reads for the loci in
+#' 'coordinates' argument. It should have one column per sample with
+#' rows that correspond to 'coordinates'.
+#' @param sample_names A character vector with sample names in the same
+#' order as the columns of methylCountDF/coverageDF/methylPropDF
+#' samples in the columns
+#' @return MIRAFormatBSDTList A list of data.tables containing
+#' the methylation data. One data.table per sample with the column
+#' names: 'chr', 'start' (methylation loci), 'methylCount' (number of
+#' methylated reads), 'coverage' (total number of reads), and 
+#' 'methylProp' (proportion of methylated reads). The order of the
+#' list is the order of samples in the columns of 
+#' methylCountDF/coverageDF/methylPropDF. If sample names 
+#' are explicitly given as input ('sample_names' argument)
+#' or can be derived from other arguments to the function then
+#' a named list will be returned. 
+#' @examples  
+#' data("exampleBSseqObj")
+#' MIRAFormatBSDTList = SumExpToMIRA(coordinates = bsseq::granges(exampleBSseqObj), 
+#'     methylCountDF = bsseq::getCoverage(BSseq = exampleBSseqObj, type = "M"), 
+#'     coverageDF = bsseq::getCoverage(BSseq = exampleBSseqObj, type = "Cov"),
+#'     methylPropDF = bsseq::getMeth(BSseq = exampleBSseqObj, type = "raw"),
+#'     sample_names = bsseq::sampleNames(exampleBSseqObj))
+#' @export
+SumExpToMIRA = function(coordinates, methylCountDF=NULL, 
+                        coverageDF=NULL, methylPropDF=NULL, 
+                        sample_names=NULL) {
+    
+    haveMCount = !is.null(methylCountDF)
+    haveCov = !is.null(coverageDF)
+    haveMProp = !is.null(methylPropDF)
+    
+    # making sure sufficient data has been given
+    if (!haveMProp) {
+        # if no methylProp given, you need both methylCount and coverage
+        if (!haveMCount || !haveCov) {
+            stop(cleanws("If methylProp is not given, both 
+                         methylCount and coverage must be given."))
+        }
+        }
+    
+    # checking that right data types have been given 
+    if (!("GRanges" %in% class(coordinates))) {
+        stop("'coordinates' argument should be a GRanges object")
+    }
+    
+    # check for accepted formats?: delayed matrix?, matrix, data.frame, data.table
+    # not sure if there might be other valid inputs so excluding this for now
+    # if (haveMCount) {
+    #     if (!("" %in% class(methylCountDF))) {
+    #         stop()
+    #     }
+    # }
+    # if (haveCov) {
+    #     if (!("" %in% class(coverageDF))) {
+    #         stop()
+    #     }
+    # }
+    # if (haveMProp) {
+    #     if (!("" %in% class(methylPropDF))) {
+    #         stop()
+    #     }
+    # }
+    
+    
+    MIRAFormatBSDTList = list() # to store output
+    
+    # changing coordinates from GRanges object to data.table
+    coordinates = grToDt(coordinates)
+    rowNum = nrow(coordinates)
+    
+    # setting sampleNum and doing checks on the inputs
+    if (haveMProp) {
+        sampleNum = ncol(methylPropDF)
+        # making sure other inputs also have sampleNum columns
+        if (haveMCount) {
+            if (sampleNum != ncol(methylCountDF)) {
+                stop(cleanws("Input with the count of 
+                             methylated reads at each loci and input 
+                             with the proportion of methylation should have
+                             the same number of columns."))
+            }
+            }
+        if (haveCov) {
+            if (sampleNum != ncol(coverageDF)) {
+                stop(cleanws("Input with the count of total reads at each loci 
+                             and input with the proportion of methylation
+                             should have the same number of columns."))
+            }
+            }
+            } else {
+                sampleNum = ncol(coverageDF)
+                # making sure other input has the same number of columns 
+                if (sampleNum != ncol(methylCountDF)) {
+                    stop(cleanws("Input with the count of total reads  
+                                 and input with the count of methylated reads
+                                 at each loci
+                                 should have the same number of columns."))
+                }
+                }
+    
+    # making sure number of rows are the same in all given inputs
+    if (haveMProp) {
+        if (rowNum != nrow(methylPropDF)) {
+            stop(cleanws("The number of rows for the genomic coordinates and 
+                         the number of rows for the proportion of methylation
+                         for each loci should be the same."))
+        }
+        }
+    if (haveMCount) {
+        if (rowNum != nrow(methylCountDF)) {
+            stop(cleanws("The number of rows for the genomic coordinates and 
+                         the number of rows for the count of methylated reads
+                         for each loci should be the same."))
+        }
+        }
+    if (haveCov) {
+        if (rowNum != nrow(coverageDF)) {
+            stop(cleanws("The number of rows for the genomic coordinates and 
+                         the number of rows for the count of total reads
+                         for each loci should be the same."))
+        }
+        }
+    
+    # adding sample names if not given as argument but present in other input
+    if (is.null(sample_names)) {
+        if (haveMProp) {
+            sample_names = colnames(methylPropDF)
+        } else {
+            sample_names = colnames(coverageDF)
+        }
+    }
+    
+    
+    
+    if (!haveCov && !haveMCount) {
+        coverage = rep(1, rowNum)
+        warning(cleanws("coverage was not included in input 
+                        so it was set to 1.
+                        It is recommended to set the minreads 
+                        argument of aggregateMethyl to 0."))
+    }
+    
+    # looping through columns/samples to make 1 data.table per sample
+    for (i in 1:sampleNum) {
+        # each column is a different sample
+        # order of the below if statements is important
+        if (haveMCount) {
+            methylCount = methylCountDF[, i]
+        }
+        if (haveMProp) {
+            methylProp = methylPropDF[, i]
+        }
+        if (haveCov) {
+            coverage = coverageDF[, i]
+        } else if (haveMCount) {
+            # assumed that if !haveCov, you haveMProp
+            coverage = round(methylCount / methylProp, 3)
+        }
+        if (haveCov && !haveMCount) {
+            # theoretically this should be a whole number
+            methylCount = round(methylProp * coverage, 0)
+        }
+        
+        if (!haveCov && !haveMCount) {
+            # this will result in fractional methylCount values (from 0 to 1)
+            # but is necessary to be consistent with giving each loci a 
+            # coverage of 1 which was done earlier in code 
+            # for !haveCov && !haveMCount
+            # methylCount = methylProp * coverage = methylProp * 1
+            methylCount = methylProp
+        }
+        
+        if (!haveMProp) {
+            methylProp = round(methylCount / coverage, 3)
+        }
+        
+        # index for taking out rows with 0 coverage
+        notCovered = which(coverage == 0)
+        # checking for NAs in methylProp
+        # they only should be present if methylPropDF was given
+        if (haveMProp) {
+            notCoveredNA = which(is.na(methylProp))
+            notCovered = sort(c(notCovered, notCoveredNA))
+        }
+        MIRAFormatBSDTList[[i]] = data.table(chr = coordinates[, chr], 
+                                             start = coordinates[, start], 
+                                             methylCount = as.vector(methylCount),
+                                             coverage = as.vector(coverage),
+                                             methylProp = as.vector(methylProp)
+        )[!notCovered,] # filtering
+        setnames(MIRAFormatBSDTList[[i]], 
+                 c("chr", "start", "methylCount", "coverage", "methylProp"))
+    }
+    
+    # add sample names to list (by reference)
+    if (!is.null(sample_names)) {
+        setattr(MIRAFormatBSDTList, "names", sample_names)
+    }
+    
+    return(MIRAFormatBSDTList)
+}
+
+#' Convert a BSseq object to data.table format for MIRA.
+#' 
+#' Converts a BSseq object to a list of data.tables with one data.table
+#' per sample. A wrapper of the SumExpToMIRA function.
+#' 
+#' @param BSseqObj An object of class BSseq, can have smoothed or raw
+#' methylation data.
+#' @return MIRAFormatBSDTList A list of data.tables containing
+#' the methylation data. One data.table per sample with the column
+#' names: 'chr', 'start' (methylation loci), 'methylCount' (number of
+#' methylated reads), 'coverage' (total number of reads), and 
+#' 'methylProp' (proportion of methylated reads). The order of the
+#' list is the order of samples in the columns of the BSseq object.
+#' If sample names are in the BSseq object, then a named list
+#' will be returned.
+#' @examples 
+#' data("exampleBSseqObj")
+#' MIRAFormatBSDTList = bsseqToMIRA(exampleBSseqObj)
+#' @export
+bsseqToMIRA <- function(BSseqObj) {
+    
+    if (bsseq::hasBeenSmoothed(BSseqObj)) {
+        rawSmooth = "smooth"
+    } else {
+        rawSmooth = "raw"
+    }
+    
+    # use accessor functions from bsseq to get needed data
+    MIRAFormatBSDTList = SumExpToMIRA(coordinates = bsseq::granges(BSseqObj), 
+                 methylCountDF = getCoverage(BSseq = BSseqObj, type = "M"), 
+                 coverageDF = getCoverage(BSseq = BSseqObj, type = "Cov"),
+                 methylPropDF = getMeth(BSseq = BSseqObj, type = rawSmooth),
+                 sample_names = bsseq::sampleNames(BSseqObj))
+    
+    # # if only one sample, do not return list, just return data.table
+    # if (length(MIRAFormatBSDTList) == 1) {
+    #     MIRAFormatBSDTList = MIRAFormatBSDTList[[1]]
+    # }
+    
+    return(MIRAFormatBSDTList)
+}

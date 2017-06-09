@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotting.R
 \name{plotMIRAScores}
 \alias{plotMIRAScores}
-\title{A function to plot MIRA scores and compare case/control.}
+\title{Plot MIRA scores and compare different conditions}
 \usage{
 plotMIRAScores(scoreDT, featID = unique(scoreDT[, featureID]),
   colBlindOption = FALSE)
@@ -21,10 +21,13 @@ a plot of class "gg"/"ggplot" that shows MIRA scores
 with geom_boxplot and geom_jitter.
 }
 \description{
-A function to plot MIRA scores and compare case/control.
+Splits up samples by sample type. Displays each region set
+in a different subplot.
+If you only want to plot certain region sets,
+subset with the `featID` parameter.
 }
 \examples{
-data(ewingMyobigBinDT2) # bigBinDT object
+data(bigBinDT2)
 exScores = bigBinDT2[, .(score=scoreDip(methylProp, 
                                        binCount = 21, 
                                        shoulderShift = 5)), 

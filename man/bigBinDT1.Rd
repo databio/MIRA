@@ -10,10 +10,7 @@ samples (human skeletal myoblasts and other related
 samples). It is the product of `aggregateMethyl`.}
 \format{A data.table, data.frame object}
 \usage{
-data(ewingMyobigBinDT1)
-}
-\value{
-No return value.
+data(bigBinDT1)
 }
 \description{
 A data.table with binned methylation data for the first part of

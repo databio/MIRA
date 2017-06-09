@@ -24,6 +24,7 @@
 #'             setcolorder rbindlist setattr setorder
 #' @importFrom Biobase sampleNames
 #' @importFrom stats lm coefficients poly
+#' @importFrom bsseq getCoverage getMeth
 NULL
 
 
@@ -40,8 +41,21 @@ if (getRversion() >= "2.15.1") {
 
 ##########################################################################
 
-#' Function to aggregate methylation data into bins 
-#' over all regions in each region set.
+#' Aggregate methylation data to get
+#' a summary methylation profile for each region set
+#' 
+#' The main function for aggregating methylation data in MIRA analysis. 
+#' Aggregates methylation across all regions in a given region set to
+#' give a summary methylation profile for each region set. 
+#' 
+#' 
+#' Each region is split into bins. For a given set of regions, 
+#' methylation is first aggregated (averaged) within each 
+#' bin in each region. Then methylation from corresponding bins from each
+#' region are aggregated (averaged) across all regions 
+#' (all first bins together, all second bins together, etc.), 
+#' giving a summary methylation profile.
+#' This process is done for each region set.
 #'
 #' @param BSDT A single data.table that has DNA methylation data on individual 
 #' sites. With columns: "chr" for chromosome, "start" for 
@@ -172,8 +186,12 @@ aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500){
     return(bigMethylByBin)
 }
 
-#' Function to take DNA methylation and region data and return a MIRA score;
-#' a wrapper for aggregateMethyl and scoreDip.
+#' Get MIRA score for each sample/region set combination
+#' 
+#' Takes methylation data and sets of regions then aggregates
+#' methylation for each region set and scores the resulting profile.
+#' A wrapper for aggregateMethyl and scoreDip but it does not return
+#' the summary methylation profiles, just the scores.
 #'
 #' @param BSDT A single data table that has DNA methylation data on individual 
 #' sites including a "chr" column with chromosome, a "start" column with the 
@@ -215,10 +233,12 @@ MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
     return(scoreDT)
 }
 
+#' Score methylation profile based on its shape
+#' 
 #' The dip scoring function for MIRA scores. This will take a vector
 #' describing the methylation pattern and return a single score summarizing
 #' that vector for how large the 'dip' in methylation is at the center of
-#' the vector.
+#' the vector. See `method` parameter for details on scoring calculations.
 #' 
 #' @param values A vector with proportion of methylation values for each bin. 
 #'  Between 0 and 1.
@@ -232,7 +252,9 @@ MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
 #' @param method The scoring method. "logRatio" is the log of the ratio of outer
 #' edges to the middle. This ratio is the average of outside values 
 #' of the dip (shoulders) divided by the center value if 
-#' it is lower than the two surrounding values or if it is not lower, an 
+#' it is lower than the two surrounding values (lower for concave up profiles or
+#' higher for concave down profiles) or if it is not lower (higher for
+#' concave down profiles), an 
 #' average of the three middle values. For an even binCount, the middle four
 #' values would be averaged with the 1st and 4th being weighted by half (as
 #' if there were 3 values). 
@@ -474,8 +496,11 @@ findShoulder <- function(values, binCount, centerSpot, whichSide="right"){
 
 
 
+#' Add column for proportion of methylation
+#' 
 #' Adding methylProp column that has proportion of reads that were 
-#' methylated for each site.
+#' methylated for each site based on number of methylated reads
+#' divided by total number of reads.
 #' Note: Assigns methylProp column by reference with ":="
 #' 
 #' @param BSDTList A bisulfite datatable or list of datatables 
@@ -514,18 +539,27 @@ addMethPropCol <- function(BSDTList){
 
 
 
-# This can run into memory problems if there are too many files...
-# because of the way parallel lacks long vector support. The solution is
-# to just use a single core; or to pass mc.preschedule = FALSE; This
-# makes it so that each file is processed as a separate job. Much better.
+
 #' Read in files from biseq meth caller
+#' 
+#' Parses the x/y format of methylation calls, 
+#' splitting them into individual columns: "methylCount" column for
+#' number of methylated reads for site and "coverage" column for total
+#' number of reads covering that site. Input files should have the following
+#' columns: "chr", "start", "end", "meth", "rate", "strand".
+#' 
+#' 
+#' This can run into memory problems if there are too many files...
+#' because of the way parallel lacks long vector support. The solution is
+#' to just use a single core; or to pass mc.preschedule = FALSE; This
+#' makes it so that each file is processed as a separate job. Much better.
+#' 
 #' @param files a list of filenames (use parseInputArg if necessary)
-#' @param contrastList  a list of named character vectors, 
+#' @param contrastList Generally not needed for MIRA. 
+#' A list of named character vectors, 
 #' each with length equal to the number of items in files. 
 #' These will translate into column names in the final table.
 #' @param sampleNames   a vector of length length(files), name for each file. 
-#' You can also just use contrastList to implement the same thing 
-#' so this is really unnecessary...
 #' @param cores number of processors.
 #' @param returnAsList Whether to return the output as a list 
 #' or as one big data.table.

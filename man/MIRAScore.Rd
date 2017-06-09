@@ -2,8 +2,7 @@
 % Please edit documentation in R/MIRA.R
 \name{MIRAScore}
 \alias{MIRAScore}
-\title{Function to take DNA methylation and region data and return a MIRA score;
-a wrapper for aggregateMethyl and scoreDip.}
+\title{Get MIRA score for each sample/region set combination}
 \usage{
 MIRAScore(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
   minReads = 500)
@@ -33,8 +32,10 @@ of the DNA methylation data.}
 A MIRA score for each region set in GRList. See ?scoreDip.
 }
 \description{
-Function to take DNA methylation and region data and return a MIRA score;
-a wrapper for aggregateMethyl and scoreDip.
+Takes methylation data and sets of regions then aggregates
+methylation for each region set and scores the resulting profile.
+A wrapper for aggregateMethyl and scoreDip but it does not return
+the summary methylation profiles, just the scores.
 }
 \examples{
 data("exampleBSDT", package = "MIRA") 

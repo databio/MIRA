@@ -2,9 +2,7 @@
 % Please edit documentation in R/MIRA.R
 \name{addMethPropCol}
 \alias{addMethPropCol}
-\title{Adding methylProp column that has proportion of reads that were 
-methylated for each site.
-Note: Assigns methylProp column by reference with ":="}
+\title{Add column for proportion of methylation}
 \usage{
 addMethPropCol(BSDTList)
 }
@@ -20,7 +18,8 @@ data.table in list.
 }
 \description{
 Adding methylProp column that has proportion of reads that were 
-methylated for each site.
+methylated for each site based on number of methylated reads
+divided by total number of reads.
 Note: Assigns methylProp column by reference with ":="
 }
 \examples{
