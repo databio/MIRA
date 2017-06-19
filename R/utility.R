@@ -263,7 +263,7 @@ cleanws = function(string) {
 #' coverage will be assumed to be 1 at each site with a methylProp value.
 #' Acceptable formats for the three "DF" parameters include:
 #' data.frame, data.table, matrix, and DelayedMatrix classes.
-#' If converting a BSseq object, see ?bsseqToMIRA for a convenient
+#' If converting a BSseq object, see ?bsseqToDataTable for a convenient
 #' wrapper of this function.
 #' 
 #' @param coordinates Coordinates for the methylation loci as a GRanges object 
@@ -296,13 +296,13 @@ cleanws = function(string) {
 #' a named list will be returned. 
 #' @examples  
 #' data("exampleBSseqObj")
-#' MIRAFormatBSDTList = SumExpToMIRA(coordinates = bsseq::granges(exampleBSseqObj), 
+#' MIRAFormatBSDTList = SummarizedExperimentToDataTable(coordinates = bsseq::granges(exampleBSseqObj), 
 #'     methylCountDF = bsseq::getCoverage(BSseq = exampleBSseqObj, type = "M"), 
 #'     coverageDF = bsseq::getCoverage(BSseq = exampleBSseqObj, type = "Cov"),
 #'     methylPropDF = bsseq::getMeth(BSseq = exampleBSseqObj, type = "raw"),
 #'     sample_names = bsseq::sampleNames(exampleBSseqObj))
 #' @export
-SumExpToMIRA = function(coordinates, methylCountDF=NULL, 
+SummarizedExperimentToDataTable = function(coordinates, methylCountDF=NULL, 
                         coverageDF=NULL, methylPropDF=NULL, 
                         sample_names=NULL) {
     
@@ -484,7 +484,7 @@ SumExpToMIRA = function(coordinates, methylCountDF=NULL,
 #' Convert a BSseq object to data.table format for MIRA.
 #' 
 #' Converts a BSseq object to a list of data.tables with one data.table
-#' per sample. A wrapper of the SumExpToMIRA function.
+#' per sample. A wrapper of the SummarizedExperimentToDataTable function.
 #' 
 #' @param BSseqObj An object of class BSseq, can have smoothed or raw
 #' methylation data.
@@ -498,9 +498,9 @@ SumExpToMIRA = function(coordinates, methylCountDF=NULL,
 #' will be returned.
 #' @examples 
 #' data("exampleBSseqObj")
-#' MIRAFormatBSDTList = bsseqToMIRA(exampleBSseqObj)
+#' MIRAFormatBSDTList = bsseqToDataTable(exampleBSseqObj)
 #' @export
-bsseqToMIRA <- function(BSseqObj) {
+bsseqToDataTable <- function(BSseqObj) {
     
     if (bsseq::hasBeenSmoothed(BSseqObj)) {
         rawSmooth = "smooth"
@@ -509,7 +509,7 @@ bsseqToMIRA <- function(BSseqObj) {
     }
     
     # use accessor functions from bsseq to get needed data
-    MIRAFormatBSDTList = SumExpToMIRA(coordinates = bsseq::granges(BSseqObj), 
+    MIRAFormatBSDTList = SummarizedExperimentToDataTable(coordinates = bsseq::granges(BSseqObj), 
                  methylCountDF = getCoverage(BSseq = BSseqObj, type = "M"), 
                  coverageDF = getCoverage(BSseq = BSseqObj, type = "Cov"),
                  methylPropDF = getMeth(BSseq = BSseqObj, type = rawSmooth),
