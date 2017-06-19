@@ -338,9 +338,9 @@ test_that("BSreadBiSeq",{
 testBSDT = copy(origtestBSDT)
 testGR = copy(origtestGR)
 testGRDT = copy(origtestGRDT)
-test_that("SumExpToMIRA and bsseqToMIRA",{
+test_that("SummarizedExperimentToDataTable and bsseqToDataTable",{
     data("exampleBSseqObj")
-    MIRAFormatBSDTList = SumExpToMIRA(coordinates = bsseq::granges(exampleBSseqObj), 
+    MIRAFormatBSDTList = SummarizedExperimentToDataTable(coordinates = bsseq::granges(exampleBSseqObj), 
                                       methylCountDF = bsseq::getCoverage(BSseq = exampleBSseqObj, type = "M"), 
                                       coverageDF = bsseq::getCoverage(BSseq = exampleBSseqObj, type = "Cov"), 
                                       methylPropDF = bsseq::getMeth(BSseq = exampleBSseqObj, type = "raw"), 
@@ -362,8 +362,8 @@ test_that("SumExpToMIRA and bsseqToMIRA",{
     expect_true(isCovGreater)
     
     
-    # quick check of bsseqToMIRA
-    MIRAFormatBSDTList2 = bsseqToMIRA(exampleBSseqObj)
+    # quick check of bsseqToDataTable
+    MIRAFormatBSDTList2 = bsseqToDataTable(exampleBSseqObj)
     expect_equal(MIRAFormatBSDTList, MIRAFormatBSDTList2)
 })
 
