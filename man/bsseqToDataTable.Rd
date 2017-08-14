@@ -13,7 +13,7 @@ methylation data.}
 \value{
 MIRAFormatBSDTList A list of data.tables containing
 the methylation data. One data.table per sample with the column
-names: 'chr', 'start' (methylation loci), 'methylCount' (number of
+names: 'chr', 'start' (methylation coordinate), 'methylCount' (number of
 methylated reads), 'coverage' (total number of reads), and 
 'methylProp' (proportion of methylated reads). The order of the
 list is the order of samples in the columns of the BSseq object.

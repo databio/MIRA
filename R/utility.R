@@ -204,6 +204,8 @@ BSdtToGRanges = function(dtList) {
 
 
 # Convert a GenomicRanges into a data.table
+#
+# Also can convert GPos objects to a data.table.
 # 
 # @param GR A GRanges object
 # @param includeStrand Boolean, whether to include strand from GR in output DT
@@ -266,8 +268,9 @@ cleanws = function(string) {
 #' If converting a BSseq object, see ?bsseqToDataTable for a convenient
 #' wrapper of this function.
 #' 
-#' @param coordinates Coordinates for the methylation loci as a GRanges object 
-#' (in same order as methylCountDF/coverageDF/methylPropDF, whichever is given).
+#' @param coordinates Coordinates for the methylation loci as a GRanges 
+#' (or GPos) object (in same order as methylCountDF/coverageDF/methylPropDF, 
+#' whichever is given).
 #' The start coordinate should be the coordinate of the cytosine.
 #' @param methylCountDF An object of matrix/data.frame/similar format
 #' that contains the number of reads with methylated C's for the loci in
@@ -286,7 +289,7 @@ cleanws = function(string) {
 #' samples in the columns
 #' @return MIRAFormatBSDTList A list of data.tables containing
 #' the methylation data. One data.table per sample with the column
-#' names: 'chr', 'start' (methylation loci), 'methylCount' (number of
+#' names: 'chr', 'start' (methylation coordinate), 'methylCount' (number of
 #' methylated reads), 'coverage' (total number of reads), and 
 #' 'methylProp' (proportion of methylated reads). The order of the
 #' list is the order of samples in the columns of 
@@ -320,8 +323,8 @@ SummarizedExperimentToDataTable = function(coordinates, methylCountDF=NULL,
         }
     
     # checking that right data types have been given 
-    if (!("GRanges" %in% class(coordinates))) {
-        stop("'coordinates' argument should be a GRanges object")
+    if (!any(c("GRanges", "GPos") %in% class(coordinates))) {
+        stop("'coordinates' argument should be a GRanges or GPos object")
     }
     
     # check for accepted formats?: delayed matrix?, matrix, data.frame, data.table
@@ -490,7 +493,7 @@ SummarizedExperimentToDataTable = function(coordinates, methylCountDF=NULL,
 #' methylation data.
 #' @return MIRAFormatBSDTList A list of data.tables containing
 #' the methylation data. One data.table per sample with the column
-#' names: 'chr', 'start' (methylation loci), 'methylCount' (number of
+#' names: 'chr', 'start' (methylation coordinate), 'methylCount' (number of
 #' methylated reads), 'coverage' (total number of reads), and 
 #' 'methylProp' (proportion of methylated reads). The order of the
 #' list is the order of samples in the columns of the BSseq object.
