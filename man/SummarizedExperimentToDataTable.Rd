@@ -9,8 +9,9 @@ SummarizedExperimentToDataTable(coordinates, methylCountDF = NULL,
   coverageDF = NULL, methylPropDF = NULL, sample_names = NULL)
 }
 \arguments{
-\item{coordinates}{Coordinates for the methylation loci as a GRanges object 
-(in same order as methylCountDF/coverageDF/methylPropDF, whichever is given).
+\item{coordinates}{Coordinates for the methylation loci as a GRanges 
+(or GPos) object (in same order as methylCountDF/coverageDF/methylPropDF, 
+whichever is given).
 The start coordinate should be the coordinate of the cytosine.}
 
 \item{methylCountDF}{An object of matrix/data.frame/similar format
@@ -35,7 +36,7 @@ samples in the columns}
 \value{
 MIRAFormatBSDTList A list of data.tables containing
 the methylation data. One data.table per sample with the column
-names: 'chr', 'start' (methylation loci), 'methylCount' (number of
+names: 'chr', 'start' (methylation coordinate), 'methylCount' (number of
 methylated reads), 'coverage' (total number of reads), and 
 'methylProp' (proportion of methylated reads). The order of the
 list is the order of samples in the columns of 
