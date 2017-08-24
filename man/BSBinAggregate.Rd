@@ -12,7 +12,8 @@ BSBinAggregate(BSDT, rangeDT, binCount, minReads = 500,
 on individual sites including a "chr" column with chromosome, 
 a "start" column with the coordinate number for the cytosine, 
 a "methylProp" column with proportion of methylation (0 to 1), 
-a "methylCount" column with number of methylated reads for each site, and 
+optionally a "methylCount" column with number of 
+methylated reads for each site, and 
 optionally a "coverage" column with total number of reads for each site
 (hasCoverage param).}
 

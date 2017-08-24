@@ -11,7 +11,8 @@ MIRAScore(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
 \item{BSDT}{A single data table that has DNA methylation data on individual 
 sites including a "chr" column with chromosome, a "start" column with the 
 coordinate number for the cytosine, a "methylProp" column with proportion of 
-methylation (0 to 1), a "methylCount" column with number of methylated reads 
+methylation (0 to 1), optionally a "methylCount" column with 
+number of methylated reads 
 for each site, optionally a "coverage" column with 
 total number of reads for each 
 site, and a "sampleName" column with a sample identifier/name (required).}

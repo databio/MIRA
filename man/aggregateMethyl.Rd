@@ -11,7 +11,8 @@ aggregateMethyl(BSDT, GRList, binNum = 11, minReads = 500)
 \item{BSDT}{A single data.table that has DNA methylation data on individual 
 sites. With columns: "chr" for chromosome, "start" for 
 cytosine coordinate, "methylProp" for proportion of 
-methylation (0 to 1), "methylCount" for number of methylated reads, and
+methylation (0 to 1), optionally "methylCount" 
+for number of methylated reads, and
 optionally "coverage" for total number of reads.
 In addition, a "sampleName" column is strongly preferred (and required later
 for scoring multiple samples at the same time using 

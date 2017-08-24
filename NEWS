@@ -1,0 +1,11 @@
+# Change log
+Notable changes to this project will be documented in this file.
+
+## Unreleased
+
+
+	
+## [0.99.7] -- 2017-08-21
+
+	- Made "coverage" column optional for the input methylation data ("aggregateMethyl" function)
+	- Made "methylCount" column optional for the input methylation data (to "aggregateMethyl" function)

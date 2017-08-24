@@ -60,7 +60,8 @@ if (getRversion() >= "2.15.1") {
 #' @param BSDT A single data.table that has DNA methylation data on individual 
 #' sites. With columns: "chr" for chromosome, "start" for 
 #' cytosine coordinate, "methylProp" for proportion of 
-#' methylation (0 to 1), "methylCount" for number of methylated reads, and
+#' methylation (0 to 1), optionally "methylCount" 
+#' for number of methylated reads, and
 #' optionally "coverage" for total number of reads.
 #' In addition, a "sampleName" column is strongly preferred (and required later
 #' for scoring multiple samples at the same time using 
@@ -202,7 +203,8 @@ aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500){
 #' @param BSDT A single data table that has DNA methylation data on individual 
 #' sites including a "chr" column with chromosome, a "start" column with the 
 #' coordinate number for the cytosine, a "methylProp" column with proportion of 
-#' methylation (0 to 1), a "methylCount" column with number of methylated reads 
+#' methylation (0 to 1), optionally a "methylCount" column with 
+#' number of methylated reads 
 #' for each site, optionally a "coverage" column with 
 #' total number of reads for each 
 #' site, and a "sampleName" column with a sample identifier/name (required).

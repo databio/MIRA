@@ -20,7 +20,8 @@
 #' on individual sites including a "chr" column with chromosome, 
 #' a "start" column with the coordinate number for the cytosine, 
 #' a "methylProp" column with proportion of methylation (0 to 1), 
-#' a "methylCount" column with number of methylated reads for each site, and 
+#' optionally a "methylCount" column with number of 
+#' methylated reads for each site, and 
 #' optionally a "coverage" column with total number of reads for each site
 #' (hasCoverage param).
 #' @param rangeDT A data table with the sets of regions to be binned, 
@@ -161,8 +162,9 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500,
 # @param BSDT The bisulfite data.table (output from one of the parsing
 # functions for methylation calls) that you wish to aggregate. It can
 # be a combined table, with individual samples identified by column passed
-# to splitFactor. To be safe, "chr", "start", "methylCount", "coverage", and 
-# "methylProp" columns should be in BSDT.
+# to splitFactor. "chr", "start", "methylCount" columns should be in BSDT.
+#  "coverage", and "methylProp" columns are optional (hasCoverage
+# must be set to FALSE if there is not coverage column)
 # @param regionsGRL Regions across which you want to aggregate.
 # @param excludeGR A GenomicRanges object with regions you want to 
 # exclude from the aggregation function. These regions will be eliminated
@@ -220,7 +222,7 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
         BSDT = BSFilter(BSDT, minReads = 0, excludeGR)
     }
     
-    bsgr = BSdtToGRanges(list(BSDT), hasCoverage);
+    bsgr = BSdtToGRanges(list(BSDT));
     
     colModes = sapply(BSDT, mode);
     if (is.null(sumCols)) {
