@@ -12,7 +12,8 @@ MIRAScore(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
 sites including a "chr" column with chromosome, a "start" column with the 
 coordinate number for the cytosine, a "methylProp" column with proportion of 
 methylation (0 to 1), a "methylCount" column with number of methylated reads 
-for each site, a "coverage" column with total number of reads for each 
+for each site, optionally a "coverage" column with 
+total number of reads for each 
 site, and a "sampleName" column with a sample identifier/name (required).}
 
 \item{GRList}{A GRangesList object containing region sets, each set 
@@ -26,7 +27,8 @@ of the DNA methylation data.}
 \item{scoringMethod}{Method to calculate MIRA score after binning. 
 "logRatio" is currently the only option. See scoreDip function.}
 
-\item{minReads}{Filter out bins with fewer than minReads reads}
+\item{minReads}{Filter out bins with fewer than minReads reads. Only used
+if there is a 'coverage' column in BSDT}
 }
 \value{
 A MIRA score for each region set in GRList. See ?scoreDip.

@@ -89,15 +89,20 @@ xAxisForRegionPlots <- function(binNum) {
 #' Splits up samples by sample type. Displays each region set
 #' in a different subplot.
 #' If you only want to plot certain region sets,
-#' subset with the `featID` parameter.
+#' subset with the `featID` parameter. 
+#' 
+#' Due to the limited number
+#' of colors in the palette, a warning will be issued if 
+#' there are too many (more than 9) region sets ('featureID's).
 #' 
 #' @param scoreDT A datatable with the following columns: 
-#' score, featureID (names of regions), sampleType.
+#' score, featureID (names of regions), ideally include 'sampleType'.
 #' @param featID Region set name/names in a single string or vector of strings.
 #' @param colBlindOption If TRUE, function will plot with a color blind
 #' friendly palette which could be helpful when plotting multiple colors. 
 #' @return a plot of class "gg"/"ggplot" that shows MIRA scores 
-#' with geom_boxplot and geom_jitter.
+#' with geom_boxplot and geom_jitter (or geom_violin instead
+#' of boxplot if no sampleType column is given).
 #' @export
 #' @examples
 #' data(bigBinDT2)
@@ -112,13 +117,14 @@ xAxisForRegionPlots <- function(binNum) {
 plotMIRAScores <- function(scoreDT, 
                            featID = unique(scoreDT[, featureID]),
                            colBlindOption = FALSE){
-    
-    sampleTypeNum = length(unique(scoreDT[, sampleType]))
-    setkey(scoreDT, featureID)
-    scorePlot = ggplot(data = scoreDT[featID], 
-                    mapping = aes(x = sampleType, 
-                                  y = score, 
-                                  col = sampleType)) + 
+    # the preferred option when 'sampleType' is a column
+    if ("sampleType" %in% colnames(scoreDT)) {
+        sampleTypeNum = length(unique(scoreDT[, sampleType]))
+        setkey(scoreDT, featureID)
+        scorePlot = ggplot(data = scoreDT[featID], 
+                           mapping = aes(x = sampleType, 
+                                         y = score, 
+                                         col = sampleType)) + 
             theme_classic() +
             ylab("MIRA Score") + xlab("Sample Type") +
             geom_boxplot(aes(fill = sampleType), alpha = 0.75) + 
@@ -127,13 +133,38 @@ plotMIRAScores <- function(scoreDT,
             scale_color_manual(guide = FALSE, values = rep("black", 
                                                            sampleTypeNum)) +
             facet_wrap(~featureID)
-    if (colBlindOption) {
-        scorePlot = scorePlot + scale_fill_brewer(name = "Sample Type", 
-                                                  palette="Dark2")
+        if (colBlindOption) {
+            scorePlot = scorePlot + scale_fill_brewer(name = "Sample Type", 
+                                                      palette="Dark2")
+        } else {
+            scorePlot = scorePlot + scale_fill_brewer(name = "Sample Type", 
+                                                      palette="Set1")
+        }
+        
     } else {
-        scorePlot = scorePlot + scale_fill_brewer(name = "Sample Type", 
-                                                  palette="Set1")
+        # a less fancy plot when sampleType column is not present
+        setkey(scoreDT, featureID)
+        scorePlot = ggplot(data = scoreDT[featID], 
+                           mapping = aes(x = "", y = score, 
+                                         col = featureID)) + 
+            theme_classic() +
+            theme(axis.title.x = element_blank(),
+                  axis.ticks.x = element_blank()) +
+            ylab("MIRA Score") + # xlab("") +
+            geom_violin(aes(fill = featureID), alpha = 0.75) +
+            geom_jitter() +
+            scale_color_manual(guide = FALSE, 
+                               values = rep("black", length(featID))) +
+            facet_wrap(~featureID)
+        if (colBlindOption) {
+            scorePlot = scorePlot + scale_fill_brewer(name = "Region Set", 
+                                                      palette="Dark2")
+        } else {
+            scorePlot = scorePlot + scale_fill_brewer(name = "Region Set", 
+                                                      palette="Set1")
+        }
+        
     }
-             
+        
     return(scorePlot)
 }

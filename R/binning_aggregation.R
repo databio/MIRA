@@ -21,7 +21,8 @@
 #' a "start" column with the coordinate number for the cytosine, 
 #' a "methylProp" column with proportion of methylation (0 to 1), 
 #' a "methylCount" column with number of methylated reads for each site, and 
-#' a "coverage" column with total number of reads for each site.
+#' optionally a "coverage" column with total number of reads for each site
+#' (hasCoverage param).
 #' @param rangeDT A data table with the sets of regions to be binned, 
 #' with columns named "start", "end". Strand may also be given and will
 #' affect the output. See "Value" section.
@@ -32,6 +33,7 @@
 #' @param minReads Filter out bins with fewer than X reads before returning.
 #' @param splitFactor With default NULL, aggregation will be done 
 #' separately/individually for each sample.
+#' @param hasCoverage Default TRUE. Whether there is a coverage column
 #' 
 #' @return With splitFactor = NULL, it will return a data.table 
 #' with binCount rows, 
@@ -62,7 +64,8 @@
 #' 
 #' @export
 BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500, 
-                          byRegionGroup = TRUE, splitFactor = NULL) {
+                          byRegionGroup = TRUE, splitFactor = NULL,
+                          hasCoverage = TRUE) {
     
     # BSDT should not be a list but can be converted
     if ("list" %in% class(BSDT)) {
@@ -107,15 +110,25 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500,
                                    binCount, get(seqnamesColName), strand)]
     binnedGR = sapply(split(binnedDT, binnedDT$binID), dtToGr)
     # message("Aggregating...")
+    if (hasCoverage) {
+        # aggregate methylation (mean) and sum coverage values
+        aggrJCommand = buildJ(c("methylProp", "coverage"), 
+                              c("mean", "sum"))
+    } else {
+        # if no coverage only aggregate methylation level
+        aggrJCommand = buildJ("methylProp", "mean")
+    }
     binnedBSDT = BSAggregate(BSDT = BSDT, 
                              regionsGRL = GRangesList(binnedGR), 
-                             jCommand = buildJ(c("methylProp", "coverage"), 
-                                               c("mean", "sum")), 
+                             jCommand = aggrJCommand, 
                              byRegionGroup = byRegionGroup, 
-                             splitFactor = splitFactor)
+                             splitFactor = splitFactor,
+                             hasCoverage = hasCoverage)
     # If we aren't aggregating by bin, then don't restrict to min reads!
     if (byRegionGroup) {
-        binnedBSDT = binnedBSDT[coverage >= minReads, ]
+        if (hasCoverage) {
+            binnedBSDT = binnedBSDT[coverage >= minReads, ]
+        }
         if (nrow(binnedBSDT) < binCount) {
             # telling user what sample failed if sample name is in BSDT
             if ("sampleName" %in% names(BSDT)) {
@@ -175,6 +188,8 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500,
 # "region group" in the description above refers to bin number,
 # and you would have 1 row per bin)
 # @param keep.na Not used in general MIRA context.
+# @param hasCoverage Default TRUE. Assuming there is a coverage column
+# unless told otherwise
 # 
 # @return In context of MIRA, with byRegionGroup = TRUE and jCommand = 
 # list( methylProp = mean(methylProp), coverage = sum(coverage) )", 
@@ -186,7 +201,7 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500,
 BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL, 
                        regionsGRL.length = NULL, splitFactor = NULL, 
                        keepCols = NULL, sumCols = NULL, jCommand = NULL, 
-                       byRegionGroup = FALSE, keep.na = FALSE) {
+                       byRegionGroup = FALSE, keep.na = FALSE, hasCoverage = TRUE) {
     
     # Assert that regionsGRL is a GRL.
     # If regionsGRL is given as a GRanges, we convert to GRL
@@ -205,7 +220,7 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
         BSDT = BSFilter(BSDT, minReads = 0, excludeGR)
     }
     
-    bsgr = BSdtToGRanges(list(BSDT));
+    bsgr = BSdtToGRanges(list(BSDT), hasCoverage);
     
     colModes = sapply(BSDT, mode);
     if (is.null(sumCols)) {
@@ -319,7 +334,9 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
         # ie if any "*" are present then average
         if ("*" %in% unique(as.character(strand(regionsGR)))) {
             bsCombined[, methylProp := (methylProp + rev(methylProp)) / 2]
-            bsCombined[, coverage := (coverage + rev(coverage)) / 2]
+            if (hasCoverage) {
+                bsCombined[, coverage := (coverage + rev(coverage)) / 2]
+            }
         }
         
         # changing "regionGroupID" name to "bin" which is less confusing

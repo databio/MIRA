@@ -177,22 +177,35 @@ dtToGrInternal = function(DT, chr, start,
 # Each should have "chr", "start", "methylCount", and "coverage" columns.
 # Error results if missing "chr", "start" but if methylCount and coverage are
 # missing, it will still work, just not have that info in the output.
+# @param hasCoverage TRUE/FALSE depending on whether the BSDT's all
+# have coverage or all don't (should be all one way or the other)
+# Default is true because this function originally assumed
+# the presence of a coverage column (ie for backwards compatibility).
 # @return a list of GRanges objects, strand has been set to "*", 
 # "start" and "end" have both been set to "start" of the DT.
 # methylCount and coverage info is preserved in GRanges object.
-BSdtToGRanges = function(dtList) {
+BSdtToGRanges = function(dtList, hasCoverage = TRUE) {
     
     gList = list();
     for (i in seq_along(dtList)) {
         # dt = dtList[[i]];
         setkey(dtList[[i]], chr, start)
         # convert the data into granges object
-        gList[[i]] = GRanges(seqnames = dtList[[i]]$chr, 
-                             ranges = IRanges(start = dtList[[i]]$start, 
-                                              end = dtList[[i]]$start), 
-                             strand = rep("*", nrow(dtList[[i]])), 
-                             methylCount = dtList[[i]]$methylCount, 
-                             coverage = dtList[[i]]$coverage)
+        if (hasCoverage) {
+            gList[[i]] = GRanges(seqnames = dtList[[i]]$chr, 
+                                 ranges = IRanges(start = dtList[[i]]$start, 
+                                                  end = dtList[[i]]$start), 
+                                 strand = rep("*", nrow(dtList[[i]])), 
+                                 methylCount = dtList[[i]]$methylCount, 
+                                 coverage = dtList[[i]]$coverage)
+        } else { 
+            # the same thing as above but does not include coverage
+            gList[[i]] = GRanges(seqnames = dtList[[i]]$chr, 
+                                 ranges = IRanges(start = dtList[[i]]$start, 
+                                                  end = dtList[[i]]$start), 
+                                 strand = rep("*", nrow(dtList[[i]])), 
+                                 methylCount = dtList[[i]]$methylCount)
+        }
         # I used to use end = start + 1, but this targets CG instead of just 
         # a C, and it's causing edge-effects problems when I assign Cs to 
         # tiled windows using (within). Aug 2014 I'm changing to start/end at 
