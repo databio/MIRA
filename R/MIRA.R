@@ -58,7 +58,9 @@ if (getRversion() >= "2.15.1") {
 #' This process is done for each region set.
 #'
 #' @param BSDT A single data.table that has DNA methylation data on individual 
-#' sites. With columns: "chr" for chromosome, "start" for 
+#' sites. Alternatively a bsseq object is allowed which will be converted 
+#' internally to data.tables. The data.table input should have columns:
+#' "chr" for chromosome, "start" for 
 #' cytosine coordinate, "methylProp" for proportion of 
 #' methylation (0 to 1), optionally "methylCount" 
 #' for number of methylated reads, and
@@ -77,7 +79,9 @@ if (getRversion() >= "2.15.1") {
 #' used if there is a "coverage" column
 #' 
 #' @return a data.table with binNum rows for each region set containing
-#' aggregated methylation data.
+#' aggregated methylation data. If the input was a bsseq object
+#' with multiple samples, a list of data.tables will be returned with
+#' one data.table for each sample.
 #' Each region was split into bins; methylation was put in these bins; 
 #' Output contains sum of the all corresponding bins for the regions of each 
 #' region set, ie for all regions in each region set: first bins summed, second 
@@ -93,7 +97,41 @@ if (getRversion() >= "2.15.1") {
 #' data("exampleRegionSet", package = "MIRA")
 #' exBinDT = aggregateMethyl(exampleBSDT, exampleRegionSet)
 aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500){
-  
+    
+    if ("bsseq" %in% class(BSDT)) {
+        # if input is not a data.table but rather a bsseq object
+        # bsseq objects can include multiple samples so make a list
+        
+        # checking for sample names
+        if (length(sampleNames(BSDT)) != ncol(BSDT)) {
+            stop(cleanws("bsseq object must have sample name for each sample.
+                        Check output of bsseq::sampleNames(BSDT)"))
+        }
+        BSDTList = bsseqToDataTable(BSDT)
+        # for each data.table, make a sampleName column with the appropriate
+        # name (by reference)
+        mapply(FUN = function(x, y) x[, sampleName := y], 
+               BSDTList,
+               names(BSDTList))
+        # do the aggregation step on each data.table
+        bigMethylByBin = lapply(X = BSDTList, 
+                                FUN = function(x) aggregateMethylInt(BSDT = x, 
+                                                                     GRList = GRList, 
+                                                                     binNum = binNum, 
+                                                                     minReads = minReads))
+    } else {
+        bigMethylByBin = aggregateMethylInt(BSDT = BSDT, 
+                                            GRList = GRList, 
+                                            binNum = binNum, 
+                                            minReads = minReads)
+    }
+    
+    
+
+    return(bigMethylByBin)
+}
+
+aggregateMethylInt = function(BSDT, GRList, binNum = 11, minReads = 500) {
     ######### aggregateMethyl:Preprocessing and formatting###############
     # BSDT should not be a list but can be converted
     if ("list" %in% class(BSDT)) {
@@ -101,37 +139,37 @@ aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500){
             BSDT = BSDT[[1]]
         } else {
             stop(cleanws("Only one BSDT may be given to function. 
-                 BSDT should not be a list."))
+                         BSDT should not be a list."))
         }
-    }
+        }
     if (! ("data.table" %in% class(BSDT))) {
         stop("BSDT must be a data.table")
     }
     
     # converting to list format if GRList is a data.table or GRanges object
     if (class(GRList) %in% "GRanges") {
-      GRList = GRangesList(GRList)
-      message("Converting to GRangesList...")
+        GRList = GRangesList(GRList)
+        message("Converting to GRangesList...")
     }
     if (class(GRList) %in% "data.table") {
         GRList = list(GRList)
         message("Converting to list...")
     }
-
+    
     # checking that input is in list format
     if (!(class(GRList) %in% c("list", "GRangesList"))) {
         stop("GRList should be a named list/GRangesList.")
     }
-
+    
     # checking if region sets have names
     if (is.null(names(GRList))) {
         warning(cleanws("GRList should be a named list/GRangesList. 
-                The region sets were assigned sequential names 
+                        The region sets were assigned sequential names 
                         based on their order in the list."))
         names(GRList) <- paste0(rep("RegionSet", length(GRList)), 
-                              seq_along(GRList))
+                                seq_along(GRList))
     }
-
+    
     # checking that all objects in GRList are the same type 
     # and converting to data.tables
     if (all(sapply(X = GRList, FUN = class) %in% "GRanges")) {
@@ -149,7 +187,7 @@ aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500){
         stop("GRList should be a GRangesList or a list of data.tables")
     }
     
-
+    
     # adding a methylProp column if it is not already in the BSDT
     if (!("methylProp" %in% names(BSDT))) {
         BSDTList = addMethPropCol(list(BSDT))
@@ -158,56 +196,63 @@ aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500){
     
     # checking for a coverage column in BSDT
     hasCoverage = "coverage" %in% colnames(BSDT)
-
+    
     
     ######## aggregateMethyl:Binning and processing output####################
-
-
+    
+    
     methylByBin = lapply(X = GRDTList, 
-                       FUN = function(x) BSBinAggregate(BSDT = BSDT, 
-                                                        rangeDT = x, 
-                                                        binCount = binNum, 
-                                                        splitFactor = NULL, 
-                                                        minReads = minReads,
-                                                        hasCoverage = hasCoverage))
+                         FUN = function(x) BSBinAggregate(BSDT = BSDT, 
+                                                          rangeDT = x, 
+                                                          binCount = binNum, 
+                                                          splitFactor = NULL, 
+                                                          minReads = minReads,
+                                                          hasCoverage = hasCoverage))
     names(methylByBin) = names(GRList)# preserving names
     # adding a feature ID column to each data.table that 
     # should identify what region set was used
     for (i in seq_along(methylByBin)) {
         methylByBin[[i]][, featureID := rep(names(methylByBin)[i], 
-                                           nrow(methylByBin[[i]]))][]
+                                            nrow(methylByBin[[i]]))][]
     }
     # screening out region sets that had incomplete binning
     binNumScreen = sapply(X = methylByBin, FUN = nrow)
     # taking out incomplete region sets
     methylByBin = methylByBin[!(binNumScreen < binNum)]
-
+    
     bigMethylByBin = rbindlist(methylByBin)
     sampleNameInBSDT = "sampleName" %in% colnames(BSDT)
     if (sampleNameInBSDT && (ncol(bigMethylByBin) != 0)) {
         # creating new sampleName column
         bigMethylByBin[, sampleName := rep(BSDT[1, sampleName])][] 
     }
-
-
+    
     return(bigMethylByBin)
 }
+
 
 #' Get MIRA score for each sample/region set combination
 #' 
 #' Takes methylation data and sets of regions then aggregates
 #' methylation for each region set and scores the resulting profile.
 #' A wrapper for aggregateMethyl and scoreDip but it does not return
-#' the summary methylation profiles, just the scores.
+#' the summary methylation profiles, just the scores. This function is 
+#' given only for convenience in working with small numbers of samples/region
+#' sets. For large analyses, "aggregateMethyl" and "scoreDip" are recommended.
+#' See vignettes for recommended use of MIRA.
 #'
 #' @param BSDT A single data table that has DNA methylation data on individual 
-#' sites including a "chr" column with chromosome, a "start" column with the 
+#' sites. #' Alternatively a bsseq object may be input which will be converted 
+#' internally to data.table/s (sample names must be in bsseq object). 
+#' For the data.table input, it should 
+#' include a "chr" column with chromosome, a "start" column with the 
 #' coordinate number for the cytosine, a "methylProp" column with proportion of 
 #' methylation (0 to 1), optionally a "methylCount" column with 
 #' number of methylated reads 
 #' for each site, optionally a "coverage" column with 
 #' total number of reads for each 
-#' site, and a "sampleName" column with a sample identifier/name (required).
+#' site, and a "sampleName" column with a sample identifier/name (required). 
+
 #' @param GRList A GRangesList object containing region sets, each set 
 #' corresponding to a regulatory element (or having regions with the 
 #' same biological annotation).
@@ -219,7 +264,10 @@ aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500){
 #' @param minReads Filter out bins with fewer than minReads reads. Only used
 #' if there is a 'coverage' column in BSDT
 #' 
-#' @return A MIRA score for each region set in GRList. See ?scoreDip. 
+#' @return A data.table with a MIRA score for each region set in GRList. 
+#' See ?scoreDip. 
+#' If input for "BSDT" is a bsseq object, output will be a list of 
+#' data.tables if there were multiple samples in the bsseq object. 
 #' @examples 
 #' data("exampleBSDT", package = "MIRA") 
 #' data("exampleRegionSet", package = "MIRA") 
@@ -229,17 +277,50 @@ aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500){
 MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio", 
                      minReads = 500){
 
-    MIRAresults = list()
-
-
-    bigBin = aggregateMethyl(BSDT = BSDT, GRList = GRList, binNum = binNum, 
+    # checking for sampleName column
+    if ("data.table" %in% class(BSDT)) {
+        if (!("sampleName" %in% colnames(BSDT))) {
+            stop("sampleName column must be present in BSDT")
+        }
+    } 
+    
+    # if bsseq object was given, convert to a list of data.tables
+    # then run aggregation on each with lapply
+    if ("bsseq" %in% class(BSDT)) {
+        # checking for sample names
+        if (length(sampleNames(BSDT)) != ncol(BSDT)) {
+            stop(cleanws("bsseq object must have sample name for each sample.
+                        Check output of bsseq::sampleNames(BSDT)"))
+        }
+        BSDTList = bsseqToDataTable(BSDT)
+        # for each data.table, make a sampleName column with the appropriate
+        # name (by reference)
+        mapply(FUN = function(x, y) x[, sampleName := y], 
+               BSDTList,
+               names(BSDTList))
+        bigBinList = lapply(X = BSDTList, 
+               FUN = function(x) aggregateMethylInt(BSDT = x, 
+                                                    GRList = GRList, 
+                                                    binNum = binNum, 
+                                                    minReads = minReads))
+        
+        # using binned methylation data to calculate MIRA score
+        scoreDT = lapply(X = bigBinList, FUN = function(x) x[, .(score = scoreDip(methylProp, binNum, 
+                                                                        method = scoringMethod)), 
+                                                   by = .(featureID, sampleName)])
+    
+    } else {
+        
+        bigBin = aggregateMethyl(BSDT = BSDT, GRList = GRList, binNum = binNum, 
                              minReads = minReads)
+        # using binned methylation data to calculate MIRA score
+        scoreDT = bigBin[, .(score = scoreDip(methylProp, binNum, 
+                                              method = scoringMethod)), 
+                         by = .(featureID, sampleName)]
+        
+    }
   
-    # using binned methylation data to calculate MIRA score
-    scoreDT = bigBin[, .(score = scoreDip(methylProp, binNum, 
-                                          method = scoringMethod)), 
-                   by = .(featureID, sampleName)]
-
+    
     return(scoreDT)
 }
 
