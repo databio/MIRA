@@ -5,18 +5,25 @@
 
 
 
-
-#' First bins regions and then aggregates methylation in
-#' each corresponding bin across a set of regions (ie all bin1's together,
-#' all bin2's together, etc.).
+#' Bins regions and aggregates methylation data across the regions by bin
+#' 
+#' First bins regions and averages the proportion of methylation for
+#' all methylation sites within each bin (ie  the methylation of 
+#' all sites within region 1, bin 1 are averaged, then all sites 
+#' within region 1, bin 2 are averaged, etc.)
+#' Then aggregates methylation across all regions by bin by averaging
+#' the proportion of methylation in each corresponding 
+#' bin (ie all bin1's together, all bin2's together, etc.). 
 #'
 #' 
 #' @param BSDT A single data table that has DNA methylation data 
 #' on individual sites including a "chr" column with chromosome, 
 #' a "start" column with the coordinate number for the cytosine, 
 #' a "methylProp" column with proportion of methylation (0 to 1), 
-#' a "methylCount" column with number of methylated reads for each site, and 
-#' a "coverage" column with total number of reads for each site.
+#' optionally a "methylCount" column with number of 
+#' methylated reads for each site, and 
+#' optionally a "coverage" column with total number of reads for each site
+#' (hasCoverage param).
 #' @param rangeDT A data table with the sets of regions to be binned, 
 #' with columns named "start", "end". Strand may also be given and will
 #' affect the output. See "Value" section.
@@ -27,6 +34,7 @@
 #' @param minReads Filter out bins with fewer than X reads before returning.
 #' @param splitFactor With default NULL, aggregation will be done 
 #' separately/individually for each sample.
+#' @param hasCoverage Default TRUE. Whether there is a coverage column
 #' 
 #' @return With splitFactor = NULL, it will return a data.table 
 #' with binCount rows, 
@@ -57,7 +65,8 @@
 #' 
 #' @export
 BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500, 
-                          byRegionGroup = TRUE, splitFactor = NULL) {
+                          byRegionGroup = TRUE, splitFactor = NULL,
+                          hasCoverage = TRUE) {
     
     # BSDT should not be a list but can be converted
     if ("list" %in% class(BSDT)) {
@@ -102,15 +111,25 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500,
                                    binCount, get(seqnamesColName), strand)]
     binnedGR = sapply(split(binnedDT, binnedDT$binID), dtToGr)
     # message("Aggregating...")
+    if (hasCoverage) {
+        # aggregate methylation (mean) and sum coverage values
+        aggrJCommand = buildJ(c("methylProp", "coverage"), 
+                              c("mean", "sum"))
+    } else {
+        # if no coverage only aggregate methylation level
+        aggrJCommand = buildJ("methylProp", "mean")
+    }
     binnedBSDT = BSAggregate(BSDT = BSDT, 
                              regionsGRL = GRangesList(binnedGR), 
-                             jCommand = buildJ(c("methylProp", "coverage"), 
-                                               c("mean", "sum")), 
+                             jCommand = aggrJCommand, 
                              byRegionGroup = byRegionGroup, 
-                             splitFactor = splitFactor)
+                             splitFactor = splitFactor,
+                             hasCoverage = hasCoverage)
     # If we aren't aggregating by bin, then don't restrict to min reads!
     if (byRegionGroup) {
-        binnedBSDT = binnedBSDT[coverage >= minReads, ]
+        if (hasCoverage) {
+            binnedBSDT = binnedBSDT[coverage >= minReads, ]
+        }
         if (nrow(binnedBSDT) < binCount) {
             # telling user what sample failed if sample name is in BSDT
             if ("sampleName" %in% names(BSDT)) {
@@ -143,8 +162,9 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500,
 # @param BSDT The bisulfite data.table (output from one of the parsing
 # functions for methylation calls) that you wish to aggregate. It can
 # be a combined table, with individual samples identified by column passed
-# to splitFactor. To be safe, "chr", "start", "methylCount", "coverage", and 
-# "methylProp" columns should be in BSDT.
+# to splitFactor. "chr", "start", "methylCount" columns should be in BSDT.
+#  "coverage", and "methylProp" columns are optional (hasCoverage
+# must be set to FALSE if there is not coverage column)
 # @param regionsGRL Regions across which you want to aggregate.
 # @param excludeGR A GenomicRanges object with regions you want to 
 # exclude from the aggregation function. These regions will be eliminated
@@ -170,6 +190,8 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500,
 # "region group" in the description above refers to bin number,
 # and you would have 1 row per bin)
 # @param keep.na Not used in general MIRA context.
+# @param hasCoverage Default TRUE. Assuming there is a coverage column
+# unless told otherwise
 # 
 # @return In context of MIRA, with byRegionGroup = TRUE and jCommand = 
 # list( methylProp = mean(methylProp), coverage = sum(coverage) )", 
@@ -181,7 +203,7 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500,
 BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL, 
                        regionsGRL.length = NULL, splitFactor = NULL, 
                        keepCols = NULL, sumCols = NULL, jCommand = NULL, 
-                       byRegionGroup = FALSE, keep.na = FALSE) {
+                       byRegionGroup = FALSE, keep.na = FALSE, hasCoverage = TRUE) {
     
     # Assert that regionsGRL is a GRL.
     # If regionsGRL is given as a GRanges, we convert to GRL
@@ -276,6 +298,10 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
     
     # Now actually do the aggregate:
     # message("Combining...");
+    # for MIRA: average methylProp and sum coverage within each instance of 
+    # each bin (ie average methylProp's in bin1 of first region, average 
+    # methylProp's in bin1 of second region etc. for all bins and all regions
+    # separately)
     bsCombined = BSDT[, eval(parse(text = jCommand)), 
                       by = eval(parse(text = byString))]
     setkey(bsCombined, regionID)
@@ -298,6 +324,9 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
             byStringGroup = "list(regionGroupID)"
         }
         # actual aggregation operation
+        # for normal MIRA use: averaging methyProp's and summing
+        # coverage for all bins with the same number (ie all
+        # bin1's together, all bin2's together, etc.)
         bsCombined = bsCombined[, eval(parse(text = jCommand)), 
                                 by = eval(parse(text = byStringGroup))]
         
@@ -307,10 +336,12 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
         # ie if any "*" are present then average
         if ("*" %in% unique(as.character(strand(regionsGR)))) {
             bsCombined[, methylProp := (methylProp + rev(methylProp)) / 2]
-            bsCombined[, coverage := (coverage + rev(coverage)) / 2]
+            if (hasCoverage) {
+                bsCombined[, coverage := (coverage + rev(coverage)) / 2]
+            }
         }
         
-        # changing "regionGroupID" name to "Bin" which is less confusing
+        # changing "regionGroupID" name to "bin" which is less confusing
         # for normal MIRA use cases
         setnames(bsCombined, old = "regionGroupID", new = "bin")
         return(bsCombined[]);

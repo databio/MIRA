@@ -2,15 +2,14 @@
 % Please edit documentation in R/MIRA.R
 \name{addMethPropCol}
 \alias{addMethPropCol}
-\title{Adding methylProp column that has proportion of reads that were methylated for 
-each site.
-Note: Assigns methylProp column by reference with ":="}
+\title{Add column for proportion of methylation}
 \usage{
 addMethPropCol(BSDTList)
 }
 \arguments{
-\item{BSDTList}{A bisulfite datatable or list of datatables with a column for
-number of methylated reads (methylCount) and a column for number of total reads 
+\item{BSDTList}{A bisulfite datatable or list of datatables 
+with a column for number of methylated reads (methylCount) and 
+a column for number of total reads 
 (coverage) for each cytosine that was measured.}
 }
 \value{
@@ -18,8 +17,9 @@ The BSDTList but with extra `methylProp` column on each
 data.table in list.
 }
 \description{
-Adding methylProp column that has proportion of reads that were methylated for 
-each site.
+Adding methylProp column that has proportion of reads that were 
+methylated for each site based on number of methylated reads
+divided by total number of reads.
 Note: Assigns methylProp column by reference with ":="
 }
 \examples{

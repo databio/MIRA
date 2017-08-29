@@ -2,44 +2,62 @@
 % Please edit documentation in R/MIRA.R
 \name{aggregateMethyl}
 \alias{aggregateMethyl}
-\title{Function to aggregate methylation data into bins 
-over all regions in each region set.}
+\title{Aggregate methylation data to get
+a summary methylation profile for each region set}
 \usage{
 aggregateMethyl(BSDT, GRList, binNum = 11, minReads = 500)
 }
 \arguments{
 \item{BSDT}{A single data.table that has DNA methylation data on individual 
-sites. With columns: "chr" for chromosome, "start" for 
+sites. Alternatively a bsseq object is allowed which will be converted 
+internally to data.tables. The data.table input should have columns:
+"chr" for chromosome, "start" for 
 cytosine coordinate, "methylProp" for proportion of 
-methylation (0 to 1), "methylCount" for number of methylated reads, and
-"coverage" for total number of reads.
+methylation (0 to 1), optionally "methylCount" 
+for number of methylated reads, and
+optionally "coverage" for total number of reads.
 In addition, a "sampleName" column is strongly preferred (and required later
 for scoring multiple samples at the same time using 
 "scoreDip(..., by = .(featureID, sampleName))" in a MIRA workflow).}
 
 \item{GRList}{A GRangesList object containing region sets, each set 
-corresponding to a type of regulatory element. Each regionSet in the list should
+corresponding to a type of regulatory element. 
+Each regionSet in the list should
 be named. A named list of data.tables also works.}
 
 \item{binNum}{How many bins each region should be split into for aggregation 
 of the DNA methylation data.}
 
-\item{minReads}{Filter out bins with fewer than minReads reads.}
+\item{minReads}{Filter out bins with fewer than minReads reads. Only
+used if there is a "coverage" column}
 }
 \value{
 a data.table with binNum rows for each region set containing
-aggregated methylation data.
+aggregated methylation data. If the input was a bsseq object
+with multiple samples, a list of data.tables will be returned with
+one data.table for each sample.
 Each region was split into bins; methylation was put in these bins; 
 Output contains sum of the all corresponding bins for the regions of each 
 region set, ie for all regions in each region set: first bins summed, second 
 bins summed, etc. Columns of the output should be "bin", "methylProp", 
-"coverage", "featureID", and possibly "sampleName".
+"coverage" (if coverage was an input column), "featureID", 
+and possibly "sampleName".
 For information on symmetry of bins and output when a region set has
 strand info, see ?BSBinAggregate.
 }
 \description{
-Function to aggregate methylation data into bins 
-over all regions in each region set.
+The main function for aggregating methylation data in MIRA analysis. 
+Aggregates methylation across all regions in a given region set to
+give a summary methylation profile for each region set.
+}
+\details{
+Each region is split into bins. For a given set of regions, 
+methylation is first aggregated (averaged) within each 
+bin in each region. Then methylation from corresponding bins from each
+region are aggregated (averaged) across all regions 
+(all first bins together, all second bins together, etc.), 
+giving a summary methylation profile.
+This process is done for each region set.
 }
 \examples{
 data("exampleBSDT", package = "MIRA")

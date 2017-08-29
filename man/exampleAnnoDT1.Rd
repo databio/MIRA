@@ -8,9 +8,6 @@
 \usage{
 data(exampleAnnoDT1)
 }
-\value{
-No return value.
-}
 \description{
 A data.table with annotation for a bisulfite sample (name and sample type)
 }

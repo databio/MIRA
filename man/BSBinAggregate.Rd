@@ -2,20 +2,20 @@
 % Please edit documentation in R/binning_aggregation.R
 \name{BSBinAggregate}
 \alias{BSBinAggregate}
-\title{First bins regions and then aggregates methylation in
-each corresponding bin across a set of regions (ie all bin1's together,
-all bin2's together, etc.).}
+\title{Bins regions and aggregates methylation data across the regions by bin}
 \usage{
 BSBinAggregate(BSDT, rangeDT, binCount, minReads = 500,
-  byRegionGroup = TRUE, splitFactor = NULL)
+  byRegionGroup = TRUE, splitFactor = NULL, hasCoverage = TRUE)
 }
 \arguments{
 \item{BSDT}{A single data table that has DNA methylation data 
 on individual sites including a "chr" column with chromosome, 
 a "start" column with the coordinate number for the cytosine, 
 a "methylProp" column with proportion of methylation (0 to 1), 
-a "methylCount" column with number of methylated reads for each site, and 
-a "coverage" column with total number of reads for each site.}
+optionally a "methylCount" column with number of 
+methylated reads for each site, and 
+optionally a "coverage" column with total number of reads for each site
+(hasCoverage param).}
 
 \item{rangeDT}{A data table with the sets of regions to be binned, 
 with columns named "start", "end". Strand may also be given and will
@@ -31,6 +31,8 @@ byRegionGroup = FALSE is deprecated.}
 
 \item{splitFactor}{With default NULL, aggregation will be done 
 separately/individually for each sample.}
+
+\item{hasCoverage}{Default TRUE. Whether there is a coverage column}
 }
 \value{
 With splitFactor = NULL, it will return a data.table 
@@ -54,9 +56,13 @@ with plus strand regions so the MIRA signature will be in
 ###########################################################################
 }
 \description{
-First bins regions and then aggregates methylation in
-each corresponding bin across a set of regions (ie all bin1's together,
-all bin2's together, etc.).
+First bins regions and averages the proportion of methylation for
+all methylation sites within each bin (ie  the methylation of 
+all sites within region 1, bin 1 are averaged, then all sites 
+within region 1, bin 2 are averaged, etc.)
+Then aggregates methylation across all regions by bin by averaging
+the proportion of methylation in each corresponding 
+bin (ie all bin1's together, all bin2's together, etc.).
 }
 \examples{
 data("exampleBSDT") # exampleBSDT

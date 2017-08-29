@@ -2,14 +2,14 @@
 % Please edit documentation in R/plotting.R
 \name{plotMIRAScores}
 \alias{plotMIRAScores}
-\title{A function to plot MIRA scores and compare case/control.}
+\title{Plot MIRA scores and compare different conditions}
 \usage{
 plotMIRAScores(scoreDT, featID = unique(scoreDT[, featureID]),
   colBlindOption = FALSE)
 }
 \arguments{
 \item{scoreDT}{A datatable with the following columns: 
-score, featureID (names of regions), sampleType.}
+score, featureID (names of regions), ideally include 'sampleType'.}
 
 \item{featID}{Region set name/names in a single string or vector of strings.}
 
@@ -18,13 +18,22 @@ friendly palette which could be helpful when plotting multiple colors.}
 }
 \value{
 a plot of class "gg"/"ggplot" that shows MIRA scores 
-with geom_boxplot and geom_jitter.
+with geom_boxplot and geom_jitter (or geom_violin instead
+of boxplot if no sampleType column is given).
 }
 \description{
-A function to plot MIRA scores and compare case/control.
+Splits up samples by sample type. Displays each region set
+in a different subplot.
+If you only want to plot certain region sets,
+subset with the `featID` parameter.
+}
+\details{
+Due to the limited number
+of colors in the palette, a warning will be issued if 
+there are too many (more than 9) region sets ('featureID's).
 }
 \examples{
-data(ewingMyobigBinDT2) # bigBinDT object
+data(bigBinDT2)
 exScores = bigBinDT2[, .(score=scoreDip(methylProp, 
                                        binCount = 21, 
                                        shoulderShift = 5)), 

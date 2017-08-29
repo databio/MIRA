@@ -3,15 +3,18 @@
 \docType{data}
 \name{exampleRegionSet}
 \alias{exampleRegionSet}
-\title{A GRanges object with a subset of ranges corresponding to Nrf1 binding}
+\title{A GRanges object with a ranges corresponding to Nrf1 Chip-seq peaks
+in the GM12878 B-lymphoblastoid cell line (GEO accession GSE31477, 
+sample GSM935309). Only a subset of the ranges are used in 
+this object and the regions were switched from hg19 to hg38.}
 \format{A GRanges object}
 \usage{
 data(exampleRegionSet)
 }
-\value{
-No return value.
-}
 \description{
-A GRanges object with a subset of ranges corresponding to Nrf1 binding
+A GRanges object with a ranges corresponding to Nrf1 Chip-seq peaks
+in the GM12878 B-lymphoblastoid cell line (GEO accession GSE31477, 
+sample GSM935309). Only a subset of the ranges are used in 
+this object and the regions were switched from hg19 to hg38.
 }
 \keyword{datasets}

@@ -11,9 +11,6 @@ samples (human skeletal myoblasts and other related samples).}
 \usage{
 data(exampleAnnoDT2)
 }
-\value{
-No return value.
-}
 \description{
 A data.table with annotation data for the "Applying MIRA to a 
 Biological Question" vignette. Has annotation data (sampleName

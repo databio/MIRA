@@ -11,13 +11,12 @@ BSreadBiSeq(files, contrastList = NULL,
 \arguments{
 \item{files}{a list of filenames (use parseInputArg if necessary)}
 
-\item{contrastList}{a list of named character vectors, 
+\item{contrastList}{Generally not needed for MIRA. 
+A list of named character vectors, 
 each with length equal to the number of items in files. 
 These will translate into column names in the final table.}
 
-\item{sampleNames}{a vector of length length(files), name for each file. 
-You can also just use contrastList to implement the same thing 
-so this is really unnecessary...}
+\item{sampleNames}{a vector of length length(files), name for each file.}
 
 \item{cores}{number of processors.}
 
@@ -30,7 +29,17 @@ If returnAsList = TRUE, then input from each file will be
 in its own data.table in a list.
 }
 \description{
-Read in files from biseq meth caller
+Parses the x/y format of methylation calls, 
+splitting them into individual columns: "methylCount" column for
+number of methylated reads for site and "coverage" column for total
+number of reads covering that site. Input files should have the following
+columns: "chr", "start", "end", "meth", "rate", "strand".
+}
+\details{
+This can run into memory problems if there are too many files...
+because of the way parallel lacks long vector support. The solution is
+to just use a single core; or to pass mc.preschedule = FALSE; This
+makes it so that each file is processed as a separate job. Much better.
 }
 \examples{
 shortBSDTFile = system.file("extdata", "shortRRBS.bed", package = "MIRA") 

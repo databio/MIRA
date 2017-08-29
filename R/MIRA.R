@@ -23,6 +23,8 @@
 #' @importFrom data.table ":=" setDT data.table setkey fread setnames 
 #'             setcolorder rbindlist setattr setorder
 #' @importFrom Biobase sampleNames
+#' @importFrom stats lm coefficients poly
+#' @importFrom bsseq getCoverage getMeth
 NULL
 
 
@@ -39,14 +41,30 @@ if (getRversion() >= "2.15.1") {
 
 ##########################################################################
 
-#' Function to aggregate methylation data into bins 
-#' over all regions in each region set.
+#' Aggregate methylation data to get
+#' a summary methylation profile for each region set
+#' 
+#' The main function for aggregating methylation data in MIRA analysis. 
+#' Aggregates methylation across all regions in a given region set to
+#' give a summary methylation profile for each region set. 
+#' 
+#' 
+#' Each region is split into bins. For a given set of regions, 
+#' methylation is first aggregated (averaged) within each 
+#' bin in each region. Then methylation from corresponding bins from each
+#' region are aggregated (averaged) across all regions 
+#' (all first bins together, all second bins together, etc.), 
+#' giving a summary methylation profile.
+#' This process is done for each region set.
 #'
 #' @param BSDT A single data.table that has DNA methylation data on individual 
-#' sites. With columns: "chr" for chromosome, "start" for 
+#' sites. Alternatively a bsseq object is allowed which will be converted 
+#' internally to data.tables. The data.table input should have columns:
+#' "chr" for chromosome, "start" for 
 #' cytosine coordinate, "methylProp" for proportion of 
-#' methylation (0 to 1), "methylCount" for number of methylated reads, and
-#' "coverage" for total number of reads.
+#' methylation (0 to 1), optionally "methylCount" 
+#' for number of methylated reads, and
+#' optionally "coverage" for total number of reads.
 #' In addition, a "sampleName" column is strongly preferred (and required later
 #' for scoring multiple samples at the same time using 
 #' "scoreDip(..., by = .(featureID, sampleName))" in a MIRA workflow).
@@ -57,15 +75,19 @@ if (getRversion() >= "2.15.1") {
 #' be named. A named list of data.tables also works. 
 #' @param binNum How many bins each region should be split into for aggregation 
 #' of the DNA methylation data.
-#' @param minReads Filter out bins with fewer than minReads reads.
+#' @param minReads Filter out bins with fewer than minReads reads. Only
+#' used if there is a "coverage" column
 #' 
 #' @return a data.table with binNum rows for each region set containing
-#' aggregated methylation data.
+#' aggregated methylation data. If the input was a bsseq object
+#' with multiple samples, a list of data.tables will be returned with
+#' one data.table for each sample.
 #' Each region was split into bins; methylation was put in these bins; 
 #' Output contains sum of the all corresponding bins for the regions of each 
 #' region set, ie for all regions in each region set: first bins summed, second 
 #' bins summed, etc. Columns of the output should be "bin", "methylProp", 
-#' "coverage", "featureID", and possibly "sampleName".
+#' "coverage" (if coverage was an input column), "featureID", 
+#' and possibly "sampleName".
 #' For information on symmetry of bins and output when a region set has
 #' strand info, see ?BSBinAggregate.
 #' 
@@ -75,7 +97,41 @@ if (getRversion() >= "2.15.1") {
 #' data("exampleRegionSet", package = "MIRA")
 #' exBinDT = aggregateMethyl(exampleBSDT, exampleRegionSet)
 aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500){
-  
+    
+    if ("bsseq" %in% class(BSDT)) {
+        # if input is not a data.table but rather a bsseq object
+        # bsseq objects can include multiple samples so make a list
+        
+        # checking for sample names
+        if (length(sampleNames(BSDT)) != ncol(BSDT)) {
+            stop(cleanws("bsseq object must have sample name for each sample.
+                        Check output of bsseq::sampleNames(BSDT)"))
+        }
+        BSDTList = bsseqToDataTable(BSDT)
+        # for each data.table, make a sampleName column with the appropriate
+        # name (by reference)
+        mapply(FUN = function(x, y) x[, sampleName := y], 
+               BSDTList,
+               names(BSDTList))
+        # do the aggregation step on each data.table
+        bigMethylByBin = lapply(X = BSDTList, 
+                                FUN = function(x) aggregateMethylInt(BSDT = x, 
+                                                                     GRList = GRList, 
+                                                                     binNum = binNum, 
+                                                                     minReads = minReads))
+    } else {
+        bigMethylByBin = aggregateMethylInt(BSDT = BSDT, 
+                                            GRList = GRList, 
+                                            binNum = binNum, 
+                                            minReads = minReads)
+    }
+    
+    
+
+    return(bigMethylByBin)
+}
+
+aggregateMethylInt = function(BSDT, GRList, binNum = 11, minReads = 500) {
     ######### aggregateMethyl:Preprocessing and formatting###############
     # BSDT should not be a list but can be converted
     if ("list" %in% class(BSDT)) {
@@ -83,37 +139,37 @@ aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500){
             BSDT = BSDT[[1]]
         } else {
             stop(cleanws("Only one BSDT may be given to function. 
-                 BSDT should not be a list."))
+                         BSDT should not be a list."))
         }
-    }
+        }
     if (! ("data.table" %in% class(BSDT))) {
         stop("BSDT must be a data.table")
     }
     
     # converting to list format if GRList is a data.table or GRanges object
     if (class(GRList) %in% "GRanges") {
-      GRList = GRangesList(GRList)
-      message("Converting to GRangesList...")
+        GRList = GRangesList(GRList)
+        message("Converting to GRangesList...")
     }
     if (class(GRList) %in% "data.table") {
         GRList = list(GRList)
         message("Converting to list...")
     }
-
+    
     # checking that input is in list format
     if (!(class(GRList) %in% c("list", "GRangesList"))) {
         stop("GRList should be a named list/GRangesList.")
     }
-
+    
     # checking if region sets have names
     if (is.null(names(GRList))) {
         warning(cleanws("GRList should be a named list/GRangesList. 
-                The region sets were assigned sequential names 
+                        The region sets were assigned sequential names 
                         based on their order in the list."))
         names(GRList) <- paste0(rep("RegionSet", length(GRList)), 
-                              seq_along(GRList))
+                                seq_along(GRList))
     }
-
+    
     # checking that all objects in GRList are the same type 
     # and converting to data.tables
     if (all(sapply(X = GRList, FUN = class) %in% "GRanges")) {
@@ -131,55 +187,72 @@ aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500){
         stop("GRList should be a GRangesList or a list of data.tables")
     }
     
-
+    
     # adding a methylProp column if it is not already in the BSDT
     if (!("methylProp" %in% names(BSDT))) {
         BSDTList = addMethPropCol(list(BSDT))
         BSDT = BSDTList[[1]] 
     }
-
+    
+    # checking for a coverage column in BSDT
+    hasCoverage = "coverage" %in% colnames(BSDT)
+    
     
     ######## aggregateMethyl:Binning and processing output####################
-
-
+    
+    
     methylByBin = lapply(X = GRDTList, 
-                       FUN = function(x) BSBinAggregate(BSDT = BSDT, 
-                                                        rangeDT = x, 
-                                                        binCount = binNum, 
-                                                        splitFactor = NULL, 
-                                                        minReads = minReads))
+                         FUN = function(x) BSBinAggregate(BSDT = BSDT, 
+                                                          rangeDT = x, 
+                                                          binCount = binNum, 
+                                                          splitFactor = NULL, 
+                                                          minReads = minReads,
+                                                          hasCoverage = hasCoverage))
     names(methylByBin) = names(GRList)# preserving names
     # adding a feature ID column to each data.table that 
     # should identify what region set was used
     for (i in seq_along(methylByBin)) {
         methylByBin[[i]][, featureID := rep(names(methylByBin)[i], 
-                                           nrow(methylByBin[[i]]))][]
+                                            nrow(methylByBin[[i]]))][]
     }
     # screening out region sets that had incomplete binning
     binNumScreen = sapply(X = methylByBin, FUN = nrow)
     # taking out incomplete region sets
     methylByBin = methylByBin[!(binNumScreen < binNum)]
-
+    
     bigMethylByBin = rbindlist(methylByBin)
     sampleNameInBSDT = "sampleName" %in% colnames(BSDT)
     if (sampleNameInBSDT && (ncol(bigMethylByBin) != 0)) {
         # creating new sampleName column
         bigMethylByBin[, sampleName := rep(BSDT[1, sampleName])][] 
     }
-
-
+    
     return(bigMethylByBin)
 }
 
-#' Function to take DNA methylation and region data and return a MIRA score;
-#' a wrapper for aggregateMethyl and scoreDip.
+
+#' Get MIRA score for each sample/region set combination
+#' 
+#' Takes methylation data and sets of regions then aggregates
+#' methylation for each region set and scores the resulting profile.
+#' A wrapper for aggregateMethyl and scoreDip but it does not return
+#' the summary methylation profiles, just the scores. This function is 
+#' given only for convenience in working with small numbers of samples/region
+#' sets. For large analyses, "aggregateMethyl" and "scoreDip" are recommended.
+#' See vignettes for recommended use of MIRA.
 #'
 #' @param BSDT A single data table that has DNA methylation data on individual 
-#' sites including a "chr" column with chromosome, a "start" column with the 
+#' sites. #' Alternatively a bsseq object may be input which will be converted 
+#' internally to data.table/s (sample names must be in bsseq object). 
+#' For the data.table input, it should 
+#' include a "chr" column with chromosome, a "start" column with the 
 #' coordinate number for the cytosine, a "methylProp" column with proportion of 
-#' methylation (0 to 1), a "methylCount" column with number of methylated reads 
-#' for each site, a "coverage" column with total number of reads for each 
-#' site, and a "sampleName" column with a sample identifier/name (required).
+#' methylation (0 to 1), optionally a "methylCount" column with 
+#' number of methylated reads 
+#' for each site, optionally a "coverage" column with 
+#' total number of reads for each 
+#' site, and a "sampleName" column with a sample identifier/name (required). 
+
 #' @param GRList A GRangesList object containing region sets, each set 
 #' corresponding to a regulatory element (or having regions with the 
 #' same biological annotation).
@@ -188,9 +261,13 @@ aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500){
 #' of the DNA methylation data.
 #' @param scoringMethod Method to calculate MIRA score after binning. 
 #' "logRatio" is currently the only option. See scoreDip function.
-#' @param minReads Filter out bins with fewer than minReads reads
+#' @param minReads Filter out bins with fewer than minReads reads. Only used
+#' if there is a 'coverage' column in BSDT
 #' 
-#' @return A MIRA score for each region set in GRList. See ?scoreDip. 
+#' @return A data.table with a MIRA score for each region set in GRList. 
+#' See ?scoreDip. 
+#' If input for "BSDT" is a bsseq object, output will be a list of 
+#' data.tables if there were multiple samples in the bsseq object. 
 #' @examples 
 #' data("exampleBSDT", package = "MIRA") 
 #' data("exampleRegionSet", package = "MIRA") 
@@ -200,24 +277,59 @@ aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500){
 MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio", 
                      minReads = 500){
 
-    MIRAresults = list()
-
-
-    bigBin = aggregateMethyl(BSDT = BSDT, GRList = GRList, binNum = binNum, 
+    # checking for sampleName column
+    if ("data.table" %in% class(BSDT)) {
+        if (!("sampleName" %in% colnames(BSDT))) {
+            stop("sampleName column must be present in BSDT")
+        }
+    } 
+    
+    # if bsseq object was given, convert to a list of data.tables
+    # then run aggregation on each with lapply
+    if ("bsseq" %in% class(BSDT)) {
+        # checking for sample names
+        if (length(sampleNames(BSDT)) != ncol(BSDT)) {
+            stop(cleanws("bsseq object must have sample name for each sample.
+                        Check output of bsseq::sampleNames(BSDT)"))
+        }
+        BSDTList = bsseqToDataTable(BSDT)
+        # for each data.table, make a sampleName column with the appropriate
+        # name (by reference)
+        mapply(FUN = function(x, y) x[, sampleName := y], 
+               BSDTList,
+               names(BSDTList))
+        bigBinList = lapply(X = BSDTList, 
+               FUN = function(x) aggregateMethylInt(BSDT = x, 
+                                                    GRList = GRList, 
+                                                    binNum = binNum, 
+                                                    minReads = minReads))
+        
+        # using binned methylation data to calculate MIRA score
+        scoreDT = lapply(X = bigBinList, FUN = function(x) x[, .(score = scoreDip(methylProp, binNum, 
+                                                                        method = scoringMethod)), 
+                                                   by = .(featureID, sampleName)])
+    
+    } else {
+        
+        bigBin = aggregateMethyl(BSDT = BSDT, GRList = GRList, binNum = binNum, 
                              minReads = minReads)
+        # using binned methylation data to calculate MIRA score
+        scoreDT = bigBin[, .(score = scoreDip(methylProp, binNum, 
+                                              method = scoringMethod)), 
+                         by = .(featureID, sampleName)]
+        
+    }
   
-    # using binned methylation data to calculate MIRA score
-    scoreDT = bigBin[, .(score = scoreDip(methylProp, binNum, 
-                                          method = scoringMethod)), 
-                   by = .(featureID, sampleName)]
-
+    
     return(scoreDT)
 }
 
+#' Score methylation profile based on its shape
+#' 
 #' The dip scoring function for MIRA scores. This will take a vector
 #' describing the methylation pattern and return a single score summarizing
 #' that vector for how large the 'dip' in methylation is at the center of
-#' the vector.
+#' the vector. See `method` parameter for details on scoring calculations.
 #' 
 #' @param values A vector with proportion of methylation values for each bin. 
 #'  Between 0 and 1.
@@ -231,7 +343,9 @@ MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
 #' @param method The scoring method. "logRatio" is the log of the ratio of outer
 #' edges to the middle. This ratio is the average of outside values 
 #' of the dip (shoulders) divided by the center value if 
-#' it is lower than the two surrounding values or if it is not lower, an 
+#' it is lower than the two surrounding values (lower for concave up profiles or
+#' higher for concave down profiles) or if it is not lower (higher for
+#' concave down profiles), an 
 #' average of the three middle values. For an even binCount, the middle four
 #' values would be averaged with the 1st and 4th being weighted by half (as
 #' if there were 3 values). 
@@ -264,8 +378,15 @@ scoreDip = function(values, binCount,
     if (!(method %in% "logRatio")) { # add new methods eventually
         stop("Invalid scoring method. Check spelling/capitalization.")
     }
+    # determining whether signature is concave up or down in general
+    # because values for finding shoulder need to be altered if concave
+    # down ('logratio scoring') 
+    # also it matters for getting middle value for 'logratio' scoring
+    concaveUp = isProfileConcaveUp(values, binCount)
+    
     if (method == "logRatio") {
         centerSpot = (binCount + 1) / 2 # X.5 for even binCount
+        
         
         if ((binCount %% 2) == 0) { # if binCount is even, centerSpot is X.5
             # if one of middle 2 vals is lowest, use it, otherwise average
@@ -285,28 +406,55 @@ scoreDip = function(values, binCount,
                             + 0.5 * values[centerSpot + 1.5]) / 3    
             }
         }else {# if binCount is odd, centerSpot is X.0
-            # if the middle is lowest use it, otherwise take average
-            # order matters in which.min (for ties) so centerSpot is first
-            if (which.min(values[c(centerSpot, centerSpot - 1, centerSpot + 1)])
-                == 1) {
+            
+            # if the middle is lowest for concave up/highest for concave down
+            # use it, otherwise average will be taken
+            if (concaveUp) {
+                # order matters in which.min (for ties) so centerSpot is first
+                useMiddlePoint = (which.min(values[c(centerSpot, 
+                                                      centerSpot - 1, 
+                                                      centerSpot + 1)]) == 1)
+            } else {
+                # if concave down, see if middle point is the max of 
+                # the three middle points
+                useMiddlePoint = (which.max(values[c(centerSpot, 
+                                                      centerSpot - 1, 
+                                                      centerSpot + 1)]) == 1)
+            }
+            
+            if (useMiddlePoint) {
                 midpoint = values[centerSpot]
-            } else { # if centerSpot does not have lowest value of the three
-                # average the three middle bins
+            } else { # if centerSpot does not have lowest/highest value of 
+                # the three, average the three middle bins
                 midpoint = (values[centerSpot] + values[centerSpot + 1] 
                             + values[centerSpot - 1] ) / 3
             }
         }
         # automatically figuring out shoulderShift based on each signature
         if (shoulderShift == "auto") {
+            
+            
+            
+            if (concaveUp) {
+                values2 = values 
+            } else {
+                # converts to concave up so same `findShoulder` algorithm 
+                # can be used for both cases
+                # values2 is not used for scoring, just for finding shoulders
+                values2 = 1 - values 
+            }
+            
+            
+            
             # signature will probably not be symmetrical if strand was used
             if (usedStrand) { # probably not common but still an option
-                shoulderShiftL= findShoulder(values, binCount, centerSpot,
+                shoulderShiftL= findShoulder(values2, binCount, centerSpot,
                                              whichSide = "left")
-                shoulderShiftR = findShoulder(values, binCount, centerSpot, 
+                shoulderShiftR = findShoulder(values2, binCount, centerSpot, 
                                              whichSide = "right")
             } else { # most common use case, strand was not used
                 # either side would work since signature is symmetrical
-                shoulderShift = findShoulder(values, binCount, centerSpot, 
+                shoulderShift = findShoulder(values2, binCount, centerSpot, 
                                              whichSide = "right")
             }
         }
@@ -352,6 +500,48 @@ scoreDip = function(values, binCount,
     return(score)
 }
 
+# helper function for determining concavity of MIRA signature
+# fits a parabola to the values then looks at the x^2 coefficient to 
+# determine concavity (+ is concave up, - is concave down)
+# if number of bins is high enough, a wide parabola is fit using all the data
+# and then a narrow parabola is fit using the middle 50% or so values. The
+# fit with the best adjusted R^2 value is used. This could help when the
+# dip is mostly in the middle half but is somewhat arbitrary and 
+# there might be a better way to do this.
+# @return TRUE if concave up, FALSE if concave down
+isProfileConcaveUp <- function(values, binCount) {
+    wideFit = lm(values ~ poly(seq_along(values), 2))
+    wideX2Coef = coefficients(wideFit)[3]
+    wideR2 = summary(wideFit)$adj.r.squared
+    # if x2 coef is positive, it is concave up
+    concaveUp = (wideX2Coef >= 0) # up is preferred so inclusive of 0
+    
+    # only do a narrow fit if enough bins are used
+    # want at least 7 bins to be a part of the narrow fit (smallerHalf)
+    # floor(15 / 2) = 7
+    # because 3 bins can be used for center in scoring (with odd binCount) 
+    # and we want at least 2 bins on each side of those center bins
+    if (binCount >= 15) {
+        # using middle 50% or so for this fit
+        smallerHalf = floor(binCount / 2)
+        endFirstQuarter = ceiling((binCount - smallerHalf) / 2)
+        narrowInd = c(endFirstQuarter + seq(smallerHalf)) # middle ~half
+        
+        narrowFit = lm(values[narrowInd] ~ 
+                           poly(seq_along(values[narrowInd]), 2))
+        narrowX2Coef = coefficients(narrowFit)[3] # the x^2 coefficient
+        narrowR2 = summary(narrowFit)$adj.r.squared
+        
+        # use narrow fit if it has a better R2
+        if (narrowR2 > wideR2) {
+            concaveUp = (narrowX2Coef >= 0)
+        }
+        
+    }
+    
+    return(concaveUp)
+}
+
 # helper function for automatic shoulder sensing
 # for unsymmetrical signatures this function should be run twice, once
 # with whichSide="right" and once with whichSide="left"
@@ -360,7 +550,7 @@ scoreDip = function(values, binCount,
 # used in scoreDip
 # @param whichSide the side of the signature to find the shoulder for
 # @param for other params see ?scoreDip
-# @return The distance from the center of the signature to the shoulder.
+# @return shoulderShift The distance from the center of the signature to the shoulder.
 #         It may be X.0 (ie an integer) if centerSpot is an integer or 
 #         X.5 if centerSpot was X.5
 
@@ -397,8 +587,11 @@ findShoulder <- function(values, binCount, centerSpot, whichSide="right"){
 
 
 
+#' Add column for proportion of methylation
+#' 
 #' Adding methylProp column that has proportion of reads that were 
-#' methylated for each site.
+#' methylated for each site based on number of methylated reads
+#' divided by total number of reads.
 #' Note: Assigns methylProp column by reference with ":="
 #' 
 #' @param BSDTList A bisulfite datatable or list of datatables 
@@ -437,18 +630,27 @@ addMethPropCol <- function(BSDTList){
 
 
 
-# This can run into memory problems if there are too many files...
-# because of the way parallel lacks long vector support. The solution is
-# to just use a single core; or to pass mc.preschedule = FALSE; This
-# makes it so that each file is processed as a separate job. Much better.
+
 #' Read in files from biseq meth caller
+#' 
+#' Parses the x/y format of methylation calls, 
+#' splitting them into individual columns: "methylCount" column for
+#' number of methylated reads for site and "coverage" column for total
+#' number of reads covering that site. Input files should have the following
+#' columns: "chr", "start", "end", "meth", "rate", "strand".
+#' 
+#' 
+#' This can run into memory problems if there are too many files...
+#' because of the way parallel lacks long vector support. The solution is
+#' to just use a single core; or to pass mc.preschedule = FALSE; This
+#' makes it so that each file is processed as a separate job. Much better.
+#' 
 #' @param files a list of filenames (use parseInputArg if necessary)
-#' @param contrastList  a list of named character vectors, 
+#' @param contrastList Generally not needed for MIRA. 
+#' A list of named character vectors, 
 #' each with length equal to the number of items in files. 
 #' These will translate into column names in the final table.
 #' @param sampleNames   a vector of length length(files), name for each file. 
-#' You can also just use contrastList to implement the same thing 
-#' so this is really unnecessary...
 #' @param cores number of processors.
 #' @param returnAsList Whether to return the output as a list 
 #' or as one big data.table.
