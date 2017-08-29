@@ -509,7 +509,7 @@ scoreDip = function(values, binCount,
 # dip is mostly in the middle half but is somewhat arbitrary and 
 # there might be a better way to do this.
 # @return TRUE if concave up, FALSE if concave down
-isProfileConcaveUp <- function(values, binCount) {
+isProfileConcaveUp = function(values, binCount) {
     wideFit = lm(values ~ poly(seq_along(values), 2))
     wideX2Coef = coefficients(wideFit)[3]
     wideR2 = summary(wideFit)$adj.r.squared
@@ -554,7 +554,7 @@ isProfileConcaveUp <- function(values, binCount) {
 #         It may be X.0 (ie an integer) if centerSpot is an integer or 
 #         X.5 if centerSpot was X.5
 
-findShoulder <- function(values, binCount, centerSpot, whichSide="right"){
+findShoulder = function(values, binCount, centerSpot, whichSide="right"){
     if (whichSide == "left") {
         values = rev(values)
     }
@@ -605,7 +605,7 @@ findShoulder <- function(values, binCount, centerSpot, whichSide="right"){
 #' data("exampleBSDT", package = "MIRA")
 #' exampleBSDT[, methylProp := NULL] # removing methylProp column
 #' addMethPropCol(list(exampleBSDT))
-addMethPropCol <- function(BSDTList){
+addMethPropCol = function(BSDTList){
 
     # converting to a data.table list if it was a single data.table
     if ("data.table" %in% class(BSDTList)) {
@@ -725,8 +725,6 @@ BSreadBiSeq = function(files, contrastList = NULL,
 # in that order.
 # @return data.table with separate methylated and unmethylated columns.
 # Specific col names are set
-# 
-# 
 parseBiseq = function(DT) {
     message(".", appendLF = FALSE);
     setnames(DT, paste0("V", 1:6), 
