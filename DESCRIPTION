@@ -9,12 +9,11 @@ Description: MIRA measures the degree of "dip" in methylation
     infer regulatory activity.
 Authors@R: c(person("Nathan", "Sheffield", role=c("aut")),
 	person("John", "Lawson", email="jtl2hk@virginia.edu", role=c("aut", "cre")),
-	person("Christoph", "Bock", role=c("ctb"))  
+	person("Christoph", "Bock", role=c("ctb")))
 Author: Nathan Sheffield <http://www.databio.org> [aut],
     Christoph Bock [ctb],
     John Lawson [aut, cre]
 Maintainer: John Lawson <jtl2hk@virginia.edu>
-Depends: R (>= 3.4)
 Imports:
     BiocGenerics,
     S4Vectors,
