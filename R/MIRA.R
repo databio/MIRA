@@ -58,7 +58,7 @@ if (getRversion() >= "2.15.1") {
 #' This process is done for each region set.
 #'
 #' @param BSDT A single data.table that has DNA methylation data on individual 
-#' sites. Alternatively a bsseq object is allowed which will be converted 
+#' sites. Alternatively a BSseq object is allowed which will be converted 
 #' internally to data.tables. The data.table input should have columns:
 #' "chr" for chromosome, "start" for 
 #' cytosine coordinate, "methylProp" for proportion of 
@@ -79,7 +79,7 @@ if (getRversion() >= "2.15.1") {
 #' used if there is a "coverage" column
 #' 
 #' @return a data.table with binNum rows for each region set containing
-#' aggregated methylation data. If the input was a bsseq object
+#' aggregated methylation data. If the input was a BSseq object
 #' with multiple samples, a list of data.tables will be returned with
 #' one data.table for each sample.
 #' Each region was split into bins; methylation was put in these bins; 
@@ -98,13 +98,13 @@ if (getRversion() >= "2.15.1") {
 #' exBinDT = aggregateMethyl(exampleBSDT, exampleRegionSet)
 aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500){
     
-    if ("bsseq" %in% class(BSDT)) {
-        # if input is not a data.table but rather a bsseq object
+    if ("BSseq" %in% class(BSDT)) {
+        # if input is not a data.table but rather a BSseq object
         # bsseq objects can include multiple samples so make a list
         
         # checking for sample names
         if (length(sampleNames(BSDT)) != ncol(BSDT)) {
-            stop(cleanws("bsseq object must have sample name for each sample.
+            stop(cleanws("BSseq object must have sample name for each sample.
                         Check output of bsseq::sampleNames(BSDT)"))
         }
         BSDTList = bsseqToDataTable(BSDT)
@@ -242,8 +242,8 @@ aggregateMethylInt = function(BSDT, GRList, binNum = 11, minReads = 500) {
 #' See vignettes for recommended use of MIRA.
 #'
 #' @param BSDT A single data table that has DNA methylation data on individual 
-#' sites. #' Alternatively a bsseq object may be input which will be converted 
-#' internally to data.table/s (sample names must be in bsseq object). 
+#' sites. #' Alternatively a BSseq object may be input which will be converted 
+#' internally to data.table/s (sample names must be in BSseq object). 
 #' For the data.table input, it should 
 #' include a "chr" column with chromosome, a "start" column with the 
 #' coordinate number for the cytosine, a "methylProp" column with proportion of 
@@ -266,8 +266,8 @@ aggregateMethylInt = function(BSDT, GRList, binNum = 11, minReads = 500) {
 #' 
 #' @return A data.table with a MIRA score for each region set in GRList. 
 #' See ?scoreDip. 
-#' If input for "BSDT" is a bsseq object, output will be a list of 
-#' data.tables if there were multiple samples in the bsseq object. 
+#' If input for "BSDT" is a BSseq object, output will be a list of 
+#' data.tables if there were multiple samples in the BSseq object. 
 #' @examples 
 #' data("exampleBSDT", package = "MIRA") 
 #' data("exampleRegionSet", package = "MIRA") 
@@ -284,12 +284,12 @@ MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
         }
     } 
     
-    # if bsseq object was given, convert to a list of data.tables
+    # if BSseq object was given, convert to a list of data.tables
     # then run aggregation on each with lapply
-    if ("bsseq" %in% class(BSDT)) {
+    if ("BSseq" %in% class(BSDT)) {
         # checking for sample names
         if (length(sampleNames(BSDT)) != ncol(BSDT)) {
-            stop(cleanws("bsseq object must have sample name for each sample.
+            stop(cleanws("BSseq object must have sample name for each sample.
                         Check output of bsseq::sampleNames(BSDT)"))
         }
         BSDTList = bsseqToDataTable(BSDT)

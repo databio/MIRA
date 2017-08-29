@@ -2,6 +2,7 @@
 library(MIRA)
 library(GenomicRanges)
 library(data.table)
+library(bsseq)
 
 context("Testthat context...")
 # 
@@ -36,7 +37,7 @@ start = c(10, 10 + 1000)
 end = c(numCpG * 20 + 10, numCpG * 20 + 1010)
 strand = c("+", "-")
 testGR = GRanges(seqnames = chr, ranges = IRanges(start, end), strand = strand)
-testGRDT = grToDt(testGR, includeStrand = TRUE)
+testGRDT = MIRA:::grToDt(testGR, includeStrand = TRUE)
 origtestGRDT=copy(testGRDT)
 origtestGR=copy(testGR)
 #cleaning up variables so they are not used by data.table j expressions later
@@ -191,8 +192,20 @@ test_that("aggregateMethyl and MIRAScore", {
     #testing that expected coverage in each bin is obtained
     expect_equal(binnedBSDT[, coverage], c(rep(20000, numBins)))
     
+    # making sure the output is same for input of data.table or bsseq
+    # making bsseq version of testBSDT (there should only be one sampleName)
+    # testBSDTbsseq = BSseq(M=as.matrix(testBSDT$methylProp),
+    #                       Cov=as.matrix(testBSDT$coverage),
+    #                       chr=testBSDT$chr,
+    #                       pos=testBSDT$start,
+    #                       sampleNames=unique(testBSDT$sampleName))
+    # binnedBSDTbsseq = aggregateMethyl(BSDT = testBSDTbsseq, GRList = testGR,
+    #                                 binNum = numBins, minReads = 0)
+    # names(binnedBSDTbsseq) <- NULL # taking off name for the following comparison
+    # expect_equal(binnedBSDTbsseq, list(binnedBSDT))
+
     
-    #testing MIRAScore, warning about names is expected
+    # testing MIRAScore, warning about names is expected
     # ignore warning about needing a named list/GrangesList
     scoreDT = MIRAScore(BSDT = testBSDT, GRList = testGR, binNum = numBins, minReads = 0, 
                       scoringMethod = "logRatio")
@@ -223,6 +236,8 @@ test_that("scoreDip, findShoulder, and isProfileConcaveUp", {
     testScore = round(scoreDip(values = y, binCount = binNumber), 2)
     expScore = round(log((mean(y[c(1, binNumber)])) / ((y[10] + y[11] + y[12]) / 3)), 2)
     expect_equal(testScore, expScore)
+    
+    
     
     #testScore = scoreDip(values = y, binCount = length(y), shoulderShift = 9.5)
     #check by hand, expect_equal(round(testScore, 2), 3.62)

@@ -9,7 +9,7 @@ aggregateMethyl(BSDT, GRList, binNum = 11, minReads = 500)
 }
 \arguments{
 \item{BSDT}{A single data.table that has DNA methylation data on individual 
-sites. Alternatively a bsseq object is allowed which will be converted 
+sites. Alternatively a BSseq object is allowed which will be converted 
 internally to data.tables. The data.table input should have columns:
 "chr" for chromosome, "start" for 
 cytosine coordinate, "methylProp" for proportion of 
@@ -33,7 +33,7 @@ used if there is a "coverage" column}
 }
 \value{
 a data.table with binNum rows for each region set containing
-aggregated methylation data. If the input was a bsseq object
+aggregated methylation data. If the input was a BSseq object
 with multiple samples, a list of data.tables will be returned with
 one data.table for each sample.
 Each region was split into bins; methylation was put in these bins; 

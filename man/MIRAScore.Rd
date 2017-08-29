@@ -9,8 +9,8 @@ MIRAScore(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
 }
 \arguments{
 \item{BSDT}{A single data table that has DNA methylation data on individual 
-sites. #' Alternatively a bsseq object may be input which will be converted 
-internally to data.table/s (sample names must be in bsseq object). 
+sites. #' Alternatively a BSseq object may be input which will be converted 
+internally to data.table/s (sample names must be in BSseq object). 
 For the data.table input, it should 
 include a "chr" column with chromosome, a "start" column with the 
 coordinate number for the cytosine, a "methylProp" column with proportion of 
@@ -37,8 +37,8 @@ if there is a 'coverage' column in BSDT}
 \value{
 A data.table with a MIRA score for each region set in GRList. 
 See ?scoreDip. 
-If input for "BSDT" is a bsseq object, output will be a list of 
-data.tables if there were multiple samples in the bsseq object.
+If input for "BSDT" is a BSseq object, output will be a list of 
+data.tables if there were multiple samples in the BSseq object.
 }
 \description{
 Takes methylation data and sets of regions then aggregates
