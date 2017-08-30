@@ -186,14 +186,14 @@ test_that("aggregateMethyl and MIRAScore", {
     
     #testing aggregateMethyl, warning about names is expected
     # ignore warning about needing a named list/GrangesList
-    binnedBSDT = aggregateMethyl(BSDT = testBSDT, GRList = testGR, 
+    binnedBSDT = aggregateMethyl(BSDT = testBSDT, GRList = testGR,
                               binNum = numBins, minReads = 0)
     expect_equal(round(binnedBSDT[, methylProp], 2), rep(0.54, numBins))
     #testing that expected coverage in each bin is obtained
     expect_equal(binnedBSDT[, coverage], c(rep(20000, numBins)))
-    
-    # making sure the output is same for input of data.table or bsseq
-    # making bsseq version of testBSDT (there should only be one sampleName)
+
+    # # making sure the output is same for input of data.table or bsseq
+    # # making bsseq version of testBSDT (there should only be one sampleName)
     # testBSDTbsseq = BSseq(M=as.matrix(testBSDT$methylProp),
     #                       Cov=as.matrix(testBSDT$coverage),
     #                       chr=testBSDT$chr,
