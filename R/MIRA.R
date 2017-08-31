@@ -205,7 +205,7 @@ aggregateMethylInt = function(BSDT, GRList, binNum = 11, minReads = 500) {
     methylByBin = lapply(X = GRDTList, 
                          FUN = function(x) BSBinAggregate(BSDT = BSDT, 
                                                           rangeDT = x, 
-                                                          binCount = binNum, 
+                                                          binNum = binNum, 
                                                           splitFactor = NULL, 
                                                           minReads = minReads,
                                                           hasCoverage = hasCoverage))
@@ -334,7 +334,7 @@ MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
 #' 
 #' @param values A vector with proportion of methylation values for each bin. 
 #'  Between 0 and 1.
-#' @param binCount Number of bins, also length of "values" vector.
+#' @param binNum Number of bins, also length of "values" vector.
 #' @param shoulderShift Used to determine the number of bins away from the 
 #' center to use as the shoulders. Default value "auto" optimizes the 
 #' shoulderShift variable for each sample/region set combination to try find the 
@@ -347,7 +347,7 @@ MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
 #' it is lower than the two surrounding values (lower for concave up profiles or
 #' higher for concave down profiles) or if it is not lower (higher for
 #' concave down profiles), an 
-#' average of the three middle values. For an even binCount, the middle four
+#' average of the three middle values. For an even binNum, the middle four
 #' values would be averaged with the 1st and 4th being weighted by half (as
 #' if there were 3 values). 
 #' A higher score with "logRatio" corresponds to a deeper dip. "logRatio" is the
@@ -368,10 +368,9 @@ MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
 #' @export
 #' @examples
 #' data("exampleBins")
-#' binCount = 11 # bin number for exampleBins 
-#' exampleBins[, .(score = scoreDip(methylProp, binCount)), 
+#' exampleBins[, .(score = scoreDip(methylProp)), 
 #'               by = .(featureID, sampleName)]
-scoreDip = function(values, binCount, 
+scoreDip = function(values, 
                     shoulderShift = "auto", 
                     method = "logRatio",
                     usedStrand = FALSE){
@@ -379,17 +378,21 @@ scoreDip = function(values, binCount,
     if (!(method %in% "logRatio")) { # add new methods eventually
         stop("Invalid scoring method. Check spelling/capitalization.")
     }
+    
+    # determining number of bins
+    binNum = length(values)
+    
     # determining whether signature is concave up or down in general
     # because values for finding shoulder need to be altered if concave
     # down ('logratio scoring') 
     # also it matters for getting middle value for 'logratio' scoring
-    concaveUp = isProfileConcaveUp(values, binCount)
+    concaveUp = isProfileConcaveUp(values, binNum)
     
     if (method == "logRatio") {
-        centerSpot = (binCount + 1) / 2 # X.5 for even binCount
+        centerSpot = (binNum + 1) / 2 # X.5 for even binNum
         
         
-        if ((binCount %% 2) == 0) { # if binCount is even, centerSpot is X.5
+        if ((binNum %% 2) == 0) { # if binNum is even, centerSpot is X.5
             # if one of middle 2 vals is lowest, use it, otherwise average
             # order of midVals vector matters because of which.min
             midVals=values[c(centerSpot - .5, centerSpot + .5, centerSpot - 1.5,
@@ -406,7 +409,7 @@ scoreDip = function(values, binCount,
                             + values[centerSpot + .5] 
                             + 0.5 * values[centerSpot + 1.5]) / 3    
             }
-        }else {# if binCount is odd, centerSpot is X.0
+        }else {# if binNum is odd, centerSpot is X.0
             
             # if the middle is lowest for concave up/highest for concave down
             # use it, otherwise average will be taken
@@ -449,20 +452,20 @@ scoreDip = function(values, binCount,
             
             # signature will probably not be symmetrical if strand was used
             if (usedStrand) { # probably not common but still an option
-                shoulderShiftL= findShoulder(values2, binCount, centerSpot,
+                shoulderShiftL= findShoulder(values2, binNum, centerSpot,
                                              whichSide = "left")
-                shoulderShiftR = findShoulder(values2, binCount, centerSpot, 
+                shoulderShiftR = findShoulder(values2, binNum, centerSpot, 
                                              whichSide = "right")
             } else { # most common use case, strand was not used
                 # either side would work since signature is symmetrical
-                shoulderShift = findShoulder(values2, binCount, centerSpot, 
+                shoulderShift = findShoulder(values2, binNum, centerSpot, 
                                              whichSide = "right")
             }
         }
         
         
         
-        # floor and ceiling are only relevant when binCount is even 
+        # floor and ceiling are only relevant when binNum is even 
         #(which means centerSpot is X.5)
         if (usedStrand && (shoulderShift == "auto")) { # probably uncommon case
             # floor and ceiling should not matter when "auto" is used but
@@ -490,7 +493,7 @@ scoreDip = function(values, binCount,
     # # alternate way of scoring by the area in the dip
     # if (method == "area") {
     #     maxMethyl = max(values)
-    #     score = maxMethyl * binCount - sum(values)
+    #     score = maxMethyl * binNum - sum(values)
     # }
 
     # # another alternate method
@@ -510,7 +513,7 @@ scoreDip = function(values, binCount,
 # dip is mostly in the middle half but is somewhat arbitrary and 
 # there might be a better way to do this.
 # @return TRUE if concave up, FALSE if concave down
-isProfileConcaveUp = function(values, binCount) {
+isProfileConcaveUp = function(values, binNum) {
     wideFit = lm(values ~ poly(seq_along(values), 2))
     wideX2Coef = coefficients(wideFit)[3]
     wideR2 = summary(wideFit)$adj.r.squared
@@ -520,12 +523,12 @@ isProfileConcaveUp = function(values, binCount) {
     # only do a narrow fit if enough bins are used
     # want at least 7 bins to be a part of the narrow fit (smallerHalf)
     # floor(15 / 2) = 7
-    # because 3 bins can be used for center in scoring (with odd binCount) 
+    # because 3 bins can be used for center in scoring (with odd binNum) 
     # and we want at least 2 bins on each side of those center bins
-    if (binCount >= 15) {
+    if (binNum >= 15) {
         # using middle 50% or so for this fit
-        smallerHalf = floor(binCount / 2)
-        endFirstQuarter = ceiling((binCount - smallerHalf) / 2)
+        smallerHalf = floor(binNum / 2)
+        endFirstQuarter = ceiling((binNum - smallerHalf) / 2)
         narrowInd = c(endFirstQuarter + seq(smallerHalf)) # middle ~half
         
         narrowFit = lm(values[narrowInd] ~ 
@@ -555,7 +558,7 @@ isProfileConcaveUp = function(values, binCount) {
 #         It may be X.0 (ie an integer) if centerSpot is an integer or 
 #         X.5 if centerSpot was X.5
 
-findShoulder = function(values, binCount, centerSpot, whichSide="right"){
+findShoulder = function(values, binNum, centerSpot, whichSide="right"){
     if (whichSide == "left") {
         values = rev(values)
     }
@@ -563,7 +566,7 @@ findShoulder = function(values, binCount, centerSpot, whichSide="right"){
     # first value that's not part of midpoint calculations
     shoulderStart = ceiling(centerSpot) + 2 
     shoulderSpot = shoulderStart
-    for (i in shoulderStart:(binCount - 2)) {
+    for (i in shoulderStart:(binNum - 2)) {
         if (values[i + 1] > values[i]) {
             shoulderSpot = i + 1
         } else if (((values[i + 2] + values[i + 1]) / 2) > values[i]) {
@@ -573,7 +576,7 @@ findShoulder = function(values, binCount, centerSpot, whichSide="right"){
         }
     }
     # testing the last/most outside point if appropriate
-    if (shoulderSpot == (binCount - 1)) {
+    if (shoulderSpot == (binNum - 1)) {
         if (values[shoulderSpot + 1] > values[shoulderSpot]) {
             shoulderSpot = shoulderSpot + 1
         }

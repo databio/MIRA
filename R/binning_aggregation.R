@@ -27,7 +27,7 @@
 #' @param rangeDT A data table with the sets of regions to be binned, 
 #' with columns named "start", "end". Strand may also be given and will
 #' affect the output. See "Value" section.
-#' @param binCount Number of bins across the region.
+#' @param binNum Number of bins across the region.
 #' @param byRegionGroup Default TRUE will aggregate methylation over 
 #' corresponding bins for each region (all bin1's aggregated, all bin2's, etc).
 #' byRegionGroup = FALSE is deprecated.
@@ -37,7 +37,7 @@
 #' @param hasCoverage Default TRUE. Whether there is a coverage column
 #' 
 #' @return With splitFactor = NULL, it will return a data.table 
-#' with binCount rows, 
+#' with binNum rows, 
 #' containing aggregated methylation data over regions in region set "rangeDT".
 #' Each region was split into bins; methylation was put in these bins; 
 #' Output contains sum of the all corresponding bins 
@@ -61,10 +61,10 @@
 #' exampleBSDT = addMethPropCol(exampleBSDT)
 #' aggregateBins = BSBinAggregate(BSDT = exampleBSDT, 
 #'                              rangeDT = exampleRegionSet, 
-#'                              binCount = 11, splitFactor = NULL)
+#'                              binNum = 11, splitFactor = NULL)
 #' 
 #' @export
-BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500, 
+BSBinAggregate = function(BSDT, rangeDT, binNum, minReads = 500, 
                           byRegionGroup = TRUE, splitFactor = NULL,
                           hasCoverage = TRUE) {
     
@@ -92,11 +92,11 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500,
     }
     seqnamesColName = "seqnames"  # default column name
     if ("chr" %in% colnames(rangeDT)) {
-        message("seqnames column name set to: chr")
+        # message("seqnames column name set to: chr")
         seqnamesColName = "chr"
     } else {
         # Got neither.
-        stop("rangeDT must have a seqnames column")
+        stop("rangeDT must have a seqnames or chr column")
     }
     
     if (! ("strand" %in% colnames(rangeDT))) {
@@ -108,7 +108,7 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500,
     # message("Binning...")
     ##}
     binnedDT = rangeDT[, binRegion(start, end, 
-                                   binCount, get(seqnamesColName), strand)]
+                                   binNum, get(seqnamesColName), strand)]
     binnedGR = sapply(split(binnedDT, binnedDT$binID), dtToGr)
     # message("Aggregating...")
     if (hasCoverage) {
@@ -130,7 +130,7 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500,
         if (hasCoverage) {
             binnedBSDT = binnedBSDT[coverage >= minReads, ]
         }
-        if (nrow(binnedBSDT) < binCount) {
+        if (nrow(binnedBSDT) < binNum) {
             # telling user what sample failed if sample name is in BSDT
             if ("sampleName" %in% names(BSDT)) {
                 thisSample = BSDT[1, sampleName]
@@ -196,7 +196,7 @@ BSBinAggregate = function(BSDT, rangeDT, binCount, minReads = 500,
 # @return In context of MIRA, with byRegionGroup = TRUE and jCommand = 
 # list( methylProp = mean(methylProp), coverage = sum(coverage) )", 
 # this function will return a data.table with 
-# binCount rows (parameter for BSBinAggregate)
+# binNum rows (parameter for BSBinAggregate)
 # containing aggregated methylation from BSDT over binned regions from a region
 # set.
 #

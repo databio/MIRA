@@ -19,7 +19,7 @@ MIRA (Methylation-based Inference of Regulatory Activity) is an R package that i
 library(MIRA)
 data(exampleBins)
 plotMIRAProfiles(exampleBins)
-exScores = exampleBins[, .(score = scoreDip(methylProp, binCount=11)), 
+exScores = exampleBins[, .(score = scoreDip(methylProp)), 
                        by=.(featureID, sampleName)]
 # normally sampleType would come from annotation object 
 # but for this example we are manually adding sampleType column

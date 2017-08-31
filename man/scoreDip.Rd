@@ -4,14 +4,12 @@
 \alias{scoreDip}
 \title{Score methylation profile based on its shape}
 \usage{
-scoreDip(values, binCount, shoulderShift = "auto", method = "logRatio",
+scoreDip(values, shoulderShift = "auto", method = "logRatio",
   usedStrand = FALSE)
 }
 \arguments{
 \item{values}{A vector with proportion of methylation values for each bin. 
 Between 0 and 1.}
-
-\item{binCount}{Number of bins, also length of "values" vector.}
 
 \item{shoulderShift}{Used to determine the number of bins away from the 
 center to use as the shoulders. Default value "auto" optimizes the 
@@ -26,7 +24,7 @@ of the dip (shoulders) divided by the center value if
 it is lower than the two surrounding values (lower for concave up profiles or
 higher for concave down profiles) or if it is not lower (higher for
 concave down profiles), an 
-average of the three middle values. For an even binCount, the middle four
+average of the three middle values. For an even binNum, the middle four
 values would be averaged with the 1st and 4th being weighted by half (as
 if there were 3 values). 
 A higher score with "logRatio" corresponds to a deeper dip. "logRatio" is the
@@ -40,6 +38,8 @@ shoulderShift sensing (done when shoulderShift="auto") needs to
 be done for both sides of the dip instead of just one side so set
 usedStrand=TRUE if strand was included for a region set.
 usedStrand=TRUE only has an effect on the function when shoulderShift="auto".}
+
+\item{binNum}{Number of bins, also length of "values" vector.}
 }
 \value{
 A MIRA score. The MIRA score quantifies the "dip" of 
@@ -54,7 +54,6 @@ the vector. See `method` parameter for details on scoring calculations.
 }
 \examples{
 data("exampleBins")
-binCount = 11 # bin number for exampleBins 
-exampleBins[, .(score = scoreDip(methylProp, binCount)), 
+exampleBins[, .(score = scoreDip(methylProp)), 
               by = .(featureID, sampleName)]
 }
