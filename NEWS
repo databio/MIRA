@@ -7,5 +7,6 @@ Notable changes to this project will be documented in this file.
 	
 ## [0.99.7] -- 2017-08-21
 
+    - Removed the binCount argument from scoreDip(). Now scoreDip just gets this from length of the input values.
 	- Made "coverage" column optional for the input methylation data ("aggregateMethyl" function)
 	- Made "methylCount" column optional for the input methylation data (to "aggregateMethyl" function)

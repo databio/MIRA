@@ -112,7 +112,7 @@ plotMIRAProfiles(binnedRegDT=bigBinDT)
 To calculate MIRA scores based on the MIRA signatures, we will apply the scoring function, `scoreDip`, to the `data.table` containing the methylation aggregated in bins using data.table syntax. `scoreDip` calculates a score for each group of bins corresponding to a sample and region set, based on the degree of the dip in the signature. With MIRA's default scoring method (`logratio`), `scoreDip` will take the log of the ratio of the outside edges of the dip to the center of the dip. Higher MIRA scores are associated with deeper dips. A flat MIRA signature would have a score of 0.
 
 ```{r Scoring, warning=FALSE}
-sampleScores = bigBinDT[, .(score = scoreDip(methylProp, binCount=11)), 
+sampleScores = bigBinDT[, .(score = scoreDip(methylProp)), 
                         by=.(featureID, sampleName)]
 head(sampleScores)
 ```
