@@ -186,20 +186,19 @@ test_that("aggregateMethyl and MIRAScore", {
     
     #testing aggregateMethyl, warning about names is expected
     # ignore warning about needing a named list/GrangesList
-    binnedBSDT = aggregateMethyl(BSDT = testBSDT, GRList = testGR,
+    binnedBSDT = aggregateMethyl(BSDT = testBSDT, GRList = testGR, 
                               binNum = numBins, minReads = 0)
     expect_equal(round(binnedBSDT[, methylProp], 2), rep(0.54, numBins))
     #testing that expected coverage in each bin is obtained
     expect_equal(binnedBSDT[, coverage], c(rep(20000, numBins)))
-
+    
     # making sure the output is same for input of data.table or bsseq
     # making bsseq version of testBSDT (there should only be one sampleName)
-    testBSDTbsseq = BSseq(M=as.matrix(testBSDT$methylCount),
+    testBSDTbsseq = BSseq(M=as.matrix(testBSDT$methylProp),
                           Cov=as.matrix(testBSDT$coverage),
                           chr=testBSDT$chr,
                           pos=testBSDT$start,
                           sampleNames=unique(testBSDT$sampleName))
-    # ignore warning about needing a named list/GrangesList
     binnedBSDTbsseq = aggregateMethyl(BSDT = testBSDTbsseq, GRList = testGR,
                                     binNum = numBins, minReads = 0)
     names(binnedBSDTbsseq) <- NULL # taking off name for the following comparison
@@ -228,19 +227,19 @@ test_that("scoreDip, findShoulder, and isProfileConcaveUp", {
     binNumber = length(y) #21
     #default shoulderShift is based on length of input (number of bins)
     # ignore warning about "essentially perfect fit"
-    testScore = round(scoreDip(values = y), 2)
+    testScore = round(scoreDip(values = y, binCount = binNumber), 2)
     expScore = round(log((mean(y[c(1, binNumber)])) / (y[11])), 2)
     expect_equal(testScore, expScore)
     
     #testing that averaging will happen if middle is not lowest value
     y[11] = 5
-    testScore = round(scoreDip(values = y), 2)
+    testScore = round(scoreDip(values = y, binCount = binNumber), 2)
     expScore = round(log((mean(y[c(1, binNumber)])) / ((y[10] + y[11] + y[12]) / 3)), 2)
     expect_equal(testScore, expScore)
     
     
     
-    #testScore = scoreDip(values = y, shoulderShift = 9.5)
+    #testScore = scoreDip(values = y, binCount = length(y), shoulderShift = 9.5)
     #check by hand, expect_equal(round(testScore, 2), 3.62)
     
     #test with even bin number
@@ -248,13 +247,13 @@ test_that("scoreDip, findShoulder, and isProfileConcaveUp", {
     y = x^2 + 1
     binNumber = length(y) #10
     # ignore warning about "essentially perfect fit"
-    testScore = round(scoreDip(values = y), 2)
+    testScore = round(scoreDip(values = y, binCount = binNumber), 2)
     expScore = round(log(mean(y[c(1, binNumber)])
                         / y[5]), 2)
     expect_equal(testScore, expScore)
     #test with non default shoulderShift
     # ignore warning about "essentially perfect fit"
-    testScore = round(scoreDip(values = y, shoulderShift = 3), 2)
+    testScore = round(scoreDip(values = y, binCount = binNumber, shoulderShift = 3), 2)
     expScore = round(log(mean(y[c(2, 9)]) / y[5]), 2)
     expect_equal(testScore, expScore)
     
@@ -262,13 +261,13 @@ test_that("scoreDip, findShoulder, and isProfileConcaveUp", {
     #chooses pos. 12 because (14+16)/2 is not > 15
     #this test will fail if standard is changed to >=
     jagged = c(16, 14, 15, 11, 12, 7, 4, 4, 7, 12, 11, 15, 14, 16)
-    testScore = round(scoreDip(values = jagged, shoulderShift = "auto"), 2)
+    testScore = round(scoreDip(values = jagged, binCount = 14, shoulderShift = "auto"), 2)
     expScore = round(log(mean(jagged[c(3, 12)]) / jagged[7]), 2)
     expect_equal(testScore, expScore)
     
     #testing that averaging will happen if middle point is not lowest
     jagged[c(7, 8)] = 8 
-    testScore = round(scoreDip(values = jagged, shoulderShift = "auto"), 2)
+    testScore = round(scoreDip(values = jagged, binCount = 14, shoulderShift = "auto"), 2)
     expMidpoint = (.5 * jagged[6] + jagged[7] + jagged[8] + .5 * jagged[9]) / 3
     expScore = round(log(mean(jagged[c(3, 12)]) / expMidpoint), 2)
     expect_equal(testScore, expScore)
@@ -286,12 +285,28 @@ test_that("scoreDip, findShoulder, and isProfileConcaveUp", {
     expect_equal(lShoulderShift, 6.5)
     
     #testing scoreDip function with unsymmetrical input
-    unSymScore = round(scoreDip(values = unsymmetric,
+    unSymScore = round(scoreDip(values = unsymmetric, binCount = 14, 
                                 shoulderShift = "auto", usedStrand = TRUE), 2)
     expMidpoint = (.5 * unsymmetric[6] + unsymmetric[7] + 
                        unsymmetric[8] + .5 * unsymmetric[9]) / 3
     #if symmetrical, you would use values 1 and 14 or 3 and 12
     expScore = round(log(mean(unsymmetric[c(1, 12)]) / expMidpoint), 2)
+    expect_equal(expScore, unSymScore)
+    
+    # testing scoreDip with input of a data.table and no data.table syntax
+    # when calling scoreDip
+    jagged = c(16, 14, 15, 11, 12, 7, 4, 4, 7, 12, 11, 15, 14, 16)
+    jagLen = length(jagged)
+    binnedDT = data.table(bin=seq_along(jagged), methylProp=jagged, 
+                          sampleName=rep("Sample1", jagLen), 
+                          featureID=rep("RegionSet1", jagLen))
+    newSyntaxScoreDT = scoreDip(binnedDT)
+    newSyntaxScore = round(newSyntaxScoreDT$score, 2)
+    expScore = round(log(mean(jagged[c(3, 12)]) / jagged[7]), 2)
+    oldSyntaxScore = round(binnedDT[, .(score=scoreDip(methylProp)), 
+                                    by=.(sampleName, featureID)]$score, 2)
+    expect_equal(expScore, newSyntaxScore)
+    expect_equal(oldSyntaxScore, newSyntaxScore)
     
     # testing isProfileConcaveUp
     jagged = c(16, 14, 15, 11, 12, 7, 4, 4, 7, 12, 11, 15, 14, 16)

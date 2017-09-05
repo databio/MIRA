@@ -327,14 +327,25 @@ MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
 
 #' Score methylation profile based on its shape
 #' 
-#' The dip scoring function for MIRA scores. This will take a vector
-#' describing the methylation pattern and return a single score summarizing
-#' that vector for how large the 'dip' in methylation is at the center of
-#' the vector. See `method` parameter for details on scoring calculations.
+#' The dip scoring function for MIRA scores. This will take a data.table
+#' that has the methylation level in each bin in the MIRA profile and
+#' return a single score summarizing how large the 'dip' 
+#' in methylation is at the center of that methylation profile.
+#' A column for sample ID/name and a column for region set ID/name
+#' should be included in the data.table because a separate score will be given 
+#' for each sample/region set combination.
+#'  
+#' See `method` parameter for details on scoring calculations.
 #' 
-#' @param values A vector with proportion of methylation values for each bin. 
-#'  Between 0 and 1.
-#' @param binNum Number of bins, also length of "values" vector.
+#' @param binnedDT A data.table with columns for:
+#' bin ("bin"), methylation level ("methylProp"), 
+#' region set ID/name (default expected column name is "featureID" 
+#' but this is configurable via a parameter), sample name (default expected column name is 
+#' "sampleName" but this is configurable via a parameter). 
+#' The bin column is not used for calculations since it is assumed by
+#' the function that the rows will be in the order of the bins (so the
+#' function will work without a bin column although the bin column assists
+#' in human readability of the input data.table) 
 #' @param shoulderShift Used to determine the number of bins away from the 
 #' center to use as the shoulders. Default value "auto" optimizes the 
 #' shoulderShift variable for each sample/region set combination to try find the 
@@ -360,17 +371,87 @@ MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
 #' be done for both sides of the dip instead of just one side so set
 #' usedStrand=TRUE if strand was included for a region set.
 #' usedStrand=TRUE only has an effect on the function when shoulderShift="auto".
+#' @param regionSetIDColName A character object. The name of the column
+#' that has region set names/identifiers.
+#' @param sampleIDColName A character object. The name of 
+#' the column that has sample names/identifiers.
 #' 
-#' @return A MIRA score. The MIRA score quantifies the "dip" of 
+#' @return A data.table with a column for region set ID 
+#' (default name is featureID), sample ID (default name is sampleName), 
+#' and MIRA score (with name "score"). There will
+#' be one row and MIRA score for each sample/region set combination.
+#' The MIRA score quantifies the "dip" of 
 #' the MIRA signature which is an aggregation of methylation 
 #' over all regions in a region set. 
 #' 
 #' @export
 #' @examples
 #' data("exampleBins")
-#' exampleBins[, .(score = scoreDip(methylProp)), 
-#'               by = .(featureID, sampleName)]
-scoreDip = function(values, 
+#' scoreDip(exampleBins)
+#' 
+scoreDip = function(binnedDT, 
+                    shoulderShift = "auto", 
+                    method = "logRatio",
+                    usedStrand = FALSE,
+                    regionSetIDColName = "featureID",
+                    sampleIDColName = "sampleName"){
+    
+    if ("data.table" %in% class(binnedDT)) {
+    
+        # the expected/necessary columns
+        expectedCols = c("methylProp", regionSetIDColName,
+                         sampleIDColName)
+        expectedColsPresent = expectedCols %in% colnames(binnedDT)
+        
+        if (!all(expectedColsPresent)) {
+            stop(paste("Missing the following expected columns:",
+                       paste(expectedCols[!expectedColsPresent], collapse=" "), 
+                       sep=" "))
+        }
+            
+        scoreDT = binnedDT[, .(score = scoreDipInt(methylProp, 
+                                                   shoulderShift=shoulderShift,
+                                                   method=method,
+                                                   usedStrand=usedStrand)), 
+                           by = .(get(regionSetIDColName), get(sampleIDColName))] 
+        #fixing names (not assigned normally because of using "get")
+        setnames(scoreDT, c(regionSetIDColName, sampleIDColName, "score"))
+    } else if ("numeric" %in% class(binnedDT)) {
+        # if binnedDT is actually a vector as was original behaviour of function
+        # preserving ability to use scoreDip on a single vector or in a 
+        # data.table j expression
+        # scoring by sample and region set will be accomplished outside
+        # this function in the "by" part of the data.table expression
+        # output is called scoreDT but is actually a single number object
+        scoreDT = scoreDipInt(values=binnedDT,
+                    shoulderShift=shoulderShift,
+                    method=method,
+                    usedStrand=usedStrand)
+    } else {
+        # the preferred input is data.table
+        stop("Input should be a data.table object")
+    }
+        
+    return(scoreDT)
+}
+
+
+# This function was the original scoreDip but it was a wrapper was
+# created to add some features and simplify the user interface.
+# This will take a vector
+# describing the methylation pattern and return a single score summarizing
+# that vector for how large the 'dip' in methylation is at the center of
+# the vector.
+# @param values A vector with proportion of methylation values for each bin. 
+# Between 0 and 1.
+# @return A MIRA score. The MIRA score quantifies the "dip" of 
+# the MIRA signature which is an aggregation of methylation 
+# over all regions in a region set. 
+# @examples
+# data("exampleBins")
+# exampleBins[, .(score = scoreDip(methylProp)), 
+# 
+scoreDipInt = function(values, 
                     shoulderShift = "auto", 
                     method = "logRatio",
                     usedStrand = FALSE){

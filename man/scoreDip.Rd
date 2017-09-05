@@ -4,12 +4,16 @@
 \alias{scoreDip}
 \title{Score methylation profile based on its shape}
 \usage{
-scoreDip(values, shoulderShift = "auto", method = "logRatio",
-  usedStrand = FALSE)
+scoreDip(binnedDT, shoulderShift = "auto", method = "logRatio",
+  usedStrand = FALSE, regionSetIDColName = "featureID",
+  sampleIDColName = "sampleName")
 }
 \arguments{
-\item{values}{A vector with proportion of methylation values for each bin. 
-Between 0 and 1.}
+\item{binnedDT}{A data.table with columns for:
+bin ("bin"), methylation level ("methylProp"), 
+region set ID/name (default expected column name is "featureID" 
+but this is configurable via a parameter), sample name (default expected column name is 
+"sampleName" but this is configurable via a parameter).}
 
 \item{shoulderShift}{Used to determine the number of bins away from the 
 center to use as the shoulders. Default value "auto" optimizes the 
@@ -39,21 +43,34 @@ be done for both sides of the dip instead of just one side so set
 usedStrand=TRUE if strand was included for a region set.
 usedStrand=TRUE only has an effect on the function when shoulderShift="auto".}
 
-\item{binNum}{Number of bins, also length of "values" vector.}
+\item{regionSetIDColName}{A character object. The name of the column
+that has region set names/identifiers.}
+
+\item{sampleIDColName}{A character object. The name of 
+the column that has sample names/identifiers.}
 }
 \value{
-A MIRA score. The MIRA score quantifies the "dip" of 
+A data.table with a column for region set ID 
+(default name is featureID), sample ID (default name is sampleName), 
+and MIRA score (with name "score"). There will
+be one row and MIRA score for each sample/region set combination.
+The MIRA score quantifies the "dip" of 
 the MIRA signature which is an aggregation of methylation 
 over all regions in a region set.
 }
 \description{
-The dip scoring function for MIRA scores. This will take a vector
-describing the methylation pattern and return a single score summarizing
-that vector for how large the 'dip' in methylation is at the center of
-the vector. See `method` parameter for details on scoring calculations.
+The dip scoring function for MIRA scores. This will take a data.table
+that has the methylation level in each bin in the MIRA profile and
+return a single score summarizing how large the 'dip' 
+in methylation is at the center of that methylation profile.
+A column for sample ID/name and a column for region set ID/name
+should be included in the data.table because a separate score will be given 
+for each sample/region set combination.
+ 
+See `method` parameter for details on scoring calculations.
 }
 \examples{
 data("exampleBins")
-exampleBins[, .(score = scoreDip(methylProp)), 
-              by = .(featureID, sampleName)]
+scoreDip(exampleBins)
+
 }
