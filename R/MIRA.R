@@ -306,7 +306,7 @@ MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
                                                     minReads = minReads))
         
         # using binned methylation data to calculate MIRA score
-        scoreDT = lapply(X = bigBinList, FUN = function(x) x[, .(score = scoreDip(methylProp, binNum, 
+        scoreDT = lapply(X = bigBinList, FUN = function(x) x[, .(score = scoreDip(methylProp, 
                                                                         method = scoringMethod)), 
                                                    by = .(featureID, sampleName)])
     
@@ -315,7 +315,7 @@ MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
         bigBin = aggregateMethyl(BSDT = BSDT, GRList = GRList, binNum = binNum, 
                              minReads = minReads)
         # using binned methylation data to calculate MIRA score
-        scoreDT = bigBin[, .(score = scoreDip(methylProp, binNum, 
+        scoreDT = bigBin[, .(score = scoreDip(methylProp, 
                                               method = scoringMethod)), 
                          by = .(featureID, sampleName)]
         

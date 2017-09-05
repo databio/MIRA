@@ -13,7 +13,11 @@ scoreDip(binnedDT, shoulderShift = "auto", method = "logRatio",
 bin ("bin"), methylation level ("methylProp"), 
 region set ID/name (default expected column name is "featureID" 
 but this is configurable via a parameter), sample name (default expected column name is 
-"sampleName" but this is configurable via a parameter).}
+"sampleName" but this is configurable via a parameter). 
+The bin column is not used for calculations since it is assumed by
+the function that the rows will be in the order of the bins (so the
+function will work without a bin column although the bin column assists
+in human readability of the input data.table)}
 
 \item{shoulderShift}{Used to determine the number of bins away from the 
 center to use as the shoulders. Default value "auto" optimizes the 
