@@ -25,7 +25,7 @@ This vignette requires large input files, which can be dowloaded here: [MIRA_Ewi
 
 # Package workflow
   
-0. Start with appropriately formatted single-nucleotide resolution methylation data, region sets -- each with genomic regions corresponding to some biological annotation, and a sample annotation file that has sample name (sampleName column) and sample type (sampleType column). See `?SummarizedExperimentToDataTable` for options for converting formats from some other DNA methylation packages to our format.  
+Preparation: Start with appropriately formatted single-nucleotide resolution methylation data, region sets -- each with genomic regions corresponding to some biological annotation, and a sample annotation file that has sample name (sampleName column) and sample type (sampleType column). See `?SummarizedExperimentToDataTable` for options for converting formats from some other DNA methylation packages to our format.  
 1. Do a quick run-through of the MIRA workflow with each region set with a few samples from each condition/sample type to make sure the region sizes are reasonable (discussed later).  
     1.1. Aggregate methylation data across regions to get a MIRA signature for each region set, sample combination.  
     1.2. Calculate MIRA score for each region set, sample combination based on the shape of the MIRA signature.  
