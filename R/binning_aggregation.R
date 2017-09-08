@@ -128,6 +128,7 @@ BSBinAggregate = function(BSDT, rangeDT, binNum, minReads = 500,
     # If we aren't aggregating by bin, then don't restrict to min reads!
     if (byRegionGroup) {
         if (hasCoverage) {
+            # only keep rows (bins) with coverage >= minReads
             binnedBSDT = binnedBSDT[coverage >= minReads, ]
         }
         if (nrow(binnedBSDT) < binNum) {
