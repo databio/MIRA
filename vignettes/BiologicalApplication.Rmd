@@ -20,6 +20,7 @@ Ewing sarcoma is a pediatric cancer defined by the fusion oncoprotein EWS-FLI1, 
 ## Input:
 
 This vignette requires large input files, which can be dowloaded here: [MIRA_Ewing_Vignette_Files.tgz](http://cloud.databio.org/vignettes/MIRA_Ewing_Vignette_Files.tar.gz). This archive contains:  
+
 - Single-nucleotide resolution DNA methylation data (RRBS data) for 12 Ewing sarcoma samples and 12 myotube (muscle) samples recently analyzed in the paper [DNA methylation heterogeneity defines a disease spectrum in Ewing sarcoma](http://www.medical-epigenomics.org/papers/sheffield2017/).  
 - Two sets of regions -- one with Ewing-specific DHSs and a one with muscle-specific DHSs, obtained from the [Regulatory Elements Database](http://db.databio.org/). All data is on the hg38 reference genome.
 
