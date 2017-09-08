@@ -179,7 +179,7 @@ dtToGrInternal = function(DT, chr, start,
 # missing, it will still work, just not have that info in the output.
 # @return a list of GRanges objects, strand has been set to "*", 
 # "start" and "end" have both been set to "start" of the DT.
-# methylCount and coverage info is preserved in GRanges object.
+# methylCount and coverage info is not included in GRanges object.
 BSdtToGRanges = function(dtList) {
     
     gList = list();
@@ -187,12 +187,11 @@ BSdtToGRanges = function(dtList) {
         # dt = dtList[[i]];
         setkey(dtList[[i]], chr, start)
         # convert the data into granges object
-        gList[[i]] = GRanges(seqnames = dtList[[i]]$chr, 
-                             ranges = IRanges(start = dtList[[i]]$start, 
-                                              end = dtList[[i]]$start), 
-                             strand = rep("*", nrow(dtList[[i]])), 
-                             methylCount = dtList[[i]]$methylCount, 
-                             coverage = dtList[[i]]$coverage)
+            gList[[i]] = GRanges(seqnames = dtList[[i]]$chr, 
+                                 ranges = IRanges(start = dtList[[i]]$start, 
+                                                  end = dtList[[i]]$start), 
+                                 strand = rep("*", nrow(dtList[[i]])))
+        
         # I used to use end = start + 1, but this targets CG instead of just 
         # a C, and it's causing edge-effects problems when I assign Cs to 
         # tiled windows using (within). Aug 2014 I'm changing to start/end at 

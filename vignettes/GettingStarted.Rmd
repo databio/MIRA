@@ -19,11 +19,14 @@ MIRA (Methylation-based Inference of Regulatory Activity) is an R package that i
 library(MIRA)
 data(exampleBins)
 plotMIRAProfiles(exampleBins)
-exScores = exampleBins[, .(score = scoreDip(methylProp, binCount=11)), 
-                       by=.(featureID, sampleName)]
+exScores = scoreDip(exampleBins, 
+                    regionSetIDColName = "featureID",
+                    sampleIDColName = "sampleName")
 # normally sampleType would come from annotation object 
 # but for this example we are manually adding sampleType column
-exScores[, sampleType := c("Condition1", "Condition2")][] 
+sampleType = c("Condition1", "Condition2")
+exScores = cbind(exScores, sampleType)
+exScores
 ```
 
 # Required Inputs
@@ -37,7 +40,7 @@ Let's describe each one in more detail:
 
 ## DNA Methylation Data
 
-MIRA requires DNA methylation data after methylation calling. For a given genomic coordinate (the location of the C in a CpG), MIRA needs  two values: the number of methylated reads, and the total number of reads. This data should be represented as a `data.table` for each sample, which we call a BSDT (Bisulfite data.table). The BSDT will have these columns: `chr`, `start` (the coordinate of the C of the CpG), `methylCount` (number of methylated reads), `coverage` (total number of reads covering this site), `methylProp` (`methylCount/coverage`), and (optionally if you have one sample but required if you have multiple samples) `sampleName` (sample identifier). Since some existing R packages for DNA methylation use different formats, we include a format conversion function that can be used to convert `SummarizedExperiment`-based objects like you would obtain from the `bsseq`, `methylPipe`, and `BiSeq` packages to the necessary format for MIRA (`SummarizedExperimentToDataTable` function). Here is an example of a `data.table` in the right format for input to MIRA:
+MIRA requires DNA methylation data after methylation calling. For a given genomic coordinate (the location of the C in a CpG), MIRA needs the methylation level (0 to 1) and optionally the total number of reads covering that coordinate which can be used for screening purposes. This data should be represented as a `data.table` for each sample, which we call a BSDT (Bisulfite data.table). The BSDT will have these columns: `chr`, `start` (the coordinate of the C of the CpG) and the `methylProp` column with methylation level at each cytosine. Alternatively, the `methylProp` column may be generated from `methylCount` (number of methylated reads) and `coverage` (total number of reads covering this site) columns where `methylProp` = `methylCount`/`coverage` and these columns may be included in the `data.table` addition to the `methylProp` column. A `sampleName` (sample identifier) column is optional if there is only one sample but required if you have multiple samples. Since some existing R packages for DNA methylation use different formats, we include a format conversion function that can be used to convert `SummarizedExperiment`-based objects like you would obtain from the `bsseq`, `methylPipe`, and `BiSeq` packages to the necessary format for MIRA (`SummarizedExperimentToDataTable` function). A `BSseq` object is an acceptable input to MIRA and will be converted to the right format internally but for the sake of parallelization it is recommended that `BSseq` objects be converted to the right format outside the MIRA function so that MIRA can be run on each sample in parallel. Here is an example of a `data.table` in the right format for input to MIRA:
 
 ```{r}
 data("exampleBSDT", package="MIRA")
@@ -109,11 +112,12 @@ plotMIRAProfiles(binnedRegDT=bigBinDT)
 ```
 
 ## Calculating the MIRA Score
-To calculate MIRA scores based on the MIRA signatures, we will apply the scoring function, `scoreDip`, to the `data.table` containing the methylation aggregated in bins using data.table syntax. `scoreDip` calculates a score for each group of bins corresponding to a sample and region set, based on the degree of the dip in the signature. With MIRA's default scoring method (`logratio`), `scoreDip` will take the log of the ratio of the outside edges of the dip to the center of the dip. Higher MIRA scores are associated with deeper dips. A flat MIRA signature would have a score of 0.
+To calculate MIRA scores based on the MIRA signatures, we will apply the scoring function, `scoreDip`, to the `data.table` that contains the methylation aggregated in bins. `scoreDip` calculates a score for each group of bins corresponding to a sample and region set, based on the degree of the dip in the signature. With MIRA's default scoring method (`logratio`), `scoreDip` will take the log of the ratio of the outside edges of the dip to the center of the dip. Higher MIRA scores are associated with deeper dips. A flat MIRA signature would have a score of 0.
 
 ```{r Scoring, warning=FALSE}
-sampleScores = bigBinDT[, .(score = scoreDip(methylProp, binCount=11)), 
-                        by=.(featureID, sampleName)]
+sampleScores = scoreDip(bigBinDT,
+                        regionSetIDColName = "featureID",
+                        sampleIDColName = "sampleName")
 head(sampleScores)
 ```
 

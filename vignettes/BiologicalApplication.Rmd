@@ -20,8 +20,9 @@ Ewing sarcoma is a pediatric cancer defined by the fusion oncoprotein EWS-FLI1, 
 ## Input:
 
 This vignette requires large input files, which can be dowloaded here: [MIRA_Ewing_Vignette_Files.tgz](http://cloud.databio.org/vignettes/MIRA_Ewing_Vignette_Files.tar.gz). This archive contains:  
-* Single-nucleotide resolution DNA methylation data (RRBS data) for 12 Ewing sarcoma samples and 12 myotube (muscle) samples recently analyzed in the paper [DNA methylation heterogeneity defines a disease spectrum in Ewing sarcoma](http://www.medical-epigenomics.org/papers/sheffield2017/).  
-* Two sets of regions -- one with Ewing-specific DHSs and a one with muscle-specific DHSs, obtained from the [Regulatory Elements Database](http://db.databio.org/). All data is on the hg38 reference genome.
+
+- Single-nucleotide resolution DNA methylation data (RRBS data) for 12 Ewing sarcoma samples and 12 myotube (muscle) samples recently analyzed in the paper [DNA methylation heterogeneity defines a disease spectrum in Ewing sarcoma](http://www.medical-epigenomics.org/papers/sheffield2017/).  
+- Two sets of regions -- one with Ewing-specific DHSs and a one with muscle-specific DHSs, obtained from the [Regulatory Elements Database](http://db.databio.org/). All data is on the hg38 reference genome.
 
 # Package workflow
   
@@ -94,7 +95,7 @@ bigBin = lapply(X=subBSDTList, FUN=aggregateMethyl, GRList=regionSets,
 bigBinDT1 = rbindlist(bigBin)
 ```
 
-If you are running the actual samples on your own device, you can skip the following step. Otherwise, let's load the binned methylation data (`bigBinDT1`) that would have been obtained by sthe previous step.
+If you are running the actual samples on your own device, you can skip the following step. Otherwise, let's load the binned methylation data (`bigBinDT1`) that would have been obtained by the previous step.
 
 ```{r, eval=TRUE}
 # from data included with MIRA package
@@ -169,13 +170,13 @@ normPlot = plotMIRAProfiles(binnedRegDT=bigBinDT2)
 normPlot + ylab("Normalized DNA Methylation (%)")
 ```
 
-Now we can calculate MIRA scores for all samples with the `scoreDip` function, again using `data.table` syntax.
+Now we can calculate MIRA scores for all samples with the `scoreDip` function.
 
 ```{r, eval=TRUE}
-sampleScores = bigBinDT2[, .(score = scoreDip(methylProp, 
-                                             binCount=21, 
-                                             shoulderShift="auto")), 
-                        by=.(featureID, sampleName)]
+sampleScores = scoreDip(bigBinDT2,
+                        shoulderShift="auto",
+                        regionSetIDColName = "featureID",
+                        sampleIDColName = "sampleName")
 head(sampleScores)
 ```
 

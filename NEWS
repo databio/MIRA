@@ -1,0 +1,15 @@
+# Change log
+Notable changes to this project will be documented in this file.
+
+## Unreleased
+
+
+	
+## [0.99.7] -- 2017-08-21
+
+    	- Removed the binCount argument from scoreDip(). Now scoreDip just gets this from length of the input values. Inclusion of "binCount" argument in the function call will now cause an error.
+	- Major change: changed user interface of scoreDip() so that input is now a data.table of binned methylation values rather than a vector of binned methylation values. The function can now be called without using data.table syntax (e.g. the old sytax: binnedDT[, scoreDip(methylProp), by= .(sampleName, featureID). As a result of this change the name of the first parameter has been changed from "values" to "binnedDT". If existing code has the "values" parameter, an error will result. Code may need to be modified to reflect syntax change although the old syntax still works for now (but is not the preferred syntax and support for that syntax may be deprecated in the future).
+
+	- Made "coverage" column optional for the input methylation data ("aggregateMethyl" function)
+	- Made "methylCount" column optional for the input methylation data (to "aggregateMethyl" function)
+

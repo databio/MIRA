@@ -4,22 +4,24 @@
 \alias{BSBinAggregate}
 \title{Bins regions and aggregates methylation data across the regions by bin}
 \usage{
-BSBinAggregate(BSDT, rangeDT, binCount, minReads = 500,
-  byRegionGroup = TRUE, splitFactor = NULL)
+BSBinAggregate(BSDT, rangeDT, binNum, minReads = 500, byRegionGroup = TRUE,
+  splitFactor = NULL, hasCoverage = TRUE)
 }
 \arguments{
 \item{BSDT}{A single data table that has DNA methylation data 
 on individual sites including a "chr" column with chromosome, 
 a "start" column with the coordinate number for the cytosine, 
 a "methylProp" column with proportion of methylation (0 to 1), 
-a "methylCount" column with number of methylated reads for each site, and 
-a "coverage" column with total number of reads for each site.}
+optionally a "methylCount" column with number of 
+methylated reads for each site, and 
+optionally a "coverage" column with total number of reads for each site
+(hasCoverage param).}
 
 \item{rangeDT}{A data table with the sets of regions to be binned, 
 with columns named "start", "end". Strand may also be given and will
 affect the output. See "Value" section.}
 
-\item{binCount}{Number of bins across the region.}
+\item{binNum}{Number of bins across the region.}
 
 \item{minReads}{Filter out bins with fewer than X reads before returning.}
 
@@ -29,10 +31,12 @@ byRegionGroup = FALSE is deprecated.}
 
 \item{splitFactor}{With default NULL, aggregation will be done 
 separately/individually for each sample.}
+
+\item{hasCoverage}{Default TRUE. Whether there is a coverage column}
 }
 \value{
 With splitFactor = NULL, it will return a data.table 
-with binCount rows, 
+with binNum rows, 
 containing aggregated methylation data over regions in region set "rangeDT".
 Each region was split into bins; methylation was put in these bins; 
 Output contains sum of the all corresponding bins 
@@ -66,6 +70,6 @@ data("exampleRegionSet") # exampleRegionSet
 exampleBSDT = addMethPropCol(exampleBSDT)
 aggregateBins = BSBinAggregate(BSDT = exampleBSDT, 
                              rangeDT = exampleRegionSet, 
-                             binCount = 11, splitFactor = NULL)
+                             binNum = 11, splitFactor = NULL)
 
 }
