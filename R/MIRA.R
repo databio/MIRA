@@ -1,5 +1,6 @@
 # PACKAGE DOCUMENTATION
 #' Methylation-based Inference of Regulatory Activity (MIRA)
+#'
 #' MIRA is a score that infers regulatory activity of genomic elements
 #' based on DNA methylation data. It assess the degree of dip in methylation
 #' level surrounding a regulatory site of interest, such as 
