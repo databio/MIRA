@@ -160,7 +160,7 @@ aggregateMethylInt <- function(BSDT, GRList, binNum = 11, minReads = 500) {
     
     # checking that input is in list format
     # should be either list or "GRangesList"
-    if (!is(GRList, c("list", "GRangesList"))) {
+    if (!(is(GRList, "list") || is(GRList, "GRangesList"))) {
         stop("GRList should be a named list/GRangesList.")
     }
     

@@ -321,7 +321,7 @@ SummarizedExperimentToDataTable <- function(coordinates, methylCountDF=NULL,
         }
     
     # checking that right data types have been given 
-    if (!is(coordinates, c("GRanges", "GPos"))) {
+    if (!(is(coordinates, "GRanges") || is(coordinates, "GPos"))) {
         stop("'coordinates' argument should be a GRanges or GPos object")
     }
     
