@@ -69,7 +69,7 @@ BSBinAggregate <- function(BSDT, rangeDT, binNum, minReads = 500,
                           hasCoverage = TRUE) {
     
     # BSDT should not be a list but can be converted
-    if ("list" %in% class(BSDT)) {
+    if (is(BSDT, "list")) {
         if (length(BSDT) == 1) {
             BSDT <- BSDT[[1]]
         } else {
@@ -77,17 +77,17 @@ BSBinAggregate <- function(BSDT, rangeDT, binNum, minReads = 500,
                  BSDT should not be a list."))
         }
     }
-    if (! ("data.table" %in% class(BSDT))) {
+    if (!is(BSDT, "data.table")) {
         stop("BSDT must be a data.table")
     }
     
     
     # if given GRanges object, change to DT
-    if ("GRanges" %in% class(rangeDT)) {
+    if (is(rangeDT, "GRanges")) {
         rangeDT <- grToDt(GR = rangeDT, includeStrand = TRUE)
     }
     
-    if (! ("data.table" %in% class(rangeDT))) {
+    if (!is(rangeDT, "data.table")) {
         stop("rangeDT must be a data.table")
     }
     seqnamesColName <- "seqnames"  # default column name
@@ -208,9 +208,9 @@ BSAggregate <- function(BSDT, regionsGRL, excludeGR = NULL,
     
     # Assert that regionsGRL is a GRL.
     # If regionsGRL is given as a GRanges, we convert to GRL
-    if ("GRanges" %in% class(regionsGRL)) {
+    if (is(regionsGRL, "GRanges")) {
         regionsGRL <- GRangesList(regionsGRL);
-    } else if (! ("GRangesList" %in% class(regionsGRL))) {
+    } else if (!is(regionsGRL, "GRangesList")) {
         stop("regionsGRL is not a GRanges or GRangesList object");
     }
     
@@ -400,7 +400,7 @@ BSAggregate <- function(BSDT, regionsGRL, excludeGR = NULL,
 #' # data.table "j command" using column names and numberOfBins variable
 #' binnedRegionDT <- regionsToBinDT[, binRegion(start, end, numberOfBins, chr)]
 binRegion <- function(start, end, bins, idDF = NULL, strand = "*") {
-    # if (!is.null(idDF) & (! ("data.frame"  %in% class(idDF)))) {
+    # if (!is.null(idDF) & (!is(idDF, "data.frame"))) {
     #   stop("idDF should be a data.frame")
     #}
     

@@ -108,7 +108,7 @@ dtToGr <- function(DT, chr = "chr", start = "start",
         return(dtToGrInternal(DT, chr, start, end, strand, name, metaCols));
     }
     if ( length(splitFactor) == 1 ) { 
-        if ( splitFactor %in% colnames(DT) ) {
+        if (splitFactor %in% colnames(DT)) {
             splitFactor <- DT[, get(splitFactor)];
         }
     }
@@ -321,12 +321,13 @@ SummarizedExperimentToDataTable <- function(coordinates, methylCountDF=NULL,
         }
     
     # checking that right data types have been given 
-    if (!any(c("GRanges", "GPos") %in% class(coordinates))) {
+    if (!is(coordinates, c("GRanges", "GPos"))) {
         stop("'coordinates' argument should be a GRanges or GPos object")
     }
     
     # check for accepted formats?: delayed matrix?, matrix, data.frame, data.table
     # not sure if there might be other valid inputs so excluding this for now
+    # if using this code, change to is(object, class) format for if statements
     # if (haveMCount) {
     #     if (!("" %in% class(methylCountDF))) {
     #         stop()

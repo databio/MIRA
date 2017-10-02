@@ -100,7 +100,7 @@ if (getRversion() >= "2.15.1") {
 #' exBinDT <- aggregateMethyl(exampleBSDT, exampleRegionSet)
 aggregateMethyl <- function(BSDT, GRList, binNum = 11, minReads = 500){
     
-    if ("BSseq" %in% class(BSDT)) {
+    if (is(BSDT, "BSseq")) {
         # if input is not a data.table but rather a BSseq object
         # bsseq objects can include multiple samples so make a list
         
@@ -136,7 +136,7 @@ aggregateMethyl <- function(BSDT, GRList, binNum = 11, minReads = 500){
 aggregateMethylInt <- function(BSDT, GRList, binNum = 11, minReads = 500) {
     ######### aggregateMethyl:Preprocessing and formatting###############
     # BSDT should not be a list but can be converted
-    if ("list" %in% class(BSDT)) {
+    if (is(BSDT, "list")) {
         if (length(BSDT) == 1) {
             BSDT <- BSDT[[1]]
         } else {
@@ -144,22 +144,23 @@ aggregateMethylInt <- function(BSDT, GRList, binNum = 11, minReads = 500) {
                          BSDT should not be a list."))
         }
         }
-    if (! ("data.table" %in% class(BSDT))) {
+    if (!is(BSDT, "data.table")) {
         stop("BSDT must be a data.table")
     }
     
     # converting to list format if GRList is a data.table or GRanges object
-    if (class(GRList) %in% "GRanges") {
+    if (is(GRList, "GRanges")) {
         GRList <- GRangesList(GRList)
         message("Converting to GRangesList...")
     }
-    if (class(GRList) %in% "data.table") {
+    if (is(GRList, "data.table")) {
         GRList <- list(GRList)
         message("Converting to list...")
     }
     
     # checking that input is in list format
-    if (!(class(GRList) %in% c("list", "GRangesList"))) {
+    # should be either list or "GRangesList"
+    if (!is(GRList, c("list", "GRangesList"))) {
         stop("GRList should be a named list/GRangesList.")
     }
     
@@ -174,15 +175,13 @@ aggregateMethylInt <- function(BSDT, GRList, binNum = 11, minReads = 500) {
     
     # checking that all objects in GRList are the same type 
     # and converting to data.tables
-    if (all(sapply(X = GRList, FUN = class) %in% "GRanges")) {
+    # first check if all objects are GRanges
+    if (all(sapply(X = GRList, FUN = function(x) is(x, "GRanges")))) {
         # GRanges to data.tables
         GRDTList <- lapply(X = GRList, FUN = grToDt, includeStrand = TRUE)
-        # below statement will be true if all objects in the list are of 
-        # class data.table
-        # necessary since data.tables also include data.frame as a class
-    }else if (all(sapply(
-        X = lapply(X = GRList, FUN = function(x) class(x) %in% "data.table"), 
-        FUN = any))) {
+        
+        # next check if all objects are data.tables 
+    }else if (all(sapply(X = GRList, FUN = function(x) is(x, "data.table")))) {
         
         GRDTList <- GRList # this case is okay
     }else{
@@ -280,7 +279,7 @@ MIRAScore <- function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
                      minReads = 500){
 
     # checking for sampleName column
-    if ("data.table" %in% class(BSDT)) {
+    if (is(BSDT, "data.table")) {
         if (!("sampleName" %in% colnames(BSDT))) {
             stop("sampleName column must be present in BSDT")
         }
@@ -288,7 +287,7 @@ MIRAScore <- function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
     
     # if BSseq object was given, convert to a list of data.tables
     # then run aggregation on each with lapply
-    if ("BSseq" %in% class(BSDT)) {
+    if (is(BSDT, "BSseq")) {
         # checking for sample names
         if (length(sampleNames(BSDT)) != ncol(BSDT)) {
             stop(cleanws("BSseq object must have sample name for each sample.
@@ -397,7 +396,7 @@ scoreDip <- function(binnedDT,
                     regionSetIDColName = "featureID",
                     sampleIDColName = "sampleName"){
     
-    if ("data.table" %in% class(binnedDT)) {
+    if (is(binnedDT, "data.table")) {
     
         # the expected/necessary columns
         expectedCols <- c("methylProp", regionSetIDColName,
@@ -417,7 +416,7 @@ scoreDip <- function(binnedDT,
                            by = .(get(regionSetIDColName), get(sampleIDColName))] 
         #fixing names (not assigned normally because of using "get")
         setnames(scoreDT, c(regionSetIDColName, sampleIDColName, "score"))
-    } else if ("numeric" %in% class(binnedDT)) {
+    } else if (is(binnedDT, "numeric")) {
         # if binnedDT is actually a vector as was original behaviour of function
         # preserving ability to use scoreDip on a single vector or in a 
         # data.table j expression
@@ -694,12 +693,12 @@ findShoulder <- function(values, binNum, centerSpot, whichSide="right"){
 addMethPropCol <- function(BSDTList){
 
     # converting to a data.table list if it was a single data.table
-    if ("data.table" %in% class(BSDTList)) {
+    if (is(BSDTList, "data.table")) {
         BSDTList <- list(BSDTList)
     }
 
     # stopping the function if the input was not data.table originally
-    if (!("data.table" %in% class(BSDTList[[1]]))) {
+    if (!is(BSDTList[[1]], "data.table")) {
         stop('Input must be a single data.table object 
              or list of data.table objects')
     }
