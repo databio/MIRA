@@ -58,20 +58,20 @@
 #' @examples
 #' data("exampleBSDT") # exampleBSDT
 #' data("exampleRegionSet") # exampleRegionSet
-#' exampleBSDT = addMethPropCol(exampleBSDT)
-#' aggregateBins = BSBinAggregate(BSDT = exampleBSDT, 
+#' exampleBSDT <- addMethPropCol(exampleBSDT)
+#' aggregateBins <- BSBinAggregate(BSDT = exampleBSDT, 
 #'                              rangeDT = exampleRegionSet, 
 #'                              binNum = 11, splitFactor = NULL)
 #' 
 #' @export
-BSBinAggregate = function(BSDT, rangeDT, binNum, minReads = 500, 
+BSBinAggregate <- function(BSDT, rangeDT, binNum, minReads = 500, 
                           byRegionGroup = TRUE, splitFactor = NULL,
                           hasCoverage = TRUE) {
     
     # BSDT should not be a list but can be converted
     if ("list" %in% class(BSDT)) {
         if (length(BSDT) == 1) {
-            BSDT = BSDT[[1]]
+            BSDT <- BSDT[[1]]
         } else {
             stop(cleanws("Only one BSDT may be given to function. 
                  BSDT should not be a list."))
@@ -84,16 +84,16 @@ BSBinAggregate = function(BSDT, rangeDT, binNum, minReads = 500,
     
     # if given GRanges object, change to DT
     if ("GRanges" %in% class(rangeDT)) {
-        rangeDT = grToDt(GR = rangeDT, includeStrand = TRUE)
+        rangeDT <- grToDt(GR = rangeDT, includeStrand = TRUE)
     }
     
     if (! ("data.table" %in% class(rangeDT))) {
         stop("rangeDT must be a data.table")
     }
-    seqnamesColName = "seqnames"  # default column name
+    seqnamesColName <- "seqnames"  # default column name
     if ("chr" %in% colnames(rangeDT)) {
         # message("seqnames column name set to: chr")
-        seqnamesColName = "chr"
+        seqnamesColName <- "chr"
     } else {
         # Got neither.
         stop("rangeDT must have a seqnames or chr column")
@@ -107,19 +107,19 @@ BSBinAggregate = function(BSDT, rangeDT, binNum, minReads = 500,
     ## if (!silent) {
     # message("Binning...")
     ##}
-    binnedDT = rangeDT[, binRegion(start, end, 
+    binnedDT <- rangeDT[, binRegion(start, end, 
                                    binNum, get(seqnamesColName), strand)]
-    binnedGR = sapply(split(binnedDT, binnedDT$binID), dtToGr)
+    binnedGR <- sapply(split(binnedDT, binnedDT$binID), dtToGr)
     # message("Aggregating...")
     if (hasCoverage) {
         # aggregate methylation (mean) and sum coverage values
-        aggrJCommand = buildJ(c("methylProp", "coverage"), 
+        aggrJCommand <- buildJ(c("methylProp", "coverage"), 
                               c("mean", "sum"))
     } else {
         # if no coverage only aggregate methylation level
-        aggrJCommand = buildJ("methylProp", "mean")
+        aggrJCommand <- buildJ("methylProp", "mean")
     }
-    binnedBSDT = BSAggregate(BSDT = BSDT, 
+    binnedBSDT <- BSAggregate(BSDT = BSDT, 
                              regionsGRL = GRangesList(binnedGR), 
                              jCommand = aggrJCommand, 
                              byRegionGroup = byRegionGroup, 
@@ -129,14 +129,14 @@ BSBinAggregate = function(BSDT, rangeDT, binNum, minReads = 500,
     if (byRegionGroup) {
         if (hasCoverage) {
             # only keep rows (bins) with coverage >= minReads
-            binnedBSDT = binnedBSDT[coverage >= minReads, ]
+            binnedBSDT <- binnedBSDT[coverage >= minReads, ]
         }
         if (nrow(binnedBSDT) < binNum) {
             # telling user what sample failed if sample name is in BSDT
             if ("sampleName" %in% names(BSDT)) {
-                thisSample = BSDT[1, sampleName]
+                thisSample <- BSDT[1, sampleName]
             } else {
-                thisSample = "this sample"
+                thisSample <- "this sample"
             }
             
             warning(paste0("Less than minReads. Unable to return bins for ", 
@@ -201,7 +201,7 @@ BSBinAggregate = function(BSDT, rangeDT, binNum, minReads = 500,
 # containing aggregated methylation from BSDT over binned regions from a region
 # set.
 #
-BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL, 
+BSAggregate <- function(BSDT, regionsGRL, excludeGR = NULL, 
                        regionsGRL.length = NULL, splitFactor = NULL, 
                        keepCols = NULL, sumCols = NULL, jCommand = NULL, 
                        byRegionGroup = FALSE, keep.na = FALSE, hasCoverage = TRUE) {
@@ -209,7 +209,7 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
     # Assert that regionsGRL is a GRL.
     # If regionsGRL is given as a GRanges, we convert to GRL
     if ("GRanges" %in% class(regionsGRL)) {
-        regionsGRL = GRangesList(regionsGRL);
+        regionsGRL <- GRangesList(regionsGRL);
     } else if (! ("GRangesList" %in% class(regionsGRL))) {
         stop("regionsGRL is not a GRanges or GRangesList object");
     }
@@ -220,17 +220,17 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
     }
     
     if (! is.null(excludeGR)) {
-        BSDT = BSFilter(BSDT, minReads = 0, excludeGR)
+        BSDT <- BSFilter(BSDT, minReads = 0, excludeGR)
     }
     
-    bsgr = BSdtToGRanges(list(BSDT));
+    bsgr <- BSdtToGRanges(list(BSDT));
     
-    colModes = sapply(BSDT, mode);
+    colModes <- sapply(BSDT, mode);
     if (is.null(sumCols)) {
-        sumCols = setdiff(colnames(BSDT), c("chr", "start", "end", 
+        sumCols <- setdiff(colnames(BSDT), c("chr", "start", "end", 
                                             "strand", splitFactor, keepCols))
         # Restrict to numeric columns.      
-        sumCols = intersect(sumCols, 
+        sumCols <- intersect(sumCols, 
                             names(colModes[which(colModes == "numeric")]))
         
     }
@@ -238,7 +238,7 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
     # Not on a GRL, because of the way overlaps with GRLs work. So, 
     # we must convert the GRL to a GR, but we must keep track of which
     # regions came from which group.
-    regionsGR = unlist(regionsGRL)
+    regionsGR <- unlist(regionsGRL)
     
     if (is.null(regionsGRL.length)) {
         if (length(regionsGRL) > 100) {
@@ -246,12 +246,12 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
                              up by supplying a regionsGRL.length vector..."),
                              appendLF = FALSE)
         }
-        regionsGRL.length = sapply(regionsGRL, length)
+        regionsGRL.length <- sapply(regionsGRL, length)
         # message("Done counting regionsGRL lengths.");
     }
     
     # Build a table to keep track of which regions belong to which group
-    region2group = data.table(
+    region2group <- data.table(
         regionID = seq_along(regionsGR), 
         chr = as.vector(seqnames(regionsGR)), 
         start = as.vector(start(regionsGR)), 
@@ -262,14 +262,14 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
     
     
     # message("Finding overlaps...");
-    fo = findOverlaps(bsgr[[1]], regionsGR)
+    fo <- findOverlaps(bsgr[[1]], regionsGR)
     
     setkey(BSDT, chr, start)
     # Gut check:
     # stopifnot(all(elementMetadata(bsgr[[1]])$coverage == BSDT$coverage))
     
     # message("Setting regionIDs...");
-    BSDT = BSDT[queryHits(fo), ] # restrict the table to CpGs in any region.
+    BSDT <- BSDT[queryHits(fo), ] # restrict the table to CpGs in any region.
     
     if (NROW(BSDT) < 1) {
         warning("No BSDT sites in the given region list. 
@@ -279,21 +279,21 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
     
     BSDT[, regionID := subjectHits(fo)] # record which region they overlapped.
     # if (!keep.na) {
-    # BSDT = BSDT[queryHits(fo), ]
+    # BSDT <- BSDT[queryHits(fo), ]
     #}
     
     if (is.null(jCommand)) {
-        cols = c(sumCols, keepCols)
-        funcs = c(rep("sum", length(sumCols)), rep("unique", length(keepCols)))
-        jCommand = buildJ(cols, funcs)
+        cols <- c(sumCols, keepCols)
+        funcs <- c(rep("sum", length(sumCols)), rep("unique", length(keepCols)))
+        jCommand <- buildJ(cols, funcs)
     }
     # message("jCommand: ", jCommand)
     
     # Build the by string
     if (is.null(splitFactor)) {
-        byString = paste0("list(regionID)");
+        byString <- paste0("list(regionID)");
     } else {
-        byString = paste0("list(", paste("regionID", paste0(splitFactor, ""), 
+        byString <- paste0("list(", paste("regionID", paste0(splitFactor, ""), 
                                          collapse = ",", sep = ","), ")")
     }
     
@@ -303,7 +303,7 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
     # each bin (ie average methylProp's in bin1 of first region, average 
     # methylProp's in bin1 of second region etc. for all bins and all regions
     # separately)
-    bsCombined = BSDT[, eval(parse(text = jCommand)), 
+    bsCombined <- BSDT[, eval(parse(text = jCommand)), 
                       by = eval(parse(text = byString))]
     setkey(bsCombined, regionID)
     # Now aggregate across groups.
@@ -316,19 +316,19 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
         # adds regionGroupID column from region2group to bsCombined
         bsCombined[region2group, regionGroupID := regionGroupID, allow = TRUE]
         if (! is.null(splitFactor)) { 
-            byStringGroup = paste0("list(", 
+            byStringGroup <- paste0("list(", 
                                    paste("regionGroupID", 
                                          paste0(splitFactor, collapse = ","), 
                                          sep = ","), 
                                    ")")
         } else {
-            byStringGroup = "list(regionGroupID)"
+            byStringGroup <- "list(regionGroupID)"
         }
         # actual aggregation operation
         # for normal MIRA use: averaging methyProp's and summing
         # coverage for all bins with the same number (ie all
         # bin1's together, all bin2's together, etc.)
-        bsCombined = bsCombined[, eval(parse(text = jCommand)), 
+        bsCombined <- bsCombined[, eval(parse(text = jCommand)), 
                                 by = eval(parse(text = byStringGroup))]
         
         # if any strand information was not given, averaging the signatures 
@@ -349,7 +349,7 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
     } else {
         warning(cleanws("Using byRegionGroup = FALSE may 
              result in missing functionalities such as symmetrical averaging"))
-        e = region2group[bsCombined, ]
+        e <- region2group[bsCombined, ]
         setkey(e, regionID);
         return(e);
     }
@@ -389,88 +389,88 @@ BSAggregate = function(BSDT, regionsGRL, excludeGR = NULL,
 #' @export
 #' @examples
 #' library(data.table)
-#' start = c(100, 1000, 3000)
-#' end = c(500, 1400, 3400)
-#' chr = c("chr1", "chr1", "chr2")
-#' strand = c("*", "*", "*")
+#' start <- c(100, 1000, 3000)
+#' end <- c(500, 1400, 3400)
+#' chr <- c("chr1", "chr1", "chr2")
+#' strand <- c("*", "*", "*")
 #' # strand not included in object 
 #' # since MIRA assumes "*" already unless given something else
-#' regionsToBinDT = data.table(chr, start, end)
-#' numberOfBins = 15
+#' regionsToBinDT <- data.table(chr, start, end)
+#' numberOfBins <- 15
 #' # data.table "j command" using column names and numberOfBins variable
-#' binnedRegionDT = regionsToBinDT[, binRegion(start, end, numberOfBins, chr)]
-binRegion = function(start, end, bins, idDF = NULL, strand = "*") {
+#' binnedRegionDT <- regionsToBinDT[, binRegion(start, end, numberOfBins, chr)]
+binRegion <- function(start, end, bins, idDF = NULL, strand = "*") {
     # if (!is.null(idDF) & (! ("data.frame"  %in% class(idDF)))) {
     #   stop("idDF should be a data.frame")
     #}
     
     # conditionally altered later
-    finalColNames = c("chr", "start", "end", "id", "binID", "ubinID")
+    finalColNames <- c("chr", "start", "end", "id", "binID", "ubinID")
     if (!("*" %in% strand)) {
         if ("+" %in% strand) {
-            plusIndex = which(strand == "+")
+            plusIndex <- which(strand == "+")
             # once for plus strand coordinates
-            plusStart = start[plusIndex]
-            plusEnd = end[plusIndex]
+            plusStart <- start[plusIndex]
+            plusEnd <- end[plusIndex]
             
-            binSize = (plusEnd - plusStart) / (bins)
-            breaks = round(rep(plusStart, each = (bins + 1)) 
+            binSize <- (plusEnd - plusStart) / (bins)
+            breaks <- round(rep(plusStart, each = (bins + 1)) 
                            + (0:(bins)) * rep(binSize, each = (bins + 1)))
             
-            endpoints = (bins + 1) * (1:(length(plusStart)))
-            startpoints = 1 + (bins + 1)  * (0:(length(plusStart) - 1))
+            endpoints <- (bins + 1) * (1:(length(plusStart)))
+            startpoints <- 1 + (bins + 1)  * (0:(length(plusStart) - 1))
             
-            plusDT = data.table(start = breaks[-endpoints], 
+            plusDT <- data.table(start = breaks[-endpoints], 
                                 end = breaks[-startpoints], 
                                 id = rep(plusIndex, each = bins), 
                                 binID = 1:bins, 
                                 strand = "+", 
                                 key = "id")
-            dt = plusDT # placeholder but may be returned
+            dt <- plusDT # placeholder but may be returned
         }
         if ("-" %in% strand) {
-            minusIndex = which(strand == "-")
+            minusIndex <- which(strand == "-")
             
-            minusStart = start[minusIndex]
-            minusEnd = end[minusIndex]
+            minusStart <- start[minusIndex]
+            minusEnd <- end[minusIndex]
             
-            binSize = (minusEnd - minusStart) / (bins)
-            breaks = round(rep(minusStart, each = (bins + 1)) 
+            binSize <- (minusEnd - minusStart) / (bins)
+            breaks <- round(rep(minusStart, each = (bins + 1)) 
                            + (0:(bins)) * rep(binSize, each = (bins + 1)))
             
-            endpoints = (bins + 1) * (1:(length(minusStart)))
-            startpoints = 1 + (bins + 1)  * (0:(length(minusStart) - 1))
+            endpoints <- (bins + 1) * (1:(length(minusStart)))
+            startpoints <- 1 + (bins + 1)  * (0:(length(minusStart) - 1))
             
-            minusDT = data.table(start = breaks[-endpoints], 
+            minusDT <- data.table(start = breaks[-endpoints], 
                                  end = breaks[-startpoints], 
                                  id = rep(minusIndex, each = bins), 
                                  binID = bins:1, 
                                  strand = "-", 
                                  key = "id")
-            dt = minusDT # placeholder but may be returned
+            dt <- minusDT # placeholder but may be returned
         }
         
         # if there are both + and - strands
         # combining and sorting plus and minus data.tables 
         if (("+" %in% strand) && ("-" %in% strand)) {
-            dt = rbindlist(list(plusDT, minusDT))
+            dt <- rbindlist(list(plusDT, minusDT))
             setorder(x = dt, id, binID)  # setorder(dt, id) might also work?
         }
         
         # included only if + /- are present
-        finalColNames = c(finalColNames, "strand")
+        finalColNames <- c(finalColNames, "strand")
         dt[, ubinID := 1:nrow(dt)] 
         
     }else { # some strand information is "*", don't flip bin directions
         
-        binSize = (end - start) / (bins)
-        breaks = round(rep(start, each = (bins + 1)) 
+        binSize <- (end - start) / (bins)
+        breaks <- round(rep(start, each = (bins + 1)) 
                        + (0:(bins)) * rep(binSize, each = (bins + 1)))
         
-        endpoints = (bins + 1) * (1:(length(start)))
-        startpoints = 1 + (bins + 1)  * (0:(length(start) - 1))
+        endpoints <- (bins + 1) * (1:(length(start)))
+        startpoints <- 1 + (bins + 1)  * (0:(length(start) - 1))
         # do all regions in the same order
-        dt = data.table(start = breaks[-endpoints], 
+        dt <- data.table(start = breaks[-endpoints], 
                         end = breaks[-startpoints], 
                         id = rep((seq_along(start)), each = bins), 
                         binID = 1:bins, 
@@ -480,8 +480,8 @@ binRegion = function(start, end, bins, idDF = NULL, strand = "*") {
     }
     
     if (!is.null(idDF)) {
-        chr = rep(idDF, each = bins)
-        dt = dt[, chr := chr]
+        chr <- rep(idDF, each = bins)
+        dt <- dt[, chr := chr]
         setcolorder(dt, finalColNames)  # putting chr first, does not copy
     }
     

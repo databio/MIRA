@@ -34,11 +34,11 @@ there are too many (more than 9) region sets ('featureID's).
 }
 \examples{
 data(bigBinDT2)
-exScores = bigBinDT2[, .(score=scoreDip(methylProp,
+exScores <- bigBinDT2[, .(score=scoreDip(methylProp,
                                        shoulderShift = 5)), 
                     by = .(featureID, sampleName)]
 # adding annotation
-sampleType = rep(c("Ewing", "Muscle-related"), each = 24)
-exScores = cbind(exScores, sampleType)
-exScorePlot = plotMIRAScores(exScores)         
+sampleType <- rep(c("Ewing", "Muscle-related"), each = 24)
+exScores <- cbind(exScores, sampleType)
+exScorePlot <- plotMIRAScores(exScores)         
 }

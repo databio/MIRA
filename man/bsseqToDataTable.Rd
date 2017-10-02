@@ -26,5 +26,5 @@ per sample. A wrapper of the SummarizedExperimentToDataTable function.
 }
 \examples{
 data("exampleBSseqObj")
-MIRAFormatBSDTList = bsseqToDataTable(exampleBSseqObj)
+MIRAFormatBSDTList <- bsseqToDataTable(exampleBSseqObj)
 }

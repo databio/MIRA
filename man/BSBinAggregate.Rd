@@ -67,8 +67,8 @@ bin (ie all bin1's together, all bin2's together, etc.).
 \examples{
 data("exampleBSDT") # exampleBSDT
 data("exampleRegionSet") # exampleRegionSet
-exampleBSDT = addMethPropCol(exampleBSDT)
-aggregateBins = BSBinAggregate(BSDT = exampleBSDT, 
+exampleBSDT <- addMethPropCol(exampleBSDT)
+aggregateBins <- BSBinAggregate(BSDT = exampleBSDT, 
                              rangeDT = exampleRegionSet, 
                              binNum = 11, splitFactor = NULL)
 

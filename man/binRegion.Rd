@@ -41,14 +41,14 @@ data.table j expression to divide a bunch of regions in the same way.
 }
 \examples{
 library(data.table)
-start = c(100, 1000, 3000)
-end = c(500, 1400, 3400)
-chr = c("chr1", "chr1", "chr2")
-strand = c("*", "*", "*")
+start <- c(100, 1000, 3000)
+end <- c(500, 1400, 3400)
+chr <- c("chr1", "chr1", "chr2")
+strand <- c("*", "*", "*")
 # strand not included in object 
 # since MIRA assumes "*" already unless given something else
-regionsToBinDT = data.table(chr, start, end)
-numberOfBins = 15
+regionsToBinDT <- data.table(chr, start, end)
+numberOfBins <- 15
 # data.table "j command" using column names and numberOfBins variable
-binnedRegionDT = regionsToBinDT[, binRegion(start, end, numberOfBins, chr)]
+binnedRegionDT <- regionsToBinDT[, binRegion(start, end, numberOfBins, chr)]
 }

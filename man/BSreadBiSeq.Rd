@@ -42,7 +42,7 @@ to just use a single core; or to pass mc.preschedule = FALSE; This
 makes it so that each file is processed as a separate job. Much better.
 }
 \examples{
-shortBSDTFile = system.file("extdata", "shortRRBS.bed", package = "MIRA") 
-shortBSDT = BSreadBiSeq(shortBSDTFile)
+shortBSDTFile <- system.file("extdata", "shortRRBS.bed", package = "MIRA") 
+shortBSDT <- BSreadBiSeq(shortBSDTFile)
 
 }

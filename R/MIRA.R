@@ -97,8 +97,8 @@ if (getRversion() >= "2.15.1") {
 #' @examples
 #' data("exampleBSDT", package = "MIRA")
 #' data("exampleRegionSet", package = "MIRA")
-#' exBinDT = aggregateMethyl(exampleBSDT, exampleRegionSet)
-aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500){
+#' exBinDT <- aggregateMethyl(exampleBSDT, exampleRegionSet)
+aggregateMethyl <- function(BSDT, GRList, binNum = 11, minReads = 500){
     
     if ("BSseq" %in% class(BSDT)) {
         # if input is not a data.table but rather a BSseq object
@@ -109,20 +109,20 @@ aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500){
             stop(cleanws("BSseq object must have sample name for each sample.
                         Check output of bsseq::sampleNames(BSDT)"))
         }
-        BSDTList = bsseqToDataTable(BSDT)
+        BSDTList <- bsseqToDataTable(BSDT)
         # for each data.table, make a sampleName column with the appropriate
         # name (by reference)
         mapply(FUN = function(x, y) x[, sampleName := y], 
                BSDTList,
                names(BSDTList))
         # do the aggregation step on each data.table
-        bigMethylByBin = lapply(X = BSDTList, 
+        bigMethylByBin <- lapply(X = BSDTList, 
                                 FUN = function(x) aggregateMethylInt(BSDT = x, 
                                                                      GRList = GRList, 
                                                                      binNum = binNum, 
                                                                      minReads = minReads))
     } else {
-        bigMethylByBin = aggregateMethylInt(BSDT = BSDT, 
+        bigMethylByBin <- aggregateMethylInt(BSDT = BSDT, 
                                             GRList = GRList, 
                                             binNum = binNum, 
                                             minReads = minReads)
@@ -133,12 +133,12 @@ aggregateMethyl = function(BSDT, GRList, binNum = 11, minReads = 500){
     return(bigMethylByBin)
 }
 
-aggregateMethylInt = function(BSDT, GRList, binNum = 11, minReads = 500) {
+aggregateMethylInt <- function(BSDT, GRList, binNum = 11, minReads = 500) {
     ######### aggregateMethyl:Preprocessing and formatting###############
     # BSDT should not be a list but can be converted
     if ("list" %in% class(BSDT)) {
         if (length(BSDT) == 1) {
-            BSDT = BSDT[[1]]
+            BSDT <- BSDT[[1]]
         } else {
             stop(cleanws("Only one BSDT may be given to function. 
                          BSDT should not be a list."))
@@ -150,11 +150,11 @@ aggregateMethylInt = function(BSDT, GRList, binNum = 11, minReads = 500) {
     
     # converting to list format if GRList is a data.table or GRanges object
     if (class(GRList) %in% "GRanges") {
-        GRList = GRangesList(GRList)
+        GRList <- GRangesList(GRList)
         message("Converting to GRangesList...")
     }
     if (class(GRList) %in% "data.table") {
-        GRList = list(GRList)
+        GRList <- list(GRList)
         message("Converting to list...")
     }
     
@@ -176,7 +176,7 @@ aggregateMethylInt = function(BSDT, GRList, binNum = 11, minReads = 500) {
     # and converting to data.tables
     if (all(sapply(X = GRList, FUN = class) %in% "GRanges")) {
         # GRanges to data.tables
-        GRDTList = lapply(X = GRList, FUN = grToDt, includeStrand = TRUE)
+        GRDTList <- lapply(X = GRList, FUN = grToDt, includeStrand = TRUE)
         # below statement will be true if all objects in the list are of 
         # class data.table
         # necessary since data.tables also include data.frame as a class
@@ -184,7 +184,7 @@ aggregateMethylInt = function(BSDT, GRList, binNum = 11, minReads = 500) {
         X = lapply(X = GRList, FUN = function(x) class(x) %in% "data.table"), 
         FUN = any))) {
         
-        GRDTList = GRList # this case is okay
+        GRDTList <- GRList # this case is okay
     }else{
         stop("GRList should be a GRangesList or a list of data.tables")
     }
@@ -192,25 +192,25 @@ aggregateMethylInt = function(BSDT, GRList, binNum = 11, minReads = 500) {
     
     # adding a methylProp column if it is not already in the BSDT
     if (!("methylProp" %in% names(BSDT))) {
-        BSDTList = addMethPropCol(list(BSDT))
-        BSDT = BSDTList[[1]] 
+        BSDTList <- addMethPropCol(list(BSDT))
+        BSDT <- BSDTList[[1]] 
     }
     
     # checking for a coverage column in BSDT
-    hasCoverage = "coverage" %in% colnames(BSDT)
+    hasCoverage <- "coverage" %in% colnames(BSDT)
     
     
     ######## aggregateMethyl:Binning and processing output####################
     
     
-    methylByBin = lapply(X = GRDTList, 
+    methylByBin <- lapply(X = GRDTList, 
                          FUN = function(x) BSBinAggregate(BSDT = BSDT, 
                                                           rangeDT = x, 
                                                           binNum = binNum, 
                                                           splitFactor = NULL, 
                                                           minReads = minReads,
                                                           hasCoverage = hasCoverage))
-    names(methylByBin) = names(GRList)# preserving names
+    names(methylByBin) <- names(GRList)# preserving names
     # adding a feature ID column to each data.table that 
     # should identify what region set was used
     for (i in seq_along(methylByBin)) {
@@ -218,12 +218,12 @@ aggregateMethylInt = function(BSDT, GRList, binNum = 11, minReads = 500) {
                                             nrow(methylByBin[[i]]))][]
     }
     # screening out region sets that had incomplete binning
-    binNumScreen = sapply(X = methylByBin, FUN = nrow)
+    binNumScreen <- sapply(X = methylByBin, FUN = nrow)
     # taking out incomplete region sets
-    methylByBin = methylByBin[!(binNumScreen < binNum)]
+    methylByBin <- methylByBin[!(binNumScreen < binNum)]
     
-    bigMethylByBin = rbindlist(methylByBin)
-    sampleNameInBSDT = "sampleName" %in% colnames(BSDT)
+    bigMethylByBin <- rbindlist(methylByBin)
+    sampleNameInBSDT <- "sampleName" %in% colnames(BSDT)
     if (sampleNameInBSDT && (ncol(bigMethylByBin) != 0)) {
         # creating new sampleName column
         bigMethylByBin[, sampleName := rep(BSDT[1, sampleName])][] 
@@ -276,7 +276,7 @@ aggregateMethylInt = function(BSDT, GRList, binNum = 11, minReads = 500) {
 #' MIRAScore(BSDT = exampleBSDT, GRList = exampleRegionSet)
 #' 
 #' @export
-MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio", 
+MIRAScore <- function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio", 
                      minReads = 500){
 
     # checking for sampleName column
@@ -294,29 +294,29 @@ MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
             stop(cleanws("BSseq object must have sample name for each sample.
                         Check output of bsseq::sampleNames(BSDT)"))
         }
-        BSDTList = bsseqToDataTable(BSDT)
+        BSDTList <- bsseqToDataTable(BSDT)
         # for each data.table, make a sampleName column with the appropriate
         # name (by reference)
         mapply(FUN = function(x, y) x[, sampleName := y], 
                BSDTList,
                names(BSDTList))
-        bigBinList = lapply(X = BSDTList, 
+        bigBinList <- lapply(X = BSDTList, 
                FUN = function(x) aggregateMethylInt(BSDT = x, 
                                                     GRList = GRList, 
                                                     binNum = binNum, 
                                                     minReads = minReads))
         
         # using binned methylation data to calculate MIRA score
-        scoreDT = lapply(X = bigBinList, FUN = function(x) x[, .(score = scoreDip(methylProp, 
+        scoreDT <- lapply(X = bigBinList, FUN = function(x) x[, .(score = scoreDip(methylProp, 
                                                                         method = scoringMethod)), 
                                                    by = .(featureID, sampleName)])
     
     } else {
         
-        bigBin = aggregateMethyl(BSDT = BSDT, GRList = GRList, binNum = binNum, 
+        bigBin <- aggregateMethyl(BSDT = BSDT, GRList = GRList, binNum = binNum, 
                              minReads = minReads)
         # using binned methylation data to calculate MIRA score
-        scoreDT = bigBin[, .(score = scoreDip(methylProp, 
+        scoreDT <- bigBin[, .(score = scoreDip(methylProp, 
                                               method = scoringMethod)), 
                          by = .(featureID, sampleName)]
         
@@ -390,7 +390,7 @@ MIRAScore = function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
 #' data("exampleBins")
 #' scoreDip(exampleBins)
 #' 
-scoreDip = function(binnedDT, 
+scoreDip <- function(binnedDT, 
                     shoulderShift = "auto", 
                     method = "logRatio",
                     usedStrand = FALSE,
@@ -400,9 +400,9 @@ scoreDip = function(binnedDT,
     if ("data.table" %in% class(binnedDT)) {
     
         # the expected/necessary columns
-        expectedCols = c("methylProp", regionSetIDColName,
+        expectedCols <- c("methylProp", regionSetIDColName,
                          sampleIDColName)
-        expectedColsPresent = expectedCols %in% colnames(binnedDT)
+        expectedColsPresent <- expectedCols %in% colnames(binnedDT)
         
         if (!all(expectedColsPresent)) {
             stop(paste("Missing the following expected columns:",
@@ -410,7 +410,7 @@ scoreDip = function(binnedDT,
                        sep=" "))
         }
             
-        scoreDT = binnedDT[, .(score = scoreDipInt(methylProp, 
+        scoreDT <- binnedDT[, .(score = scoreDipInt(methylProp, 
                                                    shoulderShift=shoulderShift,
                                                    method=method,
                                                    usedStrand=usedStrand)), 
@@ -424,7 +424,7 @@ scoreDip = function(binnedDT,
         # scoring by sample and region set will be accomplished outside
         # this function in the "by" part of the data.table expression
         # output is called scoreDT but is actually a single number object
-        scoreDT = scoreDipInt(values=binnedDT,
+        scoreDT <- scoreDipInt(values=binnedDT,
                     shoulderShift=shoulderShift,
                     method=method,
                     usedStrand=usedStrand)
@@ -452,7 +452,7 @@ scoreDip = function(binnedDT,
 # data("exampleBins")
 # exampleBins[, .(score = scoreDip(methylProp)), 
 # 
-scoreDipInt = function(values, 
+scoreDipInt <- function(values, 
                     shoulderShift = "auto", 
                     method = "logRatio",
                     usedStrand = FALSE){
@@ -462,16 +462,16 @@ scoreDipInt = function(values,
     }
     
     # determining number of bins
-    binNum = length(values)
+    binNum <- length(values)
     
     # determining whether signature is concave up or down in general
     # because values for finding shoulder need to be altered if concave
     # down ('logratio scoring') 
     # also it matters for getting middle value for 'logratio' scoring
-    concaveUp = isProfileConcaveUp(values, binNum)
+    concaveUp <- isProfileConcaveUp(values, binNum)
     
     if (method == "logRatio") {
-        centerSpot = (binNum + 1) / 2 # X.5 for even binNum
+        centerSpot <- (binNum + 1) / 2 # X.5 for even binNum
         
         
         if ((binNum %% 2) == 0) { # if binNum is even, centerSpot is X.5
@@ -480,13 +480,13 @@ scoreDipInt = function(values,
             midVals=values[c(centerSpot - .5, centerSpot + .5, centerSpot - 1.5,
                              centerSpot + 1.5)]
             if (which.min(midVals) == 1) { # first middle bin
-                midpoint = midVals[1]
+                midpoint <- midVals[1]
             } else if (which.min(midVals) == 2) { # second middle bin
-                midpoint = midVals[2]
+                midpoint <- midVals[2]
             } else { # otherwise take average
                 # includes 4 bins but outer two bins are weighted by half
                 # approximates having 3 middle bins
-                midpoint = (.5 * values[centerSpot - 1.5] 
+                midpoint <- (.5 * values[centerSpot - 1.5] 
                             + values[centerSpot - .5]
                             + values[centerSpot + .5] 
                             + 0.5 * values[centerSpot + 1.5]) / 3    
@@ -497,22 +497,22 @@ scoreDipInt = function(values,
             # use it, otherwise average will be taken
             if (concaveUp) {
                 # order matters in which.min (for ties) so centerSpot is first
-                useMiddlePoint = (which.min(values[c(centerSpot, 
+                useMiddlePoint <- (which.min(values[c(centerSpot, 
                                                       centerSpot - 1, 
                                                       centerSpot + 1)]) == 1)
             } else {
                 # if concave down, see if middle point is the max of 
                 # the three middle points
-                useMiddlePoint = (which.max(values[c(centerSpot, 
+                useMiddlePoint <- (which.max(values[c(centerSpot, 
                                                       centerSpot - 1, 
                                                       centerSpot + 1)]) == 1)
             }
             
             if (useMiddlePoint) {
-                midpoint = values[centerSpot]
+                midpoint <- values[centerSpot]
             } else { # if centerSpot does not have lowest/highest value of 
                 # the three, average the three middle bins
-                midpoint = (values[centerSpot] + values[centerSpot + 1] 
+                midpoint <- (values[centerSpot] + values[centerSpot + 1] 
                             + values[centerSpot - 1] ) / 3
             }
         }
@@ -522,25 +522,25 @@ scoreDipInt = function(values,
             
             
             if (concaveUp) {
-                values2 = values 
+                values2 <- values 
             } else {
                 # converts to concave up so same `findShoulder` algorithm 
                 # can be used for both cases
                 # values2 is not used for scoring, just for finding shoulders
-                values2 = 1 - values 
+                values2 <- 1 - values 
             }
             
             
             
             # signature will probably not be symmetrical if strand was used
             if (usedStrand) { # probably not common but still an option
-                shoulderShiftL= findShoulder(values2, binNum, centerSpot,
+                shoulderShiftL <- findShoulder(values2, binNum, centerSpot,
                                              whichSide = "left")
-                shoulderShiftR = findShoulder(values2, binNum, centerSpot, 
+                shoulderShiftR <- findShoulder(values2, binNum, centerSpot, 
                                              whichSide = "right")
             } else { # most common use case, strand was not used
                 # either side would work since signature is symmetrical
-                shoulderShift = findShoulder(values2, binNum, centerSpot, 
+                shoulderShift <- findShoulder(values2, binNum, centerSpot, 
                                              whichSide = "right")
             }
         }
@@ -552,14 +552,14 @@ scoreDipInt = function(values,
         if (usedStrand && (shoulderShift == "auto")) { # probably uncommon case
             # floor and ceiling should not matter when "auto" is used but
             # I kept them just in case
-            leftSide = floor(centerSpot - shoulderShiftL)  
-            rightSide = ceiling(centerSpot + shoulderShiftR)
+            leftSide <- floor(centerSpot - shoulderShiftL)  
+            rightSide <- ceiling(centerSpot + shoulderShiftR)
         } else { # most common case, strand was not used,
             #"auto" may or may not have been used
-            leftSide = floor(centerSpot - shoulderShift)  
-            rightSide = ceiling(centerSpot + shoulderShift)
+            leftSide <- floor(centerSpot - shoulderShift)  
+            rightSide <- ceiling(centerSpot + shoulderShift)
         }
-        shoulders = ((values[leftSide] + values[rightSide]) / 2)
+        shoulders <- ((values[leftSide] + values[rightSide]) / 2)
         if (midpoint < .000001) {
             warning("Division by zero. Consider adding a small constant 
                     to all bins for this region set.")
@@ -569,13 +569,13 @@ scoreDipInt = function(values,
                     to all bins for this region set.")
         }
         # log ratio...
-        score = log(shoulders / midpoint)
+        score <- log(shoulders / midpoint)
     }
 
     # # alternate way of scoring by the area in the dip
     # if (method == "area") {
-    #     maxMethyl = max(values)
-    #     score = maxMethyl * binNum - sum(values)
+    #     maxMethyl <- max(values)
+    #     score <- maxMethyl * binNum - sum(values)
     # }
 
     # # another alternate method
@@ -595,12 +595,12 @@ scoreDipInt = function(values,
 # dip is mostly in the middle half but is somewhat arbitrary and 
 # there might be a better way to do this.
 # @return TRUE if concave up, FALSE if concave down
-isProfileConcaveUp = function(values, binNum) {
-    wideFit = lm(values ~ poly(seq_along(values), 2))
-    wideX2Coef = coefficients(wideFit)[3]
-    wideR2 = summary(wideFit)$adj.r.squared
+isProfileConcaveUp <- function(values, binNum) {
+    wideFit <- lm(values ~ poly(seq_along(values), 2))
+    wideX2Coef <- coefficients(wideFit)[3]
+    wideR2 <- summary(wideFit)$adj.r.squared
     # if x2 coef is positive, it is concave up
-    concaveUp = (wideX2Coef >= 0) # up is preferred so inclusive of 0
+    concaveUp <- (wideX2Coef >= 0) # up is preferred so inclusive of 0
     
     # only do a narrow fit if enough bins are used
     # want at least 7 bins to be a part of the narrow fit (smallerHalf)
@@ -609,18 +609,18 @@ isProfileConcaveUp = function(values, binNum) {
     # and we want at least 2 bins on each side of those center bins
     if (binNum >= 15) {
         # using middle 50% or so for this fit
-        smallerHalf = floor(binNum / 2)
-        endFirstQuarter = ceiling((binNum - smallerHalf) / 2)
-        narrowInd = c(endFirstQuarter + seq(smallerHalf)) # middle ~half
+        smallerHalf <- floor(binNum / 2)
+        endFirstQuarter <- ceiling((binNum - smallerHalf) / 2)
+        narrowInd <- c(endFirstQuarter + seq(smallerHalf)) # middle ~half
         
-        narrowFit = lm(values[narrowInd] ~ 
+        narrowFit <- lm(values[narrowInd] ~ 
                            poly(seq_along(values[narrowInd]), 2))
-        narrowX2Coef = coefficients(narrowFit)[3] # the x^2 coefficient
-        narrowR2 = summary(narrowFit)$adj.r.squared
+        narrowX2Coef <- coefficients(narrowFit)[3] # the x^2 coefficient
+        narrowR2 <- summary(narrowFit)$adj.r.squared
         
         # use narrow fit if it has a better R2
         if (narrowR2 > wideR2) {
-            concaveUp = (narrowX2Coef >= 0)
+            concaveUp <- (narrowX2Coef >= 0)
         }
         
     }
@@ -640,19 +640,19 @@ isProfileConcaveUp = function(values, binNum) {
 #         It may be X.0 (ie an integer) if centerSpot is an integer or 
 #         X.5 if centerSpot was X.5
 
-findShoulder = function(values, binNum, centerSpot, whichSide="right"){
+findShoulder <- function(values, binNum, centerSpot, whichSide="right"){
     if (whichSide == "left") {
-        values = rev(values)
+        values <- rev(values)
     }
     
     # first value that's not part of midpoint calculations
-    shoulderStart = ceiling(centerSpot) + 2 
-    shoulderSpot = shoulderStart
+    shoulderStart <- ceiling(centerSpot) + 2 
+    shoulderSpot <- shoulderStart
     for (i in shoulderStart:(binNum - 2)) {
         if (values[i + 1] > values[i]) {
-            shoulderSpot = i + 1
+            shoulderSpot <- i + 1
         } else if (((values[i + 2] + values[i + 1]) / 2) > values[i]) {
-            shoulderSpot = i + 1
+            shoulderSpot <- i + 1
         } else {
             break()
         }
@@ -660,12 +660,12 @@ findShoulder = function(values, binNum, centerSpot, whichSide="right"){
     # testing the last/most outside point if appropriate
     if (shoulderSpot == (binNum - 1)) {
         if (values[shoulderSpot + 1] > values[shoulderSpot]) {
-            shoulderSpot = shoulderSpot + 1
+            shoulderSpot <- shoulderSpot + 1
         }
     }
     # should work for X.0 and X.5 values of centerSpot
     # assuming calculations for leftSide and rightSide vars stay the same
-    shoulderShift = shoulderSpot - centerSpot
+    shoulderShift <- shoulderSpot - centerSpot
     
     return(shoulderShift)
 }
@@ -691,11 +691,11 @@ findShoulder = function(values, binNum, centerSpot, whichSide="right"){
 #' data("exampleBSDT", package = "MIRA")
 #' exampleBSDT[, methylProp := NULL] # removing methylProp column
 #' addMethPropCol(list(exampleBSDT))
-addMethPropCol = function(BSDTList){
+addMethPropCol <- function(BSDTList){
 
     # converting to a data.table list if it was a single data.table
     if ("data.table" %in% class(BSDTList)) {
-        BSDTList = list(BSDTList)
+        BSDTList <- list(BSDTList)
     }
 
     # stopping the function if the input was not data.table originally
@@ -707,7 +707,7 @@ addMethPropCol = function(BSDTList){
     # using anonymous function to apply operation 
     # that adds methylProp column to each element of list
     # extra [] on the end is necessary for proper display/printing of the object
-    BSDTList = lapply(X = BSDTList, 
+    BSDTList <- lapply(X = BSDTList, 
                     FUN = function(x) x[, methylProp := 
                                             round(methylCount / coverage, 3)][])
 
@@ -744,15 +744,15 @@ addMethPropCol = function(BSDTList){
 #' If returnAsList = TRUE, then input from each file will be 
 #' in its own data.table in a list.
 #' @examples
-#' shortBSDTFile = system.file("extdata", "shortRRBS.bed", package = "MIRA") 
-#' shortBSDT = BSreadBiSeq(shortBSDTFile)
+#' shortBSDTFile <- system.file("extdata", "shortRRBS.bed", package = "MIRA") 
+#' shortBSDT <- BSreadBiSeq(shortBSDTFile)
 #'
 #' @export
-BSreadBiSeq = function(files, contrastList = NULL, 
+BSreadBiSeq <- function(files, contrastList = NULL, 
                        sampleNames = tools::file_path_sans_ext(basename(files)), 
                        cores = 4, returnAsList = FALSE) {
     
-    cores = min(length(files), cores); # not more cores than files!
+    cores <- min(length(files), cores); # not more cores than files!
     setLapplyAlias(cores);
     if (!is.null(contrastList)) {
         if (any(sapply(contrastList, length) != length(files))) {
@@ -761,17 +761,17 @@ BSreadBiSeq = function(files, contrastList = NULL,
         }
     }
     message("Reading ", length(files), " files..");
-    freadList = lapplyAlias(files, fread, mc.preschedule = FALSE);
-    colNames = names(contrastList)
+    freadList <- lapplyAlias(files, fread, mc.preschedule = FALSE);
+    colNames <- names(contrastList)
     message("File reading finished (",
         length(files),
         " files). Parsing Biseq format...",
         appendLF = FALSE);
     # TODO: This parsing takes awhile, and could be done in parallel.
-    freadListParsed = lapplyAlias(freadList, parseBiseq, mc.preschedule = FALSE)
+    freadListParsed <- lapplyAlias(freadList, parseBiseq, mc.preschedule = FALSE)
 
     message("Parsing complete, building final tables and cleaning up...")
-    numberOfFiles = length(freadListParsed);
+    numberOfFiles <- length(freadListParsed);
     for (i in 1:numberOfFiles) {
         if (numberOfFiles > 1) {
             message(i, ": ", sampleNames[i], "; ", appendLF = FALSE)
@@ -779,26 +779,26 @@ BSreadBiSeq = function(files, contrastList = NULL,
         if (numberOfFiles > 1 && i == numberOfFiles) {
             message("", appendLF = TRUE)
         }
-        DT = freadListParsed[[i]]; # convenience alias.
+        DT <- freadListParsed[[i]]; # convenience alias.
         if (!is.null(contrastList)) {
             DT[, get("colNames") := as.list(sapply(contrastList, "[[", i))]
         }
         if (!is.null(sampleNames)) {
             DT[, sampleName := sampleNames[i]]
         }
-        freadListParsed[[i]] = DT
+        freadListParsed[[i]] <- DT
     }
 
-    # filteredList = do.call(rbind, freadListParsed)
+    # filteredList <- do.call(rbind, freadListParsed)
     # gc(); # rbind call is memory inefficient; this helps.
     # rbindlist supposedly does the same thing as do.call(rbind, list) but 
     # faster
     # default (returnAsList = FALSE) is to return as 
     # one combined data.table/data.frame
     if (!returnAsList) { 
-        filteredList = rbindlist(freadListParsed)
+        filteredList <- rbindlist(freadListParsed)
     }else{
-        filteredList = freadListParsed
+        filteredList <- freadListParsed
     }
 
     return(filteredList);
@@ -811,23 +811,23 @@ BSreadBiSeq = function(files, contrastList = NULL,
 # in that order.
 # @return data.table with separate methylated and unmethylated columns.
 # Specific col names are set
-parseBiseq = function(DT) {
+parseBiseq <- function(DT) {
     message(".", appendLF = FALSE);
     setnames(DT, paste0("V", 1:6), 
              c("chr", "start", "end", "meth", "rate", "strand"))
     DT[, meth := gsub("'", "", meth)]
     # split the '12/12' format of meth calls
-    ll = unlist(strsplit(DT$meth, "/", fixed = TRUE))
-    idx = seq(1, length(ll), by = 2)
+    ll <- unlist(strsplit(DT$meth, "/", fixed = TRUE))
+    idx <- seq(1, length(ll), by = 2)
     DT[, `:=` (methylCount = as.integer(ll[idx]), 
               coverage = as.integer(ll[idx + 1]))]
     DT[, start := as.integer(start + 1)] # re-index
     DT[, c("rate", "end", "meth" ) := NULL] # remove unnecessary columns
     DT[, strand := NULL]
-    DT = DT[, list(methylCount = sum(methylCount), coverage = sum(coverage)), 
+    DT <- DT[, list(methylCount = sum(methylCount), coverage = sum(coverage)), 
           by = list(chr, start)] # smash measurements
     setcolorder(DT, c("chr", "start", "methylCount", "coverage"));
-    DT = DT[ !grep("_", chr), ]; # clean Chrs
+    DT <- DT[ !grep("_", chr), ]; # clean Chrs
     return(DT)
 }
 
@@ -841,20 +841,20 @@ parseBiseq = function(DT) {
 # @param excludeGR GRanges object with regions to filter.
 # 
 # @return The BSDT with appropriate regions removed.
-BSFilter = function(BSDT, minReads = 10, excludeGR = NULL) {
+BSFilter <- function(BSDT, minReads = 10, excludeGR = NULL) {
     # First, filter for minimum reads.
     if (minReads > 0) {
-        BSDT = BSDT[coverage >= minReads, ]
+        BSDT <- BSDT[coverage >= minReads, ]
     }
     if (NROW(BSDT) == 0) { return(data.table(NULL)) }
     # Now, filter entries overlapping a region in excludeGR.
     if (!is.null(excludeGR)) {
-        gr = dtToGr(BSDT)
-        fo = findOverlaps(gr, excludeGR)
-        qh = unique(queryHits(fo))
+        gr <- dtToGr(BSDT)
+        fo <- findOverlaps(gr, excludeGR)
+        qh <- unique(queryHits(fo))
         length(qh)
         nrow(BSDT)
-        BSDT = BSDT[-qh, ]
+        BSDT <- BSDT[-qh, ]
     }
     return(BSDT)
 }

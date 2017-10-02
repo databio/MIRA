@@ -62,5 +62,5 @@ This process is done for each region set.
 \examples{
 data("exampleBSDT", package = "MIRA")
 data("exampleRegionSet", package = "MIRA")
-exBinDT = aggregateMethyl(exampleBSDT, exampleRegionSet)
+exBinDT <- aggregateMethyl(exampleBSDT, exampleRegionSet)
 }

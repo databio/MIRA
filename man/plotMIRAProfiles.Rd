@@ -33,6 +33,6 @@ subset with the `featID` parameter.
 }
 \examples{
 data("exampleBins", package = "MIRA")
-MIRAplot = plotMIRAProfiles(binnedRegDT = exampleBins)
+MIRAplot <- plotMIRAProfiles(binnedRegDT = exampleBins)
 
 }
