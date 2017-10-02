@@ -24,7 +24,8 @@ Imports:
     ggplot2,
     Biobase,
     stats,
-    bsseq
+    bsseq,
+    methods
 Suggests:
     knitr,
     parallel,

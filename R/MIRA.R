@@ -26,6 +26,7 @@
 #' @importFrom Biobase sampleNames
 #' @importFrom stats lm coefficients poly
 #' @importFrom bsseq getCoverage getMeth
+#' @importFrom methods is
 NULL
 
 
