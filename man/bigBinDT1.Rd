@@ -3,11 +3,8 @@
 \docType{data}
 \name{bigBinDT1}
 \alias{bigBinDT1}
-\title{A data.table with binned methylation data for the first part of
-the "Applying MIRA to a Biological Question" vignette. 
-Has data for 3 Ewing samples and 3 muscle-related 
-samples (human skeletal myoblasts and other related
-samples). It is the product of `aggregateMethyl`.}
+\title{DNA methylation data for the "Applying MIRA to a Biological Question"
+vignette (1st part).}
 \format{A data.table, data.frame object}
 \usage{
 data(bigBinDT1)

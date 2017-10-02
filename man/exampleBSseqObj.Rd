@@ -3,8 +3,7 @@
 \docType{data}
 \name{exampleBSseqObj}
 \alias{exampleBSseqObj}
-\title{A BSseq object which has the top 20 rows of the BSseq object "BS.chr22"
-which was included as built-in data in the bsseq package}
+\title{A small BSseq object.}
 \format{A BSseq object}
 \usage{
 data(exampleBSseqObj)

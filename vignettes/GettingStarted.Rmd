@@ -19,13 +19,13 @@ MIRA (Methylation-based Inference of Regulatory Activity) is an R package that i
 library(MIRA)
 data(exampleBins)
 plotMIRAProfiles(exampleBins)
-exScores = scoreDip(exampleBins, 
-                    regionSetIDColName = "featureID",
-                    sampleIDColName = "sampleName")
+exScores <- scoreDip(exampleBins, 
+                    regionSetIDColName="featureID",
+                    sampleIDColName="sampleName")
 # normally sampleType would come from annotation object 
 # but for this example we are manually adding sampleType column
-sampleType = c("Condition1", "Condition2")
-exScores = cbind(exScores, sampleType)
+sampleType <- c("Condition1", "Condition2")
+exScores <- cbind(exScores, sampleType)
 exScores
 ```
 
@@ -70,13 +70,13 @@ library(MIRA)
 library(GenomicRanges) # for the `resize`, `width` functions
 data("exampleRegionSet", package="MIRA")
 data("exampleBSDT", package="MIRA")
-BSDTList = list(exampleBSDT)
+BSDTList <- list(exampleBSDT)
 ```
 
 Since our input methylation data did not have a column for proportion of methylation at each site (`methylProp`), we need to add this based on the methylation count and total coverage data.
 
 ```{r}
-BSDTList = addMethPropCol(BSDTList)
+BSDTList <- addMethPropCol(BSDTList)
 ```
 
 ## Expand Your Regions
@@ -90,14 +90,14 @@ mean(width(exampleRegionSet))
 For this vignette, 4000 bp regions should be wide enough to capture the dip:
 
 ```{r}
-exampleRegionSet = resize(exampleRegionSet, 4000, fix="center")
+exampleRegionSet <- resize(exampleRegionSet, 4000, fix="center")
 mean(width(exampleRegionSet))
 ```
 
 Normally, we want to have each region set (only one in our case) be an item in a list, with corresponding names given to the list:
 
 ```{r}
-exampleRegionSet = GRangesList(exampleRegionSet)
+exampleRegionSet <- GRangesList(exampleRegionSet)
 names(exampleRegionSet) <- "lymphoblastoid_NRF1"
 ```
 
@@ -105,9 +105,9 @@ names(exampleRegionSet) <- "lymphoblastoid_NRF1"
 Next we aggregate the methylation across regions to get a summary methylation profile with the `aggregateMethyl` function. MIRA divides each region into bins, finds methylation that is contained in each bin in each region, and aggregates matching bins over all the regions (all 1st bins together, 2nd bins together, etc.). A couple important parameters: The binNum argument determines how many approximately equally sized bins each region is split into. This could affect the resolution or noisiness of the MIRA signature because using more bins will result in smaller bin sizes (potentially increasing resolution) but also less reads per bin (potentially increasing noise). The minReads argument in aggregateMethyl is used to screen out region sets that have any bins with fewer than a minimum number of reads. Here we use the default (500). Let's aggregate the methylation and then view the MIRA signature.
 
 ```{r Aggregate_methylation, message=FALSE, warning=FALSE}
-bigBin = lapply(X=BSDTList, FUN=aggregateMethyl, GRList=exampleRegionSet, 
+bigBin <- lapply(X=BSDTList, FUN=aggregateMethyl, GRList=exampleRegionSet, 
                 binNum=11)
-bigBinDT = bigBin[[1]]
+bigBinDT <- bigBin[[1]]
 plotMIRAProfiles(binnedRegDT=bigBinDT)
 ```
 
@@ -115,9 +115,9 @@ plotMIRAProfiles(binnedRegDT=bigBinDT)
 To calculate MIRA scores based on the MIRA signatures, we will apply the scoring function, `scoreDip`, to the `data.table` that contains the methylation aggregated in bins. `scoreDip` calculates a score for each group of bins corresponding to a sample and region set, based on the degree of the dip in the signature. With MIRA's default scoring method (`logratio`), `scoreDip` will take the log of the ratio of the outside edges of the dip to the center of the dip. Higher MIRA scores are associated with deeper dips. A flat MIRA signature would have a score of 0.
 
 ```{r Scoring, warning=FALSE}
-sampleScores = scoreDip(bigBinDT,
-                        regionSetIDColName = "featureID",
-                        sampleIDColName = "sampleName")
+sampleScores <- scoreDip(bigBinDT,
+                        regionSetIDColName="featureID",
+                        sampleIDColName="sampleName")
 head(sampleScores)
 ```
 

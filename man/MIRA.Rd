@@ -4,15 +4,8 @@
 \name{MIRA}
 \alias{MIRA}
 \alias{MIRA-package}
-\title{Methylation-based Inference of Regulatory Activity (MIRA)
-MIRA is a score that infers regulatory activity of genomic elements
-based on DNA methylation data. It assess the degree of dip in methylation
-level surrounding a regulatory site of interest, such as 
-transcription factor binding sites.
-This package provides functions for aggregating methylation 
-data across region sets, in bins.}
+\title{Methylation-based Inference of Regulatory Activity (MIRA)}
 \description{
-Methylation-based Inference of Regulatory Activity (MIRA)
 MIRA is a score that infers regulatory activity of genomic elements
 based on DNA methylation data. It assess the degree of dip in methylation
 level surrounding a regulatory site of interest, such as 

@@ -13,17 +13,17 @@
 # @param ...   arguments passed to list()
 # @return A named list object.
 # @examples
-# x = 5
-# y = 10
+# x <- 5
+# y <- 10
 # nlist(x, y) # returns list(x = 5, y = 10)
 # list(x, y) # returns unnamed list(5, 10)
-nlist = function(...) {
-    fcall = match.call(expand.dots = FALSE)
-    l = list(...);
+nlist <- function(...) {
+    fcall <- match.call(expand.dots = FALSE)
+    l <- list(...);
     if (!is.null(names(list(...)))) { 
-        names(l)[names(l) == ""] = fcall[[2]][names(l) == ""]
+        names(l)[names(l) == ""] <- fcall[[2]][names(l) == ""]
     } else {  
-        names(l) = fcall[[2]];
+        names(l) <- fcall[[2]];
     }
     return(l)
 }
@@ -36,7 +36,7 @@ nlist = function(...) {
 # @param ... Arguments passed lapply() or mclapply()
 # @param mc.preschedule Argument passed to mclapply
 # @return Result from lapply or parallel::mclapply
-lapplyAlias = function(..., mc.preschedule = TRUE) {
+lapplyAlias <- function(..., mc.preschedule = TRUE) {
     if (is.null(getOption("mc.cores"))) { setLapplyAlias(1) }
     if (getOption("mc.cores") > 1) {
         return(parallel::mclapply(..., mc.preschedule = mc.preschedule))
@@ -55,7 +55,7 @@ lapplyAlias = function(..., mc.preschedule = TRUE) {
 #
 # @param cores Number of cpus
 # @return None
-setLapplyAlias = function(cores = 0) {
+setLapplyAlias <- function(cores = 0) {
     if (cores < 1) {
         return(getOption("mc.cores"))
     }
@@ -86,8 +86,8 @@ setLapplyAlias = function(cores = 0) {
 # @param funcs Functions to use on columns.
 # @return A jcommand string. After performing function on column, column 
 # is reassigned the same name.
-buildJ = function(cols, funcs) {
-    r = paste("list(", paste(paste0(cols, "=", funcs, "(", cols, ")"), collapse = ","), ")")
+buildJ <- function(cols, funcs) {
+    r <- paste("list(", paste(paste0(cols, "=", funcs, "(", cols, ")"), collapse = ","), ")")
     return(r);
 }
 
@@ -100,7 +100,7 @@ buildJ = function(cols, funcs) {
 # @param DT a data.table with at least "chr" and "start" columns
 # 
 # @return gr A genomic ranges object derived from DT
-dtToGr = function(DT, chr = "chr", start = "start", 
+dtToGr <- function(DT, chr = "chr", start = "start", 
                   end = NA, strand = NA, name = NA, 
                   splitFactor = NA, metaCols = NA) {
     
@@ -108,8 +108,8 @@ dtToGr = function(DT, chr = "chr", start = "start",
         return(dtToGrInternal(DT, chr, start, end, strand, name, metaCols));
     }
     if ( length(splitFactor) == 1 ) { 
-        if ( splitFactor %in% colnames(DT) ) {
-            splitFactor = DT[, get(splitFactor)];
+        if (splitFactor %in% colnames(DT)) {
+            splitFactor <- DT[, get(splitFactor)];
         }
     }
     lapply(split(1:nrow(DT), splitFactor), 
@@ -119,31 +119,30 @@ dtToGr = function(DT, chr = "chr", start = "start",
     )
 }
 
-dtToGR = dtToGr;
+dtToGR <- dtToGr;
 
 
 # Internal part of a utility to convert data.tables into GRanges objects
-# genes = dtToGR(gModels, "chr", "txStart", "txEnd", "strand", "geneId").
 # 
 # @param DT A data.table with at least "chr" and "start" columns
 # @return gr A genomic ranges object derived from DT
-dtToGrInternal = function(DT, chr, start, 
+dtToGrInternal <- function(DT, chr, start, 
                           end = NA, strand = NA, name = NA, metaCols = NA) {
     
     if (is.na(end)) {
         if ("end" %in% colnames(DT)) {
-            end = "end"
+            end <- "end"
         } else {
-            end = start;
+            end <- start;
         }
     }
     if (is.na(strand)) {
         if ("strand" %in% colnames(DT)) { # checking if strand info is in DT
-            strand = "strand"
+            strand <- "strand"
         }
     }
     if (is.na(strand)) {
-        gr = GRanges(seqnames = DT[[`chr`]], 
+        gr <- GRanges(seqnames = DT[[`chr`]], 
                      ranges = IRanges(start = DT[[`start`]], end = DT[[`end`]]), 
                      strand = "*")
     } else {
@@ -152,19 +151,19 @@ dtToGrInternal = function(DT, chr, start,
         DT[, strand := as.character(strand)]
         DT[strand == "1", strand := "+"]
         DT[strand == "-1", strand := "-"]
-        DT[[`strand`]] = gsub("[^+-]", "*", DT[[`strand`]])
-        gr = GRanges(seqnames = DT[[`chr`]], 
+        DT[[`strand`]] <- gsub("[^+-]", "*", DT[[`strand`]])
+        gr <- GRanges(seqnames = DT[[`chr`]], 
                      ranges = IRanges(start = DT[[`start`]], end = DT[[`end`]]), 
                      strand = DT[[`strand`]])
     }
     if (! is.na(name)) {
-        names(gr) = DT[[`name`]];
+        names(gr) <- DT[[`name`]];
     } else {
-        names(gr) = seq_along(gr);
+        names(gr) <- seq_along(gr);
     }
     if (! is.na(metaCols)) {
         for(x in metaCols) {
-            elementMetadata(gr)[[`x`]] = DT[[`x`]]
+            elementMetadata(gr)[[`x`]] <- DT[[`x`]]
         }
     }
     gr;
@@ -180,14 +179,14 @@ dtToGrInternal = function(DT, chr, start,
 # @return a list of GRanges objects, strand has been set to "*", 
 # "start" and "end" have both been set to "start" of the DT.
 # methylCount and coverage info is not included in GRanges object.
-BSdtToGRanges = function(dtList) {
+BSdtToGRanges <- function(dtList) {
     
-    gList = list();
+    gList <- list();
     for (i in seq_along(dtList)) {
-        # dt = dtList[[i]];
+        # dt <- dtList[[i]];
         setkey(dtList[[i]], chr, start)
         # convert the data into granges object
-            gList[[i]] = GRanges(seqnames = dtList[[i]]$chr, 
+            gList[[i]] <- GRanges(seqnames = dtList[[i]]$chr, 
                                  ranges = IRanges(start = dtList[[i]]$start, 
                                                   end = dtList[[i]]$start), 
                                  strand = rep("*", nrow(dtList[[i]])))
@@ -210,29 +209,29 @@ BSdtToGRanges = function(dtList) {
 # @param includeStrand Boolean, whether to include strand from GR in output DT
 # @return A data.table object with columns:
 # "chr", "start", and "end" (possibly strand)
-grToDt = function(GR, includeStrand = FALSE) {
-    DF = as.data.frame(elementMetadata(GR))
+grToDt <- function(GR, includeStrand = FALSE) {
+    DF <- as.data.frame(elementMetadata(GR))
     if ( ncol(DF) > 0) {
         if (includeStrand) {
-            DT = data.table(chr = as.vector(seqnames(GR)), 
+            DT <- data.table(chr = as.vector(seqnames(GR)), 
                             start = start(GR), 
                             end = end(GR), 
                             strand = as.vector(strand(GR), mode = "character"), 
                             DF)    
         } else{
-            DT = data.table(chr = as.vector(seqnames(GR)), 
+            DT <- data.table(chr = as.vector(seqnames(GR)), 
                             start = start(GR), 
                             end = end(GR), 
                             DF)    
         }
     } else {
         if (includeStrand) {
-            DT = data.table(chr = as.vector(seqnames(GR)), 
+            DT <- data.table(chr = as.vector(seqnames(GR)), 
                             start = start(GR), 
                             end = end(GR), 
                             strand = as.vector(strand(GR), mode = "character")) 
         } else{
-            DT = data.table(chr = as.vector(seqnames(GR)), 
+            DT <- data.table(chr = as.vector(seqnames(GR)), 
                             start = start(GR), 
                             end = end(GR))    
         }
@@ -247,7 +246,7 @@ grToDt = function(GR, includeStrand = FALSE) {
 # @param string string to clean
 # @return A string with all consecutive whitespace characters, including
 # tabs and newlines, merged into a single space.
-cleanws = function(string) {
+cleanws <- function(string) {
     return(gsub('\\s+'," ", string))
 }
 
@@ -298,19 +297,19 @@ cleanws = function(string) {
 #' a named list will be returned. 
 #' @examples  
 #' data("exampleBSseqObj")
-#' MIRAFormatBSDTList = SummarizedExperimentToDataTable(coordinates = bsseq::granges(exampleBSseqObj), 
+#' MIRAFormatBSDTList <- SummarizedExperimentToDataTable(coordinates = bsseq::granges(exampleBSseqObj), 
 #'     methylCountDF = bsseq::getCoverage(BSseq = exampleBSseqObj, type = "M"), 
 #'     coverageDF = bsseq::getCoverage(BSseq = exampleBSseqObj, type = "Cov"),
 #'     methylPropDF = bsseq::getMeth(BSseq = exampleBSseqObj, type = "raw"),
 #'     sample_names = bsseq::sampleNames(exampleBSseqObj))
 #' @export
-SummarizedExperimentToDataTable = function(coordinates, methylCountDF=NULL, 
+SummarizedExperimentToDataTable <- function(coordinates, methylCountDF=NULL, 
                         coverageDF=NULL, methylPropDF=NULL, 
                         sample_names=NULL) {
     
-    haveMCount = !is.null(methylCountDF)
-    haveCov = !is.null(coverageDF)
-    haveMProp = !is.null(methylPropDF)
+    haveMCount <- !is.null(methylCountDF)
+    haveCov <- !is.null(coverageDF)
+    haveMProp <- !is.null(methylPropDF)
     
     # making sure sufficient data has been given
     if (!haveMProp) {
@@ -322,12 +321,13 @@ SummarizedExperimentToDataTable = function(coordinates, methylCountDF=NULL,
         }
     
     # checking that right data types have been given 
-    if (!any(c("GRanges", "GPos") %in% class(coordinates))) {
+    if (!(is(coordinates, "GRanges") || is(coordinates, "GPos"))) {
         stop("'coordinates' argument should be a GRanges or GPos object")
     }
     
     # check for accepted formats?: delayed matrix?, matrix, data.frame, data.table
     # not sure if there might be other valid inputs so excluding this for now
+    # if using this code, change to is(object, class) format for if statements
     # if (haveMCount) {
     #     if (!("" %in% class(methylCountDF))) {
     #         stop()
@@ -345,15 +345,15 @@ SummarizedExperimentToDataTable = function(coordinates, methylCountDF=NULL,
     # }
     
     
-    MIRAFormatBSDTList = list() # to store output
+    MIRAFormatBSDTList <- list() # to store output
     
     # changing coordinates from GRanges object to data.table
-    coordinates = grToDt(coordinates)
-    rowNum = nrow(coordinates)
+    coordinates <- grToDt(coordinates)
+    rowNum <- nrow(coordinates)
     
     # setting sampleNum and doing checks on the inputs
     if (haveMProp) {
-        sampleNum = ncol(methylPropDF)
+        sampleNum <- ncol(methylPropDF)
         # making sure other inputs also have sampleNum columns
         if (haveMCount) {
             if (sampleNum != ncol(methylCountDF)) {
@@ -371,7 +371,7 @@ SummarizedExperimentToDataTable = function(coordinates, methylCountDF=NULL,
             }
             }
             } else {
-                sampleNum = ncol(coverageDF)
+                sampleNum <- ncol(coverageDF)
                 # making sure other input has the same number of columns 
                 if (sampleNum != ncol(methylCountDF)) {
                     stop(cleanws("Input with the count of total reads  
@@ -407,16 +407,16 @@ SummarizedExperimentToDataTable = function(coordinates, methylCountDF=NULL,
     # adding sample names if not given as argument but present in other input
     if (is.null(sample_names)) {
         if (haveMProp) {
-            sample_names = colnames(methylPropDF)
+            sample_names <- colnames(methylPropDF)
         } else {
-            sample_names = colnames(coverageDF)
+            sample_names <- colnames(coverageDF)
         }
     }
     
     
     
     if (!haveCov && !haveMCount) {
-        coverage = rep(1, rowNum)
+        coverage <- rep(1, rowNum)
         warning(cleanws("coverage was not included in input 
                         so it was set to 1.
                         It is recommended to set the minreads 
@@ -428,20 +428,20 @@ SummarizedExperimentToDataTable = function(coordinates, methylCountDF=NULL,
         # each column is a different sample
         # order of the below if statements is important
         if (haveMCount) {
-            methylCount = methylCountDF[, i]
+            methylCount <- methylCountDF[, i]
         }
         if (haveMProp) {
-            methylProp = methylPropDF[, i]
+            methylProp <- methylPropDF[, i]
         }
         if (haveCov) {
-            coverage = coverageDF[, i]
+            coverage <- coverageDF[, i]
         } else if (haveMCount) {
             # assumed that if !haveCov, you haveMProp
-            coverage = round(methylCount / methylProp, 3)
+            coverage <- round(methylCount / methylProp, 3)
         }
         if (haveCov && !haveMCount) {
             # theoretically this should be a whole number
-            methylCount = round(methylProp * coverage, 0)
+            methylCount <- round(methylProp * coverage, 0)
         }
         
         if (!haveCov && !haveMCount) {
@@ -450,22 +450,22 @@ SummarizedExperimentToDataTable = function(coordinates, methylCountDF=NULL,
             # coverage of 1 which was done earlier in code 
             # for !haveCov && !haveMCount
             # methylCount = methylProp * coverage = methylProp * 1
-            methylCount = methylProp
+            methylCount <- methylProp
         }
         
         if (!haveMProp) {
-            methylProp = round(methylCount / coverage, 3)
+            methylProp <- round(methylCount / coverage, 3)
         }
         
         # index for taking out rows with 0 coverage
-        notCovered = which(coverage == 0)
+        notCovered <- which(coverage == 0)
         # checking for NAs in methylProp
         # they only should be present if methylPropDF was given
         if (haveMProp) {
-            notCoveredNA = which(is.na(methylProp))
-            notCovered = sort(c(notCovered, notCoveredNA))
+            notCoveredNA <- which(is.na(methylProp))
+            notCovered <- sort(c(notCovered, notCoveredNA))
         }
-        MIRAFormatBSDTList[[i]] = data.table(chr = coordinates[, chr], 
+        MIRAFormatBSDTList[[i]] <- data.table(chr = coordinates[, chr], 
                                              start = coordinates[, start], 
                                              methylCount = as.vector(methylCount),
                                              coverage = as.vector(coverage),
@@ -500,18 +500,18 @@ SummarizedExperimentToDataTable = function(coordinates, methylCountDF=NULL,
 #' will be returned.
 #' @examples 
 #' data("exampleBSseqObj")
-#' MIRAFormatBSDTList = bsseqToDataTable(exampleBSseqObj)
+#' MIRAFormatBSDTList <- bsseqToDataTable(exampleBSseqObj)
 #' @export
 bsseqToDataTable <- function(BSseqObj) {
     
     if (bsseq::hasBeenSmoothed(BSseqObj)) {
-        rawSmooth = "smooth"
+        rawSmooth <- "smooth"
     } else {
-        rawSmooth = "raw"
+        rawSmooth <- "raw"
     }
     
     # use accessor functions from bsseq to get needed data
-    MIRAFormatBSDTList = SummarizedExperimentToDataTable(coordinates = bsseq::granges(BSseqObj), 
+    MIRAFormatBSDTList <- SummarizedExperimentToDataTable(coordinates = bsseq::granges(BSseqObj), 
                  methylCountDF = getCoverage(BSseq = BSseqObj, type = "M"), 
                  coverageDF = getCoverage(BSseq = BSseqObj, type = "Cov"),
                  methylPropDF = getMeth(BSseq = BSseqObj, type = rawSmooth),
@@ -519,7 +519,7 @@ bsseqToDataTable <- function(BSseqObj) {
     
     # # if only one sample, do not return list, just return data.table
     # if (length(MIRAFormatBSDTList) == 1) {
-    #     MIRAFormatBSDTList = MIRAFormatBSDTList[[1]]
+    #     MIRAFormatBSDTList <- MIRAFormatBSDTList[[1]]
     # }
     
     return(MIRAFormatBSDTList)
