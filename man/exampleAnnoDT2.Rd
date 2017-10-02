@@ -3,17 +3,14 @@
 \docType{data}
 \name{exampleAnnoDT2}
 \alias{exampleAnnoDT2}
-\title{A data.table with annotation data for the "Applying MIRA to a 
-Biological Question" vignette. Has annotation data (sampleName
-and sampleType columns) for 24 Ewing samples and 24 muscle-related
-samples (human skeletal myoblasts and other related samples).}
+\title{Annotation data for the "Applying MIRA to a 
+Biological Question" vignette.}
 \format{A data.table, data.frame object}
 \usage{
 data(exampleAnnoDT2)
 }
 \description{
-A data.table with annotation data for the "Applying MIRA to a 
-Biological Question" vignette. Has annotation data (sampleName
+A data.table with annotation data (sampleName
 and sampleType columns) for 24 Ewing samples and 24 muscle-related
 samples (human skeletal myoblasts and other related samples).
 }

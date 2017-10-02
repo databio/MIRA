@@ -3,12 +3,12 @@
 \docType{data}
 \name{exampleAnnoDT1}
 \alias{exampleAnnoDT1}
-\title{A data.table with annotation for a bisulfite sample (name and sample type)}
+\title{A data.table with annotation for a bisulfite sample.}
 \format{A data.table, data.frame object}
 \usage{
 data(exampleAnnoDT1)
 }
 \description{
-A data.table with annotation for a bisulfite sample (name and sample type)
+Has columns for name and sample type.
 }
 \keyword{datasets}

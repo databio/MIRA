@@ -9,6 +9,6 @@
 data(exampleBins)
 }
 \description{
-A data.table with artificial binned methylation data
+Artificial data for two samples/conditions.
 }
 \keyword{datasets}
