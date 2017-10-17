@@ -91,7 +91,7 @@ Now we are ready to run MIRA on a subset of the samples -- three Ewing and three
 ```{r, eval=FALSE}
 subBSDTList <- BSDTList[c(1, 5, 9, 13, 17, 21)]
 bigBin <- lapply(X=subBSDTList, FUN=aggregateMethyl, GRList=regionSets, 
-                binNum=21, minReads=0)
+                binNum=21, minBaseCovPerBin=0)
 bigBinDT1 <- rbindlist(bigBin)
 ```
 
@@ -134,7 +134,7 @@ Now we can run MIRA with all our samples. Let's aggregate methylation data again
 
 ```{r, eval=FALSE}
 bigBin <- lapply(X=BSDTList, FUN=aggregateMethyl, GRList=regionSets, 
-                binNum=21, minReads=0)
+                binNum=21, minBaseCovPerBin=0)
 bigBinDT2 <- rbindlist(bigBin)
 ```
 

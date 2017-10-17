@@ -469,7 +469,7 @@ SummarizedExperimentToDataTable <- function(coordinates, methylCountDF=NULL,
         coverage <- rep(1, rowNum)
         warning(cleanws("coverage was not included in input 
                         so it was set to 1.
-                        It is recommended to set the minreads 
+                        It is recommended to set the minBaseCovPerBin 
                         argument of aggregateMethyl to 0."))
     }
     

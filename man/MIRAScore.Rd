@@ -5,7 +5,7 @@
 \title{Get MIRA score for each sample/region set combination}
 \usage{
 MIRAScore(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
-  minReads = 500)
+  minBaseCovPerBin = 500)
 }
 \arguments{
 \item{BSDT}{A single data table that has DNA methylation data on individual 
@@ -31,7 +31,7 @@ of the DNA methylation data.}
 \item{scoringMethod}{Method to calculate MIRA score after binning. 
 "logRatio" is currently the only option. See scoreDip function.}
 
-\item{minReads}{Filter out bins with fewer than minReads reads. Only used
+\item{minBaseCovPerBin}{Filter out bins with fewer than minBaseCovPerBin reads. Only used
 if there is a 'coverage' column in BSDT}
 }
 \value{

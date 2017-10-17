@@ -78,7 +78,7 @@ if (getRversion() >= "2.15.1") {
 #' be named. A named list of data.tables also works. 
 #' @param binNum How many bins each region should be split into for aggregation 
 #' of the DNA methylation data.
-#' @param minReads Filter out bins with fewer than minReads reads. Only
+#' @param minBaseCovPerBin Filter out bins with fewer than minBaseCovPerBin reads. Only
 #' used if there is a "coverage" column
 #' 
 #' @return a data.table with binNum rows for each region set containing
@@ -99,7 +99,7 @@ if (getRversion() >= "2.15.1") {
 #' data("exampleBSDT", package = "MIRA")
 #' data("exampleRegionSet", package = "MIRA")
 #' exBinDT <- aggregateMethyl(exampleBSDT, exampleRegionSet)
-aggregateMethyl <- function(BSDT, GRList, binNum = 11, minReads = 500){
+aggregateMethyl <- function(BSDT, GRList, binNum = 11, minBaseCovPerBin = 500){
     
     if (is(BSDT, "BSseq")) {
         # if input is not a data.table but rather a BSseq object
@@ -125,12 +125,12 @@ aggregateMethyl <- function(BSDT, GRList, binNum = 11, minReads = 500){
                                 FUN = function(x) aggregateMethylInt(BSDT = x, 
                                                                      GRList = GRList, 
                                                                      binNum = binNum, 
-                                                                     minReads = minReads))
+                                                                     minBaseCovPerBin = minBaseCovPerBin))
     } else {
         bigMethylByBin <- aggregateMethylInt(BSDT = BSDT, 
                                             GRList = GRList, 
                                             binNum = binNum, 
-                                            minReads = minReads)
+                                            minBaseCovPerBin = minBaseCovPerBin)
     }
     
     
@@ -138,7 +138,7 @@ aggregateMethyl <- function(BSDT, GRList, binNum = 11, minReads = 500){
     return(bigMethylByBin)
 }
 
-aggregateMethylInt <- function(BSDT, GRList, binNum = 11, minReads = 500) {
+aggregateMethylInt <- function(BSDT, GRList, binNum = 11, minBaseCovPerBin = 500) {
     ######### aggregateMethyl:Preprocessing and formatting###############
     # BSDT should not be a list but can be converted
     if (is(BSDT, "list")) {
@@ -212,7 +212,7 @@ aggregateMethylInt <- function(BSDT, GRList, binNum = 11, minReads = 500) {
                                                           rangeDT = x, 
                                                           binNum = binNum, 
                                                           splitFactor = NULL, 
-                                                          minReads = minReads,
+                                                          minBaseCovPerBin = minBaseCovPerBin,
                                                           hasCoverage = hasCoverage))
     names(methylByBin) <- names(GRList)# preserving names
     # adding a feature ID column to each data.table that 
@@ -268,7 +268,7 @@ aggregateMethylInt <- function(BSDT, GRList, binNum = 11, minReads = 500) {
 #' of the DNA methylation data.
 #' @param scoringMethod Method to calculate MIRA score after binning. 
 #' "logRatio" is currently the only option. See scoreDip function.
-#' @param minReads Filter out bins with fewer than minReads reads. Only used
+#' @param minBaseCovPerBin Filter out bins with fewer than minBaseCovPerBin reads. Only used
 #' if there is a 'coverage' column in BSDT
 #' 
 #' @return A data.table with a MIRA score for each region set in GRList. 
@@ -282,7 +282,7 @@ aggregateMethylInt <- function(BSDT, GRList, binNum = 11, minReads = 500) {
 #' 
 #' @export
 MIRAScore <- function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio", 
-                     minReads = 500){
+                     minBaseCovPerBin = 500){
 
     ## not requiring sampleName column to save memory
     # # checking for sampleName column
@@ -313,7 +313,7 @@ MIRAScore <- function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
                FUN = function(x) aggregateMethylInt(BSDT = x, 
                                                     GRList = GRList, 
                                                     binNum = binNum, 
-                                                    minReads = minReads))
+                                                    minBaseCovPerBin = minBaseCovPerBin))
         
         # using binned methylation data to calculate MIRA score
         scoreDT <- lapply(X = bigBinList, FUN = function(x) x[, .(score = scoreDip(methylProp, 
@@ -325,7 +325,7 @@ MIRAScore <- function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
     } else {
         
         bigBin <- aggregateMethyl(BSDT = BSDT, GRList = GRList, binNum = binNum, 
-                             minReads = minReads)
+                             minBaseCovPerBin = minBaseCovPerBin)
         # using binned methylation data to calculate MIRA score
         scoreDT <- bigBin[, .(score = scoreDip(methylProp, 
                                               method = scoringMethod)), 

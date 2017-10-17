@@ -31,7 +31,7 @@
 #' @param byRegionGroup Default TRUE will aggregate methylation over 
 #' corresponding bins for each region (all bin1's aggregated, all bin2's, etc).
 #' byRegionGroup = FALSE is deprecated.
-#' @param minReads Filter out bins with fewer than X reads before returning.
+#' @param minBaseCovPerBin Filter out bins with fewer than X reads before returning.
 #' @param splitFactor With default NULL, aggregation will be done 
 #' separately/individually for each sample.
 #' @param hasCoverage Default TRUE. Whether there is a coverage column
@@ -64,7 +64,7 @@
 #'                              binNum = 11, splitFactor = NULL)
 #' 
 #' @export
-BSBinAggregate <- function(BSDT, rangeDT, binNum, minReads = 500, 
+BSBinAggregate <- function(BSDT, rangeDT, binNum, minBaseCovPerBin = 500, 
                           byRegionGroup = TRUE, splitFactor = NULL,
                           hasCoverage = TRUE) {
     
@@ -128,8 +128,8 @@ BSBinAggregate <- function(BSDT, rangeDT, binNum, minReads = 500,
     # If we aren't aggregating by bin, then don't restrict to min reads!
     if (byRegionGroup) {
         if (hasCoverage) {
-            # only keep rows (bins) with coverage >= minReads
-            binnedBSDT <- binnedBSDT[coverage >= minReads, ]
+            # only keep rows (bins) with coverage >= minBaseCovPerBin
+            binnedBSDT <- binnedBSDT[coverage >= minBaseCovPerBin, ]
         }
         if (nrow(binnedBSDT) < binNum) {
             # telling user what sample failed if sample name is in BSDT
@@ -139,7 +139,7 @@ BSBinAggregate <- function(BSDT, rangeDT, binNum, minReads = 500,
                 thisSample <- "this sample"
             }
             
-            warning(paste0("Less than minReads. Unable to return bins for ", 
+            warning(paste0("Less than minBaseCovPerBin. Unable to return bins for ", 
                             thisSample, " for this region set."))
         }
     }

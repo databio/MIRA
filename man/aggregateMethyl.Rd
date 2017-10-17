@@ -5,7 +5,7 @@
 \title{Aggregate methylation data to get
 a summary methylation profile for each region set}
 \usage{
-aggregateMethyl(BSDT, GRList, binNum = 11, minReads = 500)
+aggregateMethyl(BSDT, GRList, binNum = 11, minBaseCovPerBin = 500)
 }
 \arguments{
 \item{BSDT}{A single data.table that has DNA methylation data on individual 
@@ -28,7 +28,7 @@ be named. A named list of data.tables also works.}
 \item{binNum}{How many bins each region should be split into for aggregation 
 of the DNA methylation data.}
 
-\item{minReads}{Filter out bins with fewer than minReads reads. Only
+\item{minBaseCovPerBin}{Filter out bins with fewer than minBaseCovPerBin reads. Only
 used if there is a "coverage" column}
 }
 \value{

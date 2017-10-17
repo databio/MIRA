@@ -187,7 +187,7 @@ test_that("aggregateMethyl and MIRAScore", {
     #testing aggregateMethyl, warning about names is expected
     # ignore warning about needing a named list/GrangesList
     binnedBSDT <- aggregateMethyl(BSDT = testBSDT, GRList = testGR, 
-                              binNum = numBins, minReads = 0)
+                              binNum = numBins, minBaseCovPerBin = 0)
     expect_equal(round(binnedBSDT[, methylProp], 2), rep(0.54, numBins))
     #testing that expected coverage in each bin is obtained
     expect_equal(binnedBSDT[, coverage], c(rep(20000, numBins)))
@@ -200,14 +200,14 @@ test_that("aggregateMethyl and MIRAScore", {
                           pos=testBSDT$start,
                           sampleNames=unique(testBSDT$sampleName))
     binnedBSDTbsseq <- aggregateMethyl(BSDT = testBSDTbsseq, GRList = testGR,
-                                    binNum = numBins, minReads = 0)
+                                    binNum = numBins, minBaseCovPerBin = 0)
     names(binnedBSDTbsseq) <- NULL # taking off name for the following comparison
     expect_equal(binnedBSDTbsseq, list(binnedBSDT))
 
     
     # testing MIRAScore, warning about names is expected
     # ignore warning about needing a named list/GrangesList
-    scoreDT <- MIRAScore(BSDT = testBSDT, GRList = testGR, binNum = numBins, minReads = 0, 
+    scoreDT <- MIRAScore(BSDT = testBSDT, GRList = testGR, binNum = numBins, minBaseCovPerBin = 0, 
                       scoringMethod = "logRatio")
     #since the MIRA signature was flat, score = 0
     expect_equal(scoreDT$score, 0)
