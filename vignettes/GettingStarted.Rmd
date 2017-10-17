@@ -71,6 +71,7 @@ library(GenomicRanges) # for the `resize`, `width` functions
 data("exampleRegionSet", package="MIRA")
 data("exampleBSDT", package="MIRA")
 BSDTList <- list(exampleBSDT)
+names(BSDTList) <- "Gm06990_1"
 ```
 
 Since our input methylation data did not have a column for proportion of methylation at each site (`methylProp`), we need to add this based on the methylation count and total coverage data.
@@ -108,6 +109,13 @@ Next we aggregate the methylation across regions to get a summary methylation pr
 bigBin <- lapply(X=BSDTList, FUN=aggregateMethyl, GRList=exampleRegionSet, 
                 binNum=11)
 bigBinDT <- bigBin[[1]]
+```
+
+We add the sample name to the data.table then plot the MIRA signature:
+
+```{r Plot profiles, message=FALSE, warning=FALSE}
+sampleName = rep(names(bigBin), nrow(bigBinDT))
+bigBinDT = cbind(bigBinDT, sampleName)
 plotMIRAProfiles(binnedRegDT=bigBinDT)
 ```
 

@@ -22,7 +22,7 @@
 #'             scale_color_brewer
 #' @import BiocGenerics S4Vectors IRanges
 #' @importFrom data.table ":=" setDT data.table setkey fread setnames 
-#'             setcolorder rbindlist setattr setorder
+#'             setcolorder rbindlist setattr setorder copy
 #' @importFrom Biobase sampleNames
 #' @importFrom stats lm coefficients poly
 #' @importFrom bsseq getCoverage getMeth
@@ -69,8 +69,8 @@ if (getRversion() >= "2.15.1") {
 #' for number of methylated reads, and
 #' optionally "coverage" for total number of reads.
 #' In addition, a "sampleName" column is strongly preferred (and required later
-#' for scoring multiple samples at the same time using 
-#' "scoreDip(..., by = .(featureID, sampleName))" in a MIRA workflow).
+#' for scoring multiple samples at the same time using the 
+#' "scoreDip" function in a MIRA workflow).
 
 #' @param GRList A GRangesList object containing region sets, each set 
 #' corresponding to a type of regulatory element. 
@@ -105,17 +105,21 @@ aggregateMethyl <- function(BSDT, GRList, binNum = 11, minReads = 500){
         # if input is not a data.table but rather a BSseq object
         # bsseq objects can include multiple samples so make a list
         
-        # checking for sample names
-        if (length(sampleNames(BSDT)) != ncol(BSDT)) {
-            stop(cleanws("BSseq object must have sample name for each sample.
-                        Check output of bsseq::sampleNames(BSDT)"))
-        }
+        ## not adding sample name to BSDT because of memory it would require
+        ## so sample names are no longer required in BSseq object
+        # # checking for sample names
+        # if (length(sampleNames(BSDT)) != ncol(BSDT)) {
+        #     stop(cleanws("BSseq object must have sample name for each sample.
+        #                 Check output of bsseq::sampleNames(BSDT)"))
+        # }
         BSDTList <- bsseqToDataTable(BSDT)
-        # for each data.table, make a sampleName column with the appropriate
-        # name (by reference)
-        mapply(FUN = function(x, y) x[, sampleName := y], 
-               BSDTList,
-               names(BSDTList))
+        
+        ## not adding sample name to BSDT because of memory it would require
+        # # for each data.table, make a sampleName column with the appropriate
+        # # name (by reference)
+        # mapply(FUN = function(x, y) x[, sampleName := y], 
+        #        BSDTList,
+        #        names(BSDTList))
         # do the aggregation step on each data.table
         bigMethylByBin <- lapply(X = BSDTList, 
                                 FUN = function(x) aggregateMethylInt(BSDT = x, 
@@ -223,11 +227,12 @@ aggregateMethylInt <- function(BSDT, GRList, binNum = 11, minReads = 500) {
     methylByBin <- methylByBin[!(binNumScreen < binNum)]
     
     bigMethylByBin <- rbindlist(methylByBin)
-    sampleNameInBSDT <- "sampleName" %in% colnames(BSDT)
-    if (sampleNameInBSDT && (ncol(bigMethylByBin) != 0)) {
-        # creating new sampleName column
-        bigMethylByBin[, sampleName := rep(BSDT[1, sampleName])][] 
-    }
+    ## letting user take care of sampleName stuff outside aggregateMethyl()
+    # sampleNameInBSDT <- "sampleName" %in% colnames(BSDT)
+    # if (sampleNameInBSDT && (ncol(bigMethylByBin) != 0)) {
+    #     # creating new sampleName column
+    #     bigMethylByBin[, sampleName := rep(BSDT[1, sampleName])][] 
+    # }
     
     return(bigMethylByBin)
 }
@@ -279,27 +284,31 @@ aggregateMethylInt <- function(BSDT, GRList, binNum = 11, minReads = 500) {
 MIRAScore <- function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio", 
                      minReads = 500){
 
-    # checking for sampleName column
-    if (is(BSDT, "data.table")) {
-        if (!("sampleName" %in% colnames(BSDT))) {
-            stop("sampleName column must be present in BSDT")
-        }
-    } 
+    ## not requiring sampleName column to save memory
+    # # checking for sampleName column
+    # if (is(BSDT, "data.table")) {
+    #     if (!("sampleName" %in% colnames(BSDT))) {
+    #         stop("sampleName column must be present in BSDT")
+    #     }
+    # } 
     
     # if BSseq object was given, convert to a list of data.tables
     # then run aggregation on each with lapply
     if (is(BSDT, "BSseq")) {
-        # checking for sample names
-        if (length(sampleNames(BSDT)) != ncol(BSDT)) {
-            stop(cleanws("BSseq object must have sample name for each sample.
-                        Check output of bsseq::sampleNames(BSDT)"))
-        }
+        ## not requiring sampleName to save on memory
+        # # checking for sample names
+        # if (length(sampleNames(BSDT)) != ncol(BSDT)) {
+        #     stop(cleanws("BSseq object must have sample name for each sample.
+        #                 Check output of bsseq::sampleNames(BSDT)"))
+        # }
         BSDTList <- bsseqToDataTable(BSDT)
-        # for each data.table, make a sampleName column with the appropriate
-        # name (by reference)
-        mapply(FUN = function(x, y) x[, sampleName := y], 
-               BSDTList,
-               names(BSDTList))
+        ## not adding sampleName column in order to save on memory
+        # # for each data.table, make a sampleName column with the appropriate
+        # # name (by reference)
+        # mapply(FUN = function(x, y) x[, sampleName := y], 
+        #        BSDTList,
+        #        names(BSDTList))
+        sampleNames = names(BSDTList) # could be NULL
         bigBinList <- lapply(X = BSDTList, 
                FUN = function(x) aggregateMethylInt(BSDT = x, 
                                                     GRList = GRList, 
@@ -309,8 +318,10 @@ MIRAScore <- function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
         # using binned methylation data to calculate MIRA score
         scoreDT <- lapply(X = bigBinList, FUN = function(x) x[, .(score = scoreDip(methylProp, 
                                                                         method = scoringMethod)), 
-                                                   by = .(featureID, sampleName)])
-    
+                                                   by = .(featureID)])
+        if (!is.null(sampleNames)) {
+            setnames(scoreDT, sampleNames)
+        }
     } else {
         
         bigBin <- aggregateMethyl(BSDT = BSDT, GRList = GRList, binNum = binNum, 
@@ -318,7 +329,7 @@ MIRAScore <- function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
         # using binned methylation data to calculate MIRA score
         scoreDT <- bigBin[, .(score = scoreDip(methylProp, 
                                               method = scoringMethod)), 
-                         by = .(featureID, sampleName)]
+                         by = .(featureID)]
         
     }
   

@@ -17,8 +17,8 @@ methylation (0 to 1), optionally "methylCount"
 for number of methylated reads, and
 optionally "coverage" for total number of reads.
 In addition, a "sampleName" column is strongly preferred (and required later
-for scoring multiple samples at the same time using 
-"scoreDip(..., by = .(featureID, sampleName))" in a MIRA workflow).}
+for scoring multiple samples at the same time using the 
+"scoreDip" function in a MIRA workflow).}
 
 \item{GRList}{A GRangesList object containing region sets, each set 
 corresponding to a type of regulatory element. 
