@@ -86,8 +86,13 @@ setLapplyAlias <- function(cores = 0) {
 # @param funcs Functions to use on columns.
 # @return A jcommand string. After performing function on column, column 
 # is reassigned the same name.
-buildJ <- function(cols, funcs) {
-    r <- paste("list(", paste(paste0(cols, "=", funcs, "(", cols, ")"), collapse = ","), ")")
+buildJ <- function(cols, funcs, newColNames=NULL) {
+    if (is.null(newColNames)) {
+        # previously the only option (changed 10/16/17)
+        r <- paste("list(", paste(paste0(cols, "=", funcs, "(", cols, ")"), collapse = ","), ")")
+    } else {
+        r <- paste("list(", paste(paste0(newColNames, "=", funcs, "(", cols, ")"), collapse = ","), ")")
+    }
     return(r);
 }
 

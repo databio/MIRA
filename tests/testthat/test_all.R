@@ -116,7 +116,9 @@ test_that("BSAggregate", {
     #
     binnedBSDT <- 
         BSAggregate(BSDT = testBSDT, regionsGRL = GRangesList(binnedGR), 
-                    jCommand = buildJ(c("methylProp", "coverage"), c("mean", "sum")), 
+                    jCommand = buildJ(c("methylProp", "coverage"), 
+                                      c("mean", "sum"),
+                                      newColNames=c("methylProp", "sumCoverage")), 
                     byRegionGroup = TRUE, splitFactor = NULL)
     #all should be the same since having opposite strands resulted in
     #flipping the second region
@@ -131,13 +133,15 @@ test_that("BSAggregate", {
     binnedGR <- sapply(split(binnedDT, binnedDT$binID), dtToGr)
     binnedBSDT <-
         BSAggregate(BSDT = testBSDT, regionsGRL = GRangesList(binnedGR), 
-                    jCommand = buildJ(c("methylProp", "coverage"), c("mean", "sum")), 
+                    jCommand = buildJ(c("methylProp", "coverage"), 
+                                      c("mean", "sum"),
+                                      newColNames=c("methylProp", "sumCoverage")), 
                     byRegionGroup = TRUE, splitFactor = NULL)
     #all should be the same since having opposite strands resulted in
     #flipping the second region
     expect_equal(round(binnedBSDT[, methylProp], 2), round(1:numBins / numBins, 2))
-    #testing that expected coverage in each bin is obtained
-    expect_equal(binnedBSDT[, coverage], c(rep(20000, numBins - 1), 30000))
+    #testing that expected sumCoverage in each bin is obtained
+    expect_equal(binnedBSDT[, sumCoverage], c(rep(20000, numBins - 1), 30000))
     
     #now with no strand info given
     #tests that no strand will be symmetrically averaged 
@@ -147,7 +151,9 @@ test_that("BSAggregate", {
     binnedGR <- sapply(split(binnedDT, binnedDT$binID), dtToGr)
     binnedBSDT <- 
         BSAggregate(BSDT = testBSDT, regionsGRL = GRangesList(binnedGR), 
-                    jCommand = buildJ(c("methylProp", "coverage"), c("mean", "sum")), 
+                    jCommand = buildJ(c("methylProp", "coverage"), 
+                                      c("mean", "sum"),
+                                      newColNames=c("methylProp", "sumCoverage")), 
                     byRegionGroup = TRUE, splitFactor = NULL)
     #hard coded so may need to be updated later
     expect_equal(round(binnedBSDT[, methylProp], 2), 
@@ -160,7 +166,9 @@ test_that("BSAggregate", {
     binnedGR <- sapply(split(binnedDT, binnedDT$binID), dtToGr)
     binnedBSDT <-
         BSAggregate(BSDT = testBSDT, regionsGRL = GRangesList(binnedGR), 
-                    jCommand = buildJ(c("methylProp", "coverage"), c("mean", "sum")), 
+                    jCommand = buildJ(c("methylProp", "coverage"), 
+                                      c("mean", "sum"),
+                                      newColNames=c("methylProp", "sumCoverage")), 
                     byRegionGroup = TRUE, splitFactor = NULL)
     expect_equal(round(binnedBSDT[12, methylProp], 2), 0.9)
     
@@ -170,7 +178,8 @@ test_that("BSAggregate", {
     expect_error(BSAggregate(BSDT = testBSDT, 
                              regionsGRL = GRangesList(binnedGR), 
                              jCommand = buildJ(c("methylProp", "coverage"), 
-                                               c("mean", "sum")), 
+                                               c("mean", "sum"),
+                                               newColNames=c("methylProp", "sumCoverage")), 
                              byRegionGroup = TRUE, splitFactor = NULL))
 
 })
@@ -189,8 +198,8 @@ test_that("aggregateMethyl and MIRAScore", {
     binnedBSDT <- aggregateMethyl(BSDT = testBSDT, GRList = testGR, 
                               binNum = numBins, minBaseCovPerBin = 0)
     expect_equal(round(binnedBSDT[, methylProp], 2), rep(0.54, numBins))
-    #testing that expected coverage in each bin is obtained
-    expect_equal(binnedBSDT[, coverage], c(rep(20000, numBins)))
+    #testing that expected sumCoverage in each bin is obtained
+    expect_equal(binnedBSDT[, sumCoverage], c(rep(20000, numBins)))
     
     # making sure the output is same for input of data.table or bsseq
     # making bsseq version of testBSDT (there should only be one sampleName)

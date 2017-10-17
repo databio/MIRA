@@ -43,7 +43,7 @@
 #' Output contains sum of the all corresponding bins 
 #' for the regions of each region set ie for all regions in each region set: 
 #' first bins summed, second bins summed, etc.
-#' Columns of the output should be "bin", "methylProp", and "coverage"
+#' Columns of the output should be "bin", "methylProp", and "sumCoverage"
 #' ###########################################################################
 #' Info about how strand of rangeDT affects output:
 #' The MIRA signature will be symmetrical if no strand information is given for 
@@ -114,7 +114,8 @@ BSBinAggregate <- function(BSDT, rangeDT, binNum, minBaseCovPerBin = 500,
     if (hasCoverage) {
         # aggregate methylation (mean) and sum coverage values
         aggrJCommand <- buildJ(c("methylProp", "coverage"), 
-                              c("mean", "sum"))
+                              c("mean", "sum"), 
+                              newColNames = c("methylProp", "sumCoverage"))
     } else {
         # if no coverage only aggregate methylation level
         aggrJCommand <- buildJ("methylProp", "mean")
@@ -128,8 +129,8 @@ BSBinAggregate <- function(BSDT, rangeDT, binNum, minBaseCovPerBin = 500,
     # If we aren't aggregating by bin, then don't restrict to min reads!
     if (byRegionGroup) {
         if (hasCoverage) {
-            # only keep rows (bins) with coverage >= minBaseCovPerBin
-            binnedBSDT <- binnedBSDT[coverage >= minBaseCovPerBin, ]
+            # only keep rows (bins) with sumCoverage >= minBaseCovPerBin
+            binnedBSDT <- binnedBSDT[sumCoverage >= minBaseCovPerBin, ]
         }
         if (nrow(binnedBSDT) < binNum) {
             # telling user what sample failed if sample name is in BSDT
@@ -195,7 +196,7 @@ BSBinAggregate <- function(BSDT, rangeDT, binNum, minBaseCovPerBin = 500,
 # unless told otherwise
 # 
 # @return In context of MIRA, with byRegionGroup = TRUE and jCommand = 
-# list( methylProp = mean(methylProp), coverage = sum(coverage) )", 
+# list( methylProp = mean(methylProp), sumCoverage = sum(coverage) )", 
 # this function will return a data.table with 
 # binNum rows (parameter for BSBinAggregate)
 # containing aggregated methylation from BSDT over binned regions from a region
@@ -333,12 +334,12 @@ BSAggregate <- function(BSDT, regionsGRL, excludeGR = NULL,
         
         # if any strand information was not given, averaging the signatures 
         # about the center to account for unknown strand orientation, 
-        # also averaging coverage about center
+        # also averaging sumCoverage about center
         # ie if any "*" are present then average
         if ("*" %in% unique(as.character(strand(regionsGR)))) {
             bsCombined[, methylProp := (methylProp + rev(methylProp)) / 2]
             if (hasCoverage) {
-                bsCombined[, coverage := (coverage + rev(coverage)) / 2]
+                bsCombined[, sumCoverage := (sumCoverage + rev(sumCoverage)) / 2]
             }
         }
         

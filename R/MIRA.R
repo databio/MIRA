@@ -89,7 +89,7 @@ if (getRversion() >= "2.15.1") {
 #' Output contains sum of the all corresponding bins for the regions of each 
 #' region set, ie for all regions in each region set: first bins summed, second 
 #' bins summed, etc. Columns of the output should be "bin", "methylProp", 
-#' "coverage" (if coverage was an input column), "featureID", 
+#' "sumCoverage" (if coverage was an input column), "featureID", 
 #' and possibly "sampleName".
 #' For information on symmetry of bins and output when a region set has
 #' strand info, see ?BSBinAggregate.
