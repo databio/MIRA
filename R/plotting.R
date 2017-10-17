@@ -106,7 +106,7 @@ xAxisForRegionPlots <- function(binNum) {
 #' @export
 #' @examples
 #' data(bigBinDT2)
-#' exScores <- bigBinDT2[, .(score=scoreDip(methylProp,
+#' exScores <- bigBinDT2[, .(score=calcMIRAScore(methylProp,
 #'                                        shoulderShift = 5)), 
 #'                     by = .(featureID, sampleName)]
 #' # adding annotation

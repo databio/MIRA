@@ -5,7 +5,7 @@
 \title{Aggregate methylation data to get
 a summary methylation profile for each region set}
 \usage{
-aggregateMethyl(BSDT, GRList, binNum = 11, minReads = 500)
+aggregateMethyl(BSDT, GRList, binNum = 11, minBaseCovPerBin = 500)
 }
 \arguments{
 \item{BSDT}{A single data.table that has DNA methylation data on individual 
@@ -17,8 +17,8 @@ methylation (0 to 1), optionally "methylCount"
 for number of methylated reads, and
 optionally "coverage" for total number of reads.
 In addition, a "sampleName" column is strongly preferred (and required later
-for scoring multiple samples at the same time using 
-"scoreDip(..., by = .(featureID, sampleName))" in a MIRA workflow).}
+for scoring multiple samples at the same time using the 
+"calcMIRAScore" function in a MIRA workflow).}
 
 \item{GRList}{A GRangesList object containing region sets, each set 
 corresponding to a type of regulatory element. 
@@ -28,7 +28,7 @@ be named. A named list of data.tables also works.}
 \item{binNum}{How many bins each region should be split into for aggregation 
 of the DNA methylation data.}
 
-\item{minReads}{Filter out bins with fewer than minReads reads. Only
+\item{minBaseCovPerBin}{Filter out bins with fewer than minBaseCovPerBin reads. Only
 used if there is a "coverage" column}
 }
 \value{
@@ -40,7 +40,7 @@ Each region was split into bins; methylation was put in these bins;
 Output contains sum of the all corresponding bins for the regions of each 
 region set, ie for all regions in each region set: first bins summed, second 
 bins summed, etc. Columns of the output should be "bin", "methylProp", 
-"coverage" (if coverage was an input column), "featureID", 
+"sumCoverage" (if coverage was an input column), "featureID", 
 and possibly "sampleName".
 For information on symmetry of bins and output when a region set has
 strand info, see ?BSBinAggregate.

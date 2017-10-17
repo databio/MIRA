@@ -34,7 +34,7 @@ there are too many (more than 9) region sets ('featureID's).
 }
 \examples{
 data(bigBinDT2)
-exScores <- bigBinDT2[, .(score=scoreDip(methylProp,
+exScores <- bigBinDT2[, .(score=calcMIRAScore(methylProp,
                                        shoulderShift = 5)), 
                     by = .(featureID, sampleName)]
 # adding annotation

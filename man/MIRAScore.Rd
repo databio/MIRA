@@ -5,7 +5,7 @@
 \title{Get MIRA score for each sample/region set combination}
 \usage{
 MIRAScore(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
-  minReads = 500)
+  minBaseCovPerBin = 500)
 }
 \arguments{
 \item{BSDT}{A single data table that has DNA methylation data on individual 
@@ -29,24 +29,24 @@ Each regionSet in the list should be named.}
 of the DNA methylation data.}
 
 \item{scoringMethod}{Method to calculate MIRA score after binning. 
-"logRatio" is currently the only option. See scoreDip function.}
+"logRatio" is currently the only option. See calcMIRAScore function.}
 
-\item{minReads}{Filter out bins with fewer than minReads reads. Only used
+\item{minBaseCovPerBin}{Filter out bins with fewer than minBaseCovPerBin reads. Only used
 if there is a 'coverage' column in BSDT}
 }
 \value{
 A data.table with a MIRA score for each region set in GRList. 
-See ?scoreDip. 
+See ?calcMIRAScore. 
 If input for "BSDT" is a BSseq object, output will be a list of 
 data.tables if there were multiple samples in the BSseq object.
 }
 \description{
 Takes methylation data and sets of regions then aggregates
 methylation for each region set and scores the resulting profile.
-A wrapper for aggregateMethyl and scoreDip but it does not return
+A wrapper for aggregateMethyl and calcMIRAScore but it does not return
 the summary methylation profiles, just the scores. This function is 
 given only for convenience in working with small numbers of samples/region
-sets. For large analyses, "aggregateMethyl" and "scoreDip" are recommended.
+sets. For large analyses, "aggregateMethyl" and "calcMIRAScore" are recommended.
 See vignettes for recommended use of MIRA.
 }
 \examples{

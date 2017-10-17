@@ -62,7 +62,8 @@ wrapper of this function.
 \examples{
  
 data("exampleBSseqObj")
-MIRAFormatBSDTList <- SummarizedExperimentToDataTable(coordinates = bsseq::granges(exampleBSseqObj), 
+MIRAFormatBSDTList <- SummarizedExperimentToDataTable(coordinates = 
+    bsseq::granges(exampleBSseqObj), 
     methylCountDF = bsseq::getCoverage(BSseq = exampleBSseqObj, type = "M"), 
     coverageDF = bsseq::getCoverage(BSseq = exampleBSseqObj, type = "Cov"),
     methylPropDF = bsseq::getMeth(BSseq = exampleBSseqObj, type = "raw"),

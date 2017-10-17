@@ -86,9 +86,70 @@ setLapplyAlias <- function(cores = 0) {
 # @param funcs Functions to use on columns.
 # @return A jcommand string. After performing function on column, column 
 # is reassigned the same name.
-buildJ <- function(cols, funcs) {
-    r <- paste("list(", paste(paste0(cols, "=", funcs, "(", cols, ")"), collapse = ","), ")")
+buildJ <- function(cols, funcs, newColNames=NULL) {
+    if (is.null(newColNames)) {
+        # previously the only option (changed 10/16/17)
+        r <- paste("list(", paste(paste0(cols, "=", funcs, "(", cols, ")"), collapse = ","), ")")
+    } else {
+        r <- paste("list(", paste(paste0(newColNames, "=", funcs, "(", cols, ")"), collapse = ","), ")")
+    }
     return(r);
+}
+
+# cleanws takes multi-line, code formatted strings and just formats them
+# as simple strings
+# @param string string to clean
+# @return A string with all consecutive whitespace characters, including
+# tabs and newlines, merged into a single space.
+cleanws <- function(string) {
+    return(gsub('\\s+'," ", string))
+}
+#' Combine data.tables from a named list into one big data.table with extra
+#' column for name.
+#' 
+#' Combines data.tables from a list as data.table::rbindlist except an 
+#' extra column is added which can mark which rows came from which 
+#' original data.table. The name of this new column can be 
+#' specified (newColName param) and the values are the names of the input list.
+#' This function was originally intended for a list where each
+#' data.table corresponds to a separate sample and the list names
+#' correspond to the names of the samples. Now all samples can
+#' be combined into one data.table but which sample the information
+#' came from can be kept.
+#' 
+#' @param namedList A list of data.tables. One sample per data.table/list item.
+#' Names of the list are the sample names. 
+#' @param newColName The name of the column that will be added to the data.tables
+#' 
+#' @return mergedDT A single data.table that combines those in the input list 
+#' (data.table::rbindlist)
+#' but also added a column (default, newColName="sampleName") to each one to
+#' keep track of which rows were from which sample
+# @examples 
+# # this example works but sample names should not be added before 
+# # running aggregateMethyl() in order to save memory
+# data(exampleBSseqObj)
+# multiSampleList <- bsseqToDataTable(exampleBSseqObj)
+# combinedDT <- rbindNamedList(multiSampleList)
+#' @export
+rbindNamedList <- function(namedList, newColName="sampleName") {
+    # making a copy so original object will not be changed by reference
+    namedListC <- data.table::copy(namedList)
+    
+    newColVals <- names(namedListC)
+    # if a not all items in list are named
+    if (length(newColVals) < length(namedListC)) {
+        warning("All list items should be named.")
+    }
+    
+    # named it .y just in case someone made their new column name (newColName) y
+    # after testing I don't think that actually is a problem but I'll keep it
+    jExpr <- paste0(newColName, " := .y")
+    # by reference
+    mapply(FUN = function(x, .y) x[, eval(parse(text = jExpr))], namedListC, newColVals)
+    mergedDT <- rbindlist(namedListC, fill = TRUE)
+    
+    return(mergedDT)
 }
 
 
@@ -241,14 +302,7 @@ grToDt <- function(GR, includeStrand = FALSE) {
 
 
 
-# cleanws takes multi-line, code formatted strings and just formats them
-# as simple strings
-# @param string string to clean
-# @return A string with all consecutive whitespace characters, including
-# tabs and newlines, merged into a single space.
-cleanws <- function(string) {
-    return(gsub('\\s+'," ", string))
-}
+
 
 #' Make MIRA-compatible data.tables using information 
 #' from SummarizedExperiment-based classes
@@ -297,7 +351,8 @@ cleanws <- function(string) {
 #' a named list will be returned. 
 #' @examples  
 #' data("exampleBSseqObj")
-#' MIRAFormatBSDTList <- SummarizedExperimentToDataTable(coordinates = bsseq::granges(exampleBSseqObj), 
+#' MIRAFormatBSDTList <- SummarizedExperimentToDataTable(coordinates = 
+#'     bsseq::granges(exampleBSseqObj), 
 #'     methylCountDF = bsseq::getCoverage(BSseq = exampleBSseqObj, type = "M"), 
 #'     coverageDF = bsseq::getCoverage(BSseq = exampleBSseqObj, type = "Cov"),
 #'     methylPropDF = bsseq::getMeth(BSseq = exampleBSseqObj, type = "raw"),
@@ -419,7 +474,7 @@ SummarizedExperimentToDataTable <- function(coordinates, methylCountDF=NULL,
         coverage <- rep(1, rowNum)
         warning(cleanws("coverage was not included in input 
                         so it was set to 1.
-                        It is recommended to set the minreads 
+                        It is recommended to set the minBaseCovPerBin 
                         argument of aggregateMethyl to 0."))
     }
     

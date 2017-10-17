@@ -4,8 +4,8 @@
 \alias{BSBinAggregate}
 \title{Bins regions and aggregates methylation data across the regions by bin}
 \usage{
-BSBinAggregate(BSDT, rangeDT, binNum, minReads = 500, byRegionGroup = TRUE,
-  splitFactor = NULL, hasCoverage = TRUE)
+BSBinAggregate(BSDT, rangeDT, binNum, minBaseCovPerBin = 500,
+  byRegionGroup = TRUE, splitFactor = NULL, hasCoverage = TRUE)
 }
 \arguments{
 \item{BSDT}{A single data table that has DNA methylation data 
@@ -23,7 +23,7 @@ affect the output. See "Value" section.}
 
 \item{binNum}{Number of bins across the region.}
 
-\item{minReads}{Filter out bins with fewer than X reads before returning.}
+\item{minBaseCovPerBin}{Filter out bins with fewer than X reads before returning.}
 
 \item{byRegionGroup}{Default TRUE will aggregate methylation over 
 corresponding bins for each region (all bin1's aggregated, all bin2's, etc).

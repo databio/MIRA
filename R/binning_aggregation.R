@@ -31,7 +31,7 @@
 #' @param byRegionGroup Default TRUE will aggregate methylation over 
 #' corresponding bins for each region (all bin1's aggregated, all bin2's, etc).
 #' byRegionGroup = FALSE is deprecated.
-#' @param minReads Filter out bins with fewer than X reads before returning.
+#' @param minBaseCovPerBin Filter out bins with fewer than X reads before returning.
 #' @param splitFactor With default NULL, aggregation will be done 
 #' separately/individually for each sample.
 #' @param hasCoverage Default TRUE. Whether there is a coverage column
@@ -64,7 +64,7 @@
 #'                              binNum = 11, splitFactor = NULL)
 #' 
 #' @export
-BSBinAggregate <- function(BSDT, rangeDT, binNum, minReads = 500, 
+BSBinAggregate <- function(BSDT, rangeDT, binNum, minBaseCovPerBin = 500, 
                           byRegionGroup = TRUE, splitFactor = NULL,
                           hasCoverage = TRUE) {
     
@@ -128,8 +128,8 @@ BSBinAggregate <- function(BSDT, rangeDT, binNum, minReads = 500,
     # If we aren't aggregating by bin, then don't restrict to min reads!
     if (byRegionGroup) {
         if (hasCoverage) {
-            # only keep rows (bins) with coverage >= minReads
-            binnedBSDT <- binnedBSDT[coverage >= minReads, ]
+            # only keep rows (bins) with coverage >= minBaseCovPerBin
+            binnedBSDT <- binnedBSDT[coverage >= minBaseCovPerBin, ]
         }
         if (nrow(binnedBSDT) < binNum) {
             # telling user what sample failed if sample name is in BSDT
@@ -139,7 +139,7 @@ BSBinAggregate <- function(BSDT, rangeDT, binNum, minReads = 500,
                 thisSample <- "this sample"
             }
             
-            warning(paste0("Less than minReads. Unable to return bins for ", 
+            warning(paste0("Less than minBaseCovPerBin. Unable to return bins for ", 
                             thisSample, " for this region set."))
         }
     }
@@ -178,7 +178,8 @@ BSBinAggregate <- function(BSDT, rangeDT, binNum, minReads = 500,
 # @param sumCols Deprecated, NULL value should be used for MIRA aggregation.
 # @param jCommand You can pass a custom command in the j slot to data.table
 # specifying which columns to aggregate, and which functions to use. You
-# can use buildJ() to build a jCommand argument easily.
+# can use buildJ() to build a jCommand argument easily. jCommand may be
+# used twice so changing column names in the jCommand could introduce errors
 # @param byRegionGroup You can aggregate by regionID or by regionGroupID; 
 # this reflects the regionsGRL that you pass; by default, BSAggregate will
 # aggregate each region individually -- scores will then be contiguous, and
@@ -324,10 +325,15 @@ BSAggregate <- function(BSDT, regionsGRL, excludeGR = NULL,
         } else {
             byStringGroup <- "list(regionGroupID)"
         }
+       
+        
         # actual aggregation operation
-        # for normal MIRA use: averaging methyProp's and summing
+        # for normal MIRA use: averaging methylProp's and summing
         # coverage for all bins with the same number (ie all
         # bin1's together, all bin2's together, etc.)
+        # NOTE: 2nd use of the jCommand so if the first jCommand use changed
+        # column names that are required by the jCommand 
+        # then this 2nd jCommand use will cause an error
         bsCombined <- bsCombined[, eval(parse(text = jCommand)), 
                                 by = eval(parse(text = byStringGroup))]
         
