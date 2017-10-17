@@ -107,6 +107,7 @@ testBSDT <- copy(origtestBSDT)
 testGR <- copy(origtestGR)
 testGRDT <- copy(origtestGRDT)
 test_that("BSAggregate", {
+    # NOTE: BSAggregate still can output a coverage column, (not sumCoverage)
     #making sure input is as I expect
     expect_equal(testGRDT[, strand], c("+", "-"))
     
@@ -118,7 +119,7 @@ test_that("BSAggregate", {
         BSAggregate(BSDT = testBSDT, regionsGRL = GRangesList(binnedGR), 
                     jCommand = buildJ(c("methylProp", "coverage"), 
                                       c("mean", "sum"),
-                                      newColNames=c("methylProp", "sumCoverage")), 
+                                      newColNames=c("methylProp", "coverage")), 
                     byRegionGroup = TRUE, splitFactor = NULL)
     #all should be the same since having opposite strands resulted in
     #flipping the second region
@@ -135,13 +136,13 @@ test_that("BSAggregate", {
         BSAggregate(BSDT = testBSDT, regionsGRL = GRangesList(binnedGR), 
                     jCommand = buildJ(c("methylProp", "coverage"), 
                                       c("mean", "sum"),
-                                      newColNames=c("methylProp", "sumCoverage")), 
+                                      newColNames=c("methylProp", "coverage")), 
                     byRegionGroup = TRUE, splitFactor = NULL)
     #all should be the same since having opposite strands resulted in
     #flipping the second region
     expect_equal(round(binnedBSDT[, methylProp], 2), round(1:numBins / numBins, 2))
-    #testing that expected sumCoverage in each bin is obtained
-    expect_equal(binnedBSDT[, sumCoverage], c(rep(20000, numBins - 1), 30000))
+    #testing that expected coverage in each bin is obtained
+    expect_equal(binnedBSDT[, coverage], c(rep(20000, numBins - 1), 30000))
     
     #now with no strand info given
     #tests that no strand will be symmetrically averaged 
@@ -153,7 +154,7 @@ test_that("BSAggregate", {
         BSAggregate(BSDT = testBSDT, regionsGRL = GRangesList(binnedGR), 
                     jCommand = buildJ(c("methylProp", "coverage"), 
                                       c("mean", "sum"),
-                                      newColNames=c("methylProp", "sumCoverage")), 
+                                      newColNames=c("methylProp", "coverage")), 
                     byRegionGroup = TRUE, splitFactor = NULL)
     #hard coded so may need to be updated later
     expect_equal(round(binnedBSDT[, methylProp], 2), 
@@ -168,7 +169,7 @@ test_that("BSAggregate", {
         BSAggregate(BSDT = testBSDT, regionsGRL = GRangesList(binnedGR), 
                     jCommand = buildJ(c("methylProp", "coverage"), 
                                       c("mean", "sum"),
-                                      newColNames=c("methylProp", "sumCoverage")), 
+                                      newColNames=c("methylProp", "coverage")), 
                     byRegionGroup = TRUE, splitFactor = NULL)
     expect_equal(round(binnedBSDT[12, methylProp], 2), 0.9)
     
@@ -179,7 +180,7 @@ test_that("BSAggregate", {
                              regionsGRL = GRangesList(binnedGR), 
                              jCommand = buildJ(c("methylProp", "coverage"), 
                                                c("mean", "sum"),
-                                               newColNames=c("methylProp", "sumCoverage")), 
+                                               newColNames=c("methylProp", "coverage")), 
                              byRegionGroup = TRUE, splitFactor = NULL))
 
 })
@@ -190,6 +191,7 @@ testBSDT <- copy(origtestBSDT)
 testGR <- copy(origtestGR)
 testGRDT <- copy(origtestGRDT)
 test_that("aggregateMethyl and MIRAScore", {
+    # NOTE: aggregateMethyl does not output a coverage column, now sumCoverage
     #making sure input is as I expect
     expect_equal(testGRDT[, strand], c("+", "-"))
     
