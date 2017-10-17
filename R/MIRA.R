@@ -38,7 +38,7 @@ if (getRversion() >= "2.15.1") {
     utils::globalVariables(c(
     ".", "bin", "binID", "chr", "element_blank", "featureID", 
     "geom_violin", "methylCount", "id", "meth", 
-    "methylProp", "coverage", "regionGroupID", "regionID", 
+    "methylProp", "coverage", "sumCoverage", "regionGroupID", "regionID", 
     "sampleName", "sampleType", "theme", "ubinID", "V1"))
 }
 
@@ -70,7 +70,7 @@ if (getRversion() >= "2.15.1") {
 #' optionally "coverage" for total number of reads.
 #' In addition, a "sampleName" column is strongly preferred (and required later
 #' for scoring multiple samples at the same time using the 
-#' "scoreDip" function in a MIRA workflow).
+#' "calcMIRAScore" function in a MIRA workflow).
 
 #' @param GRList A GRangesList object containing region sets, each set 
 #' corresponding to a type of regulatory element. 
@@ -242,10 +242,10 @@ aggregateMethylInt <- function(BSDT, GRList, binNum = 11, minBaseCovPerBin = 500
 #' 
 #' Takes methylation data and sets of regions then aggregates
 #' methylation for each region set and scores the resulting profile.
-#' A wrapper for aggregateMethyl and scoreDip but it does not return
+#' A wrapper for aggregateMethyl and calcMIRAScore but it does not return
 #' the summary methylation profiles, just the scores. This function is 
 #' given only for convenience in working with small numbers of samples/region
-#' sets. For large analyses, "aggregateMethyl" and "scoreDip" are recommended.
+#' sets. For large analyses, "aggregateMethyl" and "calcMIRAScore" are recommended.
 #' See vignettes for recommended use of MIRA.
 #'
 #' @param BSDT A single data table that has DNA methylation data on individual 
@@ -267,12 +267,12 @@ aggregateMethylInt <- function(BSDT, GRList, binNum = 11, minBaseCovPerBin = 500
 #' @param binNum How many bins each region should be split into for aggregation 
 #' of the DNA methylation data.
 #' @param scoringMethod Method to calculate MIRA score after binning. 
-#' "logRatio" is currently the only option. See scoreDip function.
+#' "logRatio" is currently the only option. See calcMIRAScore function.
 #' @param minBaseCovPerBin Filter out bins with fewer than minBaseCovPerBin reads. Only used
 #' if there is a 'coverage' column in BSDT
 #' 
 #' @return A data.table with a MIRA score for each region set in GRList. 
-#' See ?scoreDip. 
+#' See ?calcMIRAScore. 
 #' If input for "BSDT" is a BSseq object, output will be a list of 
 #' data.tables if there were multiple samples in the BSseq object. 
 #' @examples 
@@ -316,7 +316,7 @@ MIRAScore <- function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
                                                     minBaseCovPerBin = minBaseCovPerBin))
         
         # using binned methylation data to calculate MIRA score
-        scoreDT <- lapply(X = bigBinList, FUN = function(x) x[, .(score = scoreDip(methylProp, 
+        scoreDT <- lapply(X = bigBinList, FUN = function(x) x[, .(score = calcMIRAScore(methylProp, 
                                                                         method = scoringMethod)), 
                                                    by = .(featureID)])
         if (!is.null(sampleNames)) {
@@ -327,7 +327,7 @@ MIRAScore <- function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
         bigBin <- aggregateMethyl(BSDT = BSDT, GRList = GRList, binNum = binNum, 
                              minBaseCovPerBin = minBaseCovPerBin)
         # using binned methylation data to calculate MIRA score
-        scoreDT <- bigBin[, .(score = scoreDip(methylProp, 
+        scoreDT <- bigBin[, .(score = calcMIRAScore(methylProp, 
                                               method = scoringMethod)), 
                          by = .(featureID)]
         
@@ -399,9 +399,9 @@ MIRAScore <- function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
 #' @export
 #' @examples
 #' data("exampleBins")
-#' scoreDip(exampleBins)
+#' calcMIRAScore(exampleBins)
 #' 
-scoreDip <- function(binnedDT, 
+calcMIRAScore <- function(binnedDT, 
                     shoulderShift = "auto", 
                     method = "logRatio",
                     usedStrand = FALSE,
@@ -421,7 +421,7 @@ scoreDip <- function(binnedDT,
                        sep=" "))
         }
             
-        scoreDT <- binnedDT[, .(score = scoreDipInt(methylProp, 
+        scoreDT <- binnedDT[, .(score = scoreDip(methylProp, 
                                                    shoulderShift=shoulderShift,
                                                    method=method,
                                                    usedStrand=usedStrand)), 
@@ -430,12 +430,12 @@ scoreDip <- function(binnedDT,
         setnames(scoreDT, c(regionSetIDColName, sampleIDColName, "score"))
     } else if (is(binnedDT, "numeric")) {
         # if binnedDT is actually a vector as was original behaviour of function
-        # preserving ability to use scoreDip on a single vector or in a 
+        # preserving ability to use calcMIRAScore on a single vector or in a 
         # data.table j expression
         # scoring by sample and region set will be accomplished outside
         # this function in the "by" part of the data.table expression
         # output is called scoreDT but is actually a single number object
-        scoreDT <- scoreDipInt(values=binnedDT,
+        scoreDT <- scoreDip(values=binnedDT,
                     shoulderShift=shoulderShift,
                     method=method,
                     usedStrand=usedStrand)
@@ -463,7 +463,7 @@ scoreDip <- function(binnedDT,
 # data("exampleBins")
 # exampleBins[, .(score = scoreDip(methylProp)), 
 # 
-scoreDipInt <- function(values, 
+scoreDip <- function(values, 
                     shoulderShift = "auto", 
                     method = "logRatio",
                     usedStrand = FALSE){

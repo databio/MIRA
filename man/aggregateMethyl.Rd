@@ -18,7 +18,7 @@ for number of methylated reads, and
 optionally "coverage" for total number of reads.
 In addition, a "sampleName" column is strongly preferred (and required later
 for scoring multiple samples at the same time using the 
-"scoreDip" function in a MIRA workflow).}
+"calcMIRAScore" function in a MIRA workflow).}
 
 \item{GRList}{A GRangesList object containing region sets, each set 
 corresponding to a type of regulatory element. 
@@ -40,7 +40,7 @@ Each region was split into bins; methylation was put in these bins;
 Output contains sum of the all corresponding bins for the regions of each 
 region set, ie for all regions in each region set: first bins summed, second 
 bins summed, etc. Columns of the output should be "bin", "methylProp", 
-"coverage" (if coverage was an input column), "featureID", 
+"sumCoverage" (if coverage was an input column), "featureID", 
 and possibly "sampleName".
 For information on symmetry of bins and output when a region set has
 strand info, see ?BSBinAggregate.

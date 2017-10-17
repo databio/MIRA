@@ -228,7 +228,7 @@ test_that("aggregateMethyl and MIRAScore", {
 testBSDT <- copy(origtestBSDT)
 testGR <- copy(origtestGR)
 testGRDT <- copy(origtestGRDT)
-test_that("scoreDip, findShoulder, and isProfileConcaveUp", {
+test_that("calcMIRAScore, findShoulder, and isProfileConcaveUp", {
     
     #test with odd bin number
     x <- -10:10
@@ -236,19 +236,19 @@ test_that("scoreDip, findShoulder, and isProfileConcaveUp", {
     binNumber <- length(y) #21
     #default shoulderShift is based on length of input (number of bins)
     # ignore warning about "essentially perfect fit"
-    testScore <- round(scoreDip(binnedDT = y), 2)
+    testScore <- round(calcMIRAScore(binnedDT = y), 2)
     expScore <- round(log((mean(y[c(1, binNumber)])) / (y[11])), 2)
     expect_equal(testScore, expScore)
     
     #testing that averaging will happen if middle is not lowest value
     y[11] <- 5
-    testScore <- round(scoreDip(binnedDT = y), 2)
+    testScore <- round(calcMIRAScore(binnedDT = y), 2)
     expScore <- round(log((mean(y[c(1, binNumber)])) / ((y[10] + y[11] + y[12]) / 3)), 2)
     expect_equal(testScore, expScore)
     
     
     
-    #testScore <- scoreDip(binnedDT = y, shoulderShift = 9.5)
+    #testScore <- calcMIRAScore(binnedDT = y, shoulderShift = 9.5)
     #check by hand, expect_equal(round(testScore, 2), 3.62)
     
     #test with even bin number
@@ -256,13 +256,13 @@ test_that("scoreDip, findShoulder, and isProfileConcaveUp", {
     y <- x^2 + 1
     binNumber <- length(y) #10
     # ignore warning about "essentially perfect fit"
-    testScore <- round(scoreDip(binnedDT = y), 2)
+    testScore <- round(calcMIRAScore(binnedDT = y), 2)
     expScore <- round(log(mean(y[c(1, binNumber)])
                         / y[5]), 2)
     expect_equal(testScore, expScore)
     #test with non default shoulderShift
     # ignore warning about "essentially perfect fit"
-    testScore <- round(scoreDip(binnedDT = y, shoulderShift = 3), 2)
+    testScore <- round(calcMIRAScore(binnedDT = y, shoulderShift = 3), 2)
     expScore <- round(log(mean(y[c(2, 9)]) / y[5]), 2)
     expect_equal(testScore, expScore)
     
@@ -270,13 +270,13 @@ test_that("scoreDip, findShoulder, and isProfileConcaveUp", {
     #chooses pos. 12 because (14+16)/2 is not > 15
     #this test will fail if standard is changed to >=
     jagged <- c(16, 14, 15, 11, 12, 7, 4, 4, 7, 12, 11, 15, 14, 16)
-    testScore <- round(scoreDip(binnedDT = jagged, shoulderShift = "auto"), 2)
+    testScore <- round(calcMIRAScore(binnedDT = jagged, shoulderShift = "auto"), 2)
     expScore <- round(log(mean(jagged[c(3, 12)]) / jagged[7]), 2)
     expect_equal(testScore, expScore)
     
     #testing that averaging will happen if middle point is not lowest
     jagged[c(7, 8)] <- 8 
-    testScore <- round(scoreDip(binnedDT = jagged, shoulderShift = "auto"), 2)
+    testScore <- round(calcMIRAScore(binnedDT = jagged, shoulderShift = "auto"), 2)
     expMidpoint <- (.5 * jagged[6] + jagged[7] + jagged[8] + .5 * jagged[9]) / 3
     expScore <- round(log(mean(jagged[c(3, 12)]) / expMidpoint), 2)
     expect_equal(testScore, expScore)
@@ -293,8 +293,8 @@ test_that("scoreDip, findShoulder, and isProfileConcaveUp", {
                                   centerSpot, whichSide = "left")
     expect_equal(lShoulderShift, 6.5)
     
-    #testing scoreDip function with unsymmetrical input
-    unSymScore <- round(scoreDip(binnedDT = unsymmetric, 
+    #testing calcMIRAScore function with unsymmetrical input
+    unSymScore <- round(calcMIRAScore(binnedDT = unsymmetric, 
                                 shoulderShift = "auto", usedStrand = TRUE), 2)
     expMidpoint <- (.5 * unsymmetric[6] + unsymmetric[7] + 
                        unsymmetric[8] + .5 * unsymmetric[9]) / 3
@@ -302,17 +302,17 @@ test_that("scoreDip, findShoulder, and isProfileConcaveUp", {
     expScore <- round(log(mean(unsymmetric[c(1, 12)]) / expMidpoint), 2)
     expect_equal(expScore, unSymScore)
     
-    # testing scoreDip with input of a data.table and no data.table syntax
-    # when calling scoreDip
+    # testing calcMIRAScore with input of a data.table and no data.table syntax
+    # when calling calcMIRAScore
     jagged <- c(16, 14, 15, 11, 12, 7, 4, 4, 7, 12, 11, 15, 14, 16)
     jagLen <- length(jagged)
     binnedDT <- data.table(bin=seq_along(jagged), methylProp=jagged, 
                           sampleName=rep("Sample1", jagLen), 
                           featureID=rep("RegionSet1", jagLen))
-    newSyntaxScoreDT <- scoreDip(binnedDT)
+    newSyntaxScoreDT <- calcMIRAScore(binnedDT)
     newSyntaxScore <- round(newSyntaxScoreDT$score, 2)
     expScore <- round(log(mean(jagged[c(3, 12)]) / jagged[7]), 2)
-    oldSyntaxScore <- round(binnedDT[, .(score=scoreDip(methylProp)), 
+    oldSyntaxScore <- round(binnedDT[, .(score=calcMIRAScore(methylProp)), 
                                     by=.(sampleName, featureID)]$score, 2)
     expect_equal(expScore, newSyntaxScore)
     expect_equal(oldSyntaxScore, newSyntaxScore)
@@ -327,12 +327,12 @@ test_that("scoreDip, findShoulder, and isProfileConcaveUp", {
     miniDip2 <- c(1, miniDip, 1)
     expect_true(isProfileConcaveUp(miniDip2, 15))
     
-    # testing that scoreDip will give expected score
-    testScore <- round(scoreDip(miniDip2), 3)
+    # testing that calcMIRAScore will give expected score
+    testScore <- round(calcMIRAScore(miniDip2), 3)
     expScore <- round(log(mean(miniDip2[c(5,11)])/miniDip2[8]), 3)
     expect_equal(testScore, expScore)
     invMiniDip2 <- 10 - miniDip2
-    testScore <- round(scoreDip(invMiniDip2), 3)
+    testScore <- round(calcMIRAScore(invMiniDip2), 3)
     expScore <- round(log(mean(invMiniDip2[c(5,11)])/invMiniDip2[8]), 3)
     expect_equal(testScore, expScore)
 })

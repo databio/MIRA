@@ -170,10 +170,10 @@ normPlot <- plotMIRAProfiles(binnedRegDT=bigBinDT2)
 normPlot + ylab("Normalized DNA Methylation (%)")
 ```
 
-Now we can calculate MIRA scores for all samples with the `scoreDip` function.
+Now we can calculate MIRA scores for all samples with the `calcMIRAScore` function.
 
 ```{r, eval=TRUE}
-sampleScores <- scoreDip(bigBinDT2,
+sampleScores <- calcMIRAScore(bigBinDT2,
                         shoulderShift="auto",
                         regionSetIDColName="featureID",
                         sampleIDColName="sampleName")

@@ -19,7 +19,7 @@ MIRA (Methylation-based Inference of Regulatory Activity) is an R package that i
 library(MIRA)
 data(exampleBins)
 plotMIRAProfiles(exampleBins)
-exScores <- scoreDip(exampleBins, 
+exScores <- calcMIRAScore(exampleBins, 
                     regionSetIDColName="featureID",
                     sampleIDColName="sampleName")
 # normally sampleType would come from annotation object 
@@ -120,10 +120,10 @@ plotMIRAProfiles(binnedRegDT=bigBinDT)
 ```
 
 ## Calculating the MIRA Score
-To calculate MIRA scores based on the MIRA signatures, we will apply the scoring function, `scoreDip`, to the `data.table` that contains the methylation aggregated in bins. `scoreDip` calculates a score for each group of bins corresponding to a sample and region set, based on the degree of the dip in the signature. With MIRA's default scoring method (`logratio`), `scoreDip` will take the log of the ratio of the outside edges of the dip to the center of the dip. Higher MIRA scores are associated with deeper dips. A flat MIRA signature would have a score of 0.
+To calculate MIRA scores based on the MIRA signatures, we will apply the scoring function, `calcMIRAScore`, to the `data.table` that contains the methylation aggregated in bins. `calcMIRAScore` calculates a score for each group of bins corresponding to a sample and region set, based on the degree of the dip in the signature. With MIRA's default scoring method (`logratio`), `calcMIRAScore` will take the log of the ratio of the outside edges of the dip to the center of the dip. Higher MIRA scores are associated with deeper dips. A flat MIRA signature would have a score of 0.
 
 ```{r Scoring, warning=FALSE}
-sampleScores <- scoreDip(bigBinDT,
+sampleScores <- calcMIRAScore(bigBinDT,
                         regionSetIDColName="featureID",
                         sampleIDColName="sampleName")
 head(sampleScores)

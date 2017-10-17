@@ -42,7 +42,7 @@ Each region was split into bins; methylation was put in these bins;
 Output contains sum of the all corresponding bins 
 for the regions of each region set ie for all regions in each region set: 
 first bins summed, second bins summed, etc.
-Columns of the output should be "bin", "methylProp", and "coverage"
+Columns of the output should be "bin", "methylProp", and "sumCoverage"
 ###########################################################################
 Info about how strand of rangeDT affects output:
 The MIRA signature will be symmetrical if no strand information is given for 
