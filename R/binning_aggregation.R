@@ -43,7 +43,7 @@
 #' Output contains sum of the all corresponding bins 
 #' for the regions of each region set ie for all regions in each region set: 
 #' first bins summed, second bins summed, etc.
-#' Columns of the output should be "bin", "methylProp", and "sumCoverage"
+#' Columns of the output should be "bin", "methylProp", and "coverage"
 #' ###########################################################################
 #' Info about how strand of rangeDT affects output:
 #' The MIRA signature will be symmetrical if no strand information is given for 
@@ -114,8 +114,7 @@ BSBinAggregate <- function(BSDT, rangeDT, binNum, minBaseCovPerBin = 500,
     if (hasCoverage) {
         # aggregate methylation (mean) and sum coverage values
         aggrJCommand <- buildJ(c("methylProp", "coverage"), 
-                              c("mean", "sum"), 
-                              newColNames = c("methylProp", "sumCoverage"))
+                              c("mean", "sum"))
     } else {
         # if no coverage only aggregate methylation level
         aggrJCommand <- buildJ("methylProp", "mean")
@@ -129,8 +128,8 @@ BSBinAggregate <- function(BSDT, rangeDT, binNum, minBaseCovPerBin = 500,
     # If we aren't aggregating by bin, then don't restrict to min reads!
     if (byRegionGroup) {
         if (hasCoverage) {
-            # only keep rows (bins) with sumCoverage >= minBaseCovPerBin
-            binnedBSDT <- binnedBSDT[sumCoverage >= minBaseCovPerBin, ]
+            # only keep rows (bins) with coverage >= minBaseCovPerBin
+            binnedBSDT <- binnedBSDT[coverage >= minBaseCovPerBin, ]
         }
         if (nrow(binnedBSDT) < binNum) {
             # telling user what sample failed if sample name is in BSDT
@@ -179,7 +178,8 @@ BSBinAggregate <- function(BSDT, rangeDT, binNum, minBaseCovPerBin = 500,
 # @param sumCols Deprecated, NULL value should be used for MIRA aggregation.
 # @param jCommand You can pass a custom command in the j slot to data.table
 # specifying which columns to aggregate, and which functions to use. You
-# can use buildJ() to build a jCommand argument easily.
+# can use buildJ() to build a jCommand argument easily. jCommand may be
+# used twice so changing column names in the jCommand could introduce errors
 # @param byRegionGroup You can aggregate by regionID or by regionGroupID; 
 # this reflects the regionsGRL that you pass; by default, BSAggregate will
 # aggregate each region individually -- scores will then be contiguous, and
@@ -196,7 +196,7 @@ BSBinAggregate <- function(BSDT, rangeDT, binNum, minBaseCovPerBin = 500,
 # unless told otherwise
 # 
 # @return In context of MIRA, with byRegionGroup = TRUE and jCommand = 
-# list( methylProp = mean(methylProp), sumCoverage = sum(coverage) )", 
+# list( methylProp = mean(methylProp), coverage = sum(coverage) )", 
 # this function will return a data.table with 
 # binNum rows (parameter for BSBinAggregate)
 # containing aggregated methylation from BSDT over binned regions from a region
@@ -325,21 +325,26 @@ BSAggregate <- function(BSDT, regionsGRL, excludeGR = NULL,
         } else {
             byStringGroup <- "list(regionGroupID)"
         }
+       
+        
         # actual aggregation operation
-        # for normal MIRA use: averaging methyProp's and summing
+        # for normal MIRA use: averaging methylProp's and summing
         # coverage for all bins with the same number (ie all
         # bin1's together, all bin2's together, etc.)
+        # NOTE: 2nd use of the jCommand so if the first jCommand use changed
+        # column names that are required by the jCommand 
+        # then this 2nd jCommand use will cause an error
         bsCombined <- bsCombined[, eval(parse(text = jCommand)), 
                                 by = eval(parse(text = byStringGroup))]
         
         # if any strand information was not given, averaging the signatures 
         # about the center to account for unknown strand orientation, 
-        # also averaging sumCoverage about center
+        # also averaging coverage about center
         # ie if any "*" are present then average
         if ("*" %in% unique(as.character(strand(regionsGR)))) {
             bsCombined[, methylProp := (methylProp + rev(methylProp)) / 2]
             if (hasCoverage) {
-                bsCombined[, sumCoverage := (sumCoverage + rev(sumCoverage)) / 2]
+                bsCombined[, coverage := (coverage + rev(coverage)) / 2]
             }
         }
         

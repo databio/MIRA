@@ -234,6 +234,12 @@ aggregateMethylInt <- function(BSDT, GRList, binNum = 11, minBaseCovPerBin = 500
     #     bigMethylByBin[, sampleName := rep(BSDT[1, sampleName])][] 
     # }
     
+    # changing coverage col name to be more clear that it is a different type
+    # of coverage than input coverage
+    if (hasCoverage) {
+        setnames(bigMethylByBin, "coverage", "sumCoverage")
+    }
+    
     return(bigMethylByBin)
 }
 
