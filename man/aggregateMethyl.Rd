@@ -15,21 +15,25 @@ internally to data.tables. The data.table input should have columns:
 cytosine coordinate, "methylProp" for proportion of 
 methylation (0 to 1), optionally "methylCount" 
 for number of methylated reads, and
-optionally "coverage" for total number of reads.
-In addition, a "sampleName" column is strongly preferred (and required later
-for scoring multiple samples at the same time using the 
-"calcMIRAScore" function in a MIRA workflow).}
+optionally "coverage" for total number of reads.}
 
 \item{GRList}{A GRangesList object containing region sets, each set 
 corresponding to a type of regulatory element. 
-Each regionSet in the list should
+Each region set in the list should
 be named. A named list of data.tables also works.}
 
 \item{binNum}{How many bins each region should be split into for aggregation 
 of the DNA methylation data.}
 
-\item{minBaseCovPerBin}{Filter out bins with fewer than minBaseCovPerBin reads. Only
-used if there is a "coverage" column}
+\item{minBaseCovPerBin}{Screen out region sets that have any bins in the
+final methylation profile with 'sumCoverage' below the 'minBaseCovPerBin'
+threshold. 'sumCoverage' is an output column: during aggregation, 
+the 'coverage' values for each base in a bin are added, then these sums
+are added for corresponding bins from all regions, producing a 
+'sumCoverage' value for each bin. 'minBaseCovPerBin' is only 
+used if there is a "coverage" column in the input methylation data.table.
+'sumCoverage' is greater than or equal to the number of separate reads
+that contributed to a given bin.}
 }
 \value{
 a data.table with binNum rows for each region set containing
@@ -40,10 +44,15 @@ Each region was split into bins; methylation was put in these bins;
 Output contains sum of the all corresponding bins for the regions of each 
 region set, ie for all regions in each region set: first bins summed, second 
 bins summed, etc. Columns of the output should be "bin", "methylProp", 
-"sumCoverage" (if coverage was an input column), "featureID", 
-and possibly "sampleName".
+"sumCoverage" (only if coverage was an input column, described below),
+"featureID" (ID for 
+the region set).
 For information on symmetry of bins and output when a region set has
 strand info, see ?BSBinAggregate.
+'sumCoverage' is calculated as follows: during aggregation, 
+the 'coverage' values for each base in a bin are added, then these sums
+are added for corresponding bins from all regions, producing a 
+'sumCoverage' value for each bin.
 }
 \description{
 The main function for aggregating methylation data in MIRA analysis. 
@@ -56,7 +65,7 @@ methylation is first aggregated (averaged) within each
 bin in each region. Then methylation from corresponding bins from each
 region are aggregated (averaged) across all regions 
 (all first bins together, all second bins together, etc.), 
-giving a summary methylation profile.
+giving an aggregate methylation profile.
 This process is done for each region set.
 }
 \examples{

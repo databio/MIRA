@@ -28,18 +28,18 @@ This vignette requires large input files, which can be dowloaded here: [MIRA_Ewi
   
 Preparation: Start with appropriately formatted single-nucleotide resolution methylation data, region sets -- each with genomic regions corresponding to some biological annotation, and a sample annotation file that has sample name (sampleName column) and sample type (sampleType column). See `?SummarizedExperimentToDataTable` for options for converting formats from some other DNA methylation packages to our format.  
 1. Do a quick run-through of the MIRA workflow with each region set with a few samples from each condition/sample type to make sure the region sizes are reasonable (discussed later).  
-    1.1. Aggregate methylation data across regions to get a MIRA signature for each region set, sample combination.  
-    1.2. Calculate MIRA score for each region set, sample combination based on the shape of the MIRA signature.  
-2. Based on preliminary results, pick a region size for each region set depending on what the MIRA signatures look like.  
+    1.1. Aggregate methylation data across regions to get a MIRA profile for each region set, sample combination.  
+    1.2. Calculate MIRA score for each region set, sample combination based on the shape of the MIRA profile.  
+2. Based on preliminary results, pick a region size for each region set depending on what the MIRA profiles look like.  
 3. Run the full MIRA analysis with chosen region sizes.  
-    3.1. Aggregate methylation data across regions to get a MIRA signature for each region set, sample combination.  
-    3.2. Calculate MIRA score for each region set, sample combination based on the shape of the MIRA signature.  
+    3.1. Aggregate methylation data across regions to get a MIRA profile for each region set, sample combination.  
+    3.2. Calculate MIRA score for each region set, sample combination based on the shape of the MIRA profile.  
 
 ## Initial Run-through
 
 First, let's load the libraries and read in the data files. A sample annotation file was included with the package:
 
-```{r, eval=TRUE, message=FALSE}
+```{r, eval=TRUE, message=FALSE, warning=FALSE}
 library(MIRA)
 library(data.table) # for the functions: fread, setkey, merge
 library(GenomicRanges) # for the functions: GRanges, resize
@@ -110,7 +110,7 @@ setkey(bigBinDT1, sampleName)
 bigBinDT1 <- merge(bigBinDT1, exampleAnnoDT2, all.x=TRUE)
 ```
 
-Let's look at the MIRA signatures to see if we should change our region sizes.
+Let's look at the MIRA profiles to see if we should change our region sizes.
 
 ```{r, eval=TRUE}
 plotMIRAProfiles(binnedRegDT=bigBinDT1)
@@ -154,13 +154,13 @@ setkey(bigBinDT2, sampleName)
 bigBinDT2 <- merge(bigBinDT2, exampleAnnoDT2, all.x=TRUE)
 ```
 
-Let's look at the MIRA signatures:
+Let's look at the MIRA profiles:
 
 ```{r, eval=TRUE}
 plotMIRAProfiles(binnedRegDT=bigBinDT2)
 ```
 
-Next we normalize the binned methylation data (the MIRA signature). Normalizing by subtracting the minimum methylation bin value from each sample/region set combination generally brings the center MIRA signatures to a similar methylation value, making the MIRA score more about the shape of the signature and less about the average methylation. We do this with `data.table` syntax. 
+Next we normalize the binned methylation data (the MIRA profile). Normalizing by subtracting the minimum methylation bin value from each sample/region set combination generally brings the center MIRA profiles to a similar methylation value, making the MIRA score more about the shape of the profile and less about the average methylation. We do this with `data.table` syntax. 
 
 ```{r, eval=TRUE, results="hide"}
 bigBinDT2[, methylProp := methylProp - min(methylProp) + .05, by=.(featureID, sampleName)]

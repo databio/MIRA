@@ -9,21 +9,21 @@ MIRAScore(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
 }
 \arguments{
 \item{BSDT}{A single data table that has DNA methylation data on individual 
-sites. #' Alternatively a BSseq object may be input which will be converted 
+sites. Alternatively a BSseq object may be input which will be converted 
 internally to data.table/s (sample names must be in BSseq object). 
 For the data.table input, it should 
 include a "chr" column with chromosome, a "start" column with the 
 coordinate number for the cytosine, a "methylProp" column with proportion of 
 methylation (0 to 1), optionally a "methylCount" column with 
 number of methylated reads 
-for each site, optionally a "coverage" column with 
+for each site, and optionally a "coverage" column with 
 total number of reads for each 
-site, and a "sampleName" column with a sample identifier/name (required).}
+site.}
 
 \item{GRList}{A GRangesList object containing region sets, each set 
 corresponding to a regulatory element (or having regions with the 
 same biological annotation).
-Each regionSet in the list should be named.}
+Each region set in the list should be named.}
 
 \item{binNum}{How many bins each region should be split into for aggregation 
 of the DNA methylation data.}
@@ -31,14 +31,22 @@ of the DNA methylation data.}
 \item{scoringMethod}{Method to calculate MIRA score after binning. 
 "logRatio" is currently the only option. See calcMIRAScore function.}
 
-\item{minBaseCovPerBin}{Filter out bins with fewer than minBaseCovPerBin reads. Only used
-if there is a 'coverage' column in BSDT}
+\item{minBaseCovPerBin}{Screen out region sets that have any bins in the
+final methylation profile with 'sumCoverage' below the 'minBaseCovPerBin'
+threshold. 'sumCoverage' is an output column: during aggregation, 
+the 'coverage' values for each base in a bin are added, then these sums
+are added for corresponding bins from all regions, producing a 
+'sumCoverage' value for each bin. 'minBaseCovPerBin' is only 
+used if there is a "coverage" column in the input methylation data.table.
+'sumCoverage' is greater than or equal to the number of separate reads
+that contributed to a given bin.}
 }
 \value{
 A data.table with a MIRA score for each region set in GRList. 
 See ?calcMIRAScore. 
 If input for "BSDT" is a BSseq object, output will be a list of 
-data.tables if there were multiple samples in the BSseq object.
+data.tables if there were multiple samples in the BSseq object (named
+list if sample names were in BSseq object).
 }
 \description{
 Takes methylation data and sets of regions then aggregates
