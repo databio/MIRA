@@ -68,9 +68,10 @@ BSDTList <- lapply(X=RRBSFiles, FUN=BSreadBiSeq)
 regionSets <- lapply(X=regionSetFiles, FUN=fread)
 ```
 
-We need to do a bit of preprocessing before we plug the data into MIRA. The `BSreadBiSeq` function reads DNA methylation calls from the software Biseqmethcalling, reading the methylation calls into `data.table` objects. We read in the region sets with `fread` so they will also be `data.table` objects. Let's convert the region sets from `data.table` objects to `GRanges` objects, including chromosome, start, and end info. In most cases, strand information is not needed by MIRA and should be omitted. 
+We need to do a bit of preprocessing before we plug the data into MIRA. The `BSreadBiSeq` function reads DNA methylation calls from the software Biseqmethcalling, reading the methylation calls into `data.table` objects. We read in the region sets with `fread` so they will also be `data.table` objects. First, let's add sample names to the list of methylation `data.tables`. Then let's convert the region sets from `data.table` objects to `GRanges` objects, including chromosome, start, and end info. In most cases, strand information is not needed by MIRA and should be omitted. 
 
 ```{r, eval=FALSE}
+names(BSDTList) <- tools::file_path_sans_ext(basename(RRBSFiles))
 regionSets <- lapply(X=regionSets, 
                     FUN=function(x) setNames(x, c("chr", "start", "end")))
 regionSets <- lapply(X=regionSets, FUN=
@@ -92,7 +93,12 @@ Now we are ready to run MIRA on a subset of the samples -- three Ewing and three
 subBSDTList <- BSDTList[c(1, 5, 9, 13, 17, 21)]
 bigBin <- lapply(X=subBSDTList, FUN=aggregateMethyl, GRList=regionSets, 
                 binNum=21, minBaseCovPerBin=0)
-bigBinDT1 <- rbindlist(bigBin)
+```
+
+We then combine all samples into one `data.table` and add a column for sample name based on the names of the list items:
+
+```{r, eval=FALSE}
+bigBinDT1 <- rbindNamedList(bigBin, newColName = "sampleName")
 ```
 
 If you are running the actual samples on your own device, you can skip the following step. Otherwise, let's load the binned methylation data (`bigBinDT1`) that would have been obtained by the previous step.
@@ -135,7 +141,7 @@ Now we can run MIRA with all our samples. Let's aggregate methylation data again
 ```{r, eval=FALSE}
 bigBin <- lapply(X=BSDTList, FUN=aggregateMethyl, GRList=regionSets, 
                 binNum=21, minBaseCovPerBin=0)
-bigBinDT2 <- rbindlist(bigBin)
+bigBinDT2 <- rbindNamedList(bigBin)
 ```
 
 If you are running the actual samples on your own device, you can skip the following step. Otherwise, let's load the binned methylation data (`bigBinDT2`) that would have been obtained by the previous step.

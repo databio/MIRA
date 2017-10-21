@@ -4,9 +4,7 @@
 \alias{BSreadBiSeq}
 \title{Read in files from biseq meth caller}
 \usage{
-BSreadBiSeq(files, contrastList = NULL,
-  sampleNames = tools::file_path_sans_ext(basename(files)), cores = 4,
-  returnAsList = FALSE)
+BSreadBiSeq(files, contrastList = NULL, cores = 4, returnAsList = FALSE)
 }
 \arguments{
 \item{files}{a list of filenames (use parseInputArg if necessary)}
@@ -15,8 +13,6 @@ BSreadBiSeq(files, contrastList = NULL,
 A list of named character vectors, 
 each with length equal to the number of items in files. 
 These will translate into column names in the final table.}
-
-\item{sampleNames}{a vector of length length(files), name for each file.}
 
 \item{cores}{number of processors.}
 
