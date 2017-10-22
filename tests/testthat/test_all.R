@@ -369,7 +369,7 @@ testGRDT <- copy(origtestGRDT)
 test_that("BSreadBiSeq",{
     
     tRRBS <- BSreadBiSeq(system.file("extdata", "shortRRBS.bed", package = "MIRA"))
-    tRRBSCols <- c("chr", "start", "methylCount", "coverage", "sampleName")
+    tRRBSCols <- c("chr", "start", "methylCount", "coverage")
     expect_equal(tRRBSCols, colnames(tRRBS))
     # coverage should be greater than or equal to methylCount, true for all
     compareCounts <- (tRRBS$coverage >= tRRBS$methylCount)

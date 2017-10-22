@@ -57,7 +57,7 @@ if (getRversion() >= "2.15.1") {
 #' bin in each region. Then methylation from corresponding bins from each
 #' region are aggregated (averaged) across all regions 
 #' (all first bins together, all second bins together, etc.), 
-#' giving a summary methylation profile.
+#' giving an aggregate methylation profile.
 #' This process is done for each region set.
 #'
 #' @param BSDT A single data.table that has DNA methylation data on individual 
@@ -68,18 +68,22 @@ if (getRversion() >= "2.15.1") {
 #' methylation (0 to 1), optionally "methylCount" 
 #' for number of methylated reads, and
 #' optionally "coverage" for total number of reads.
-#' In addition, a "sampleName" column is strongly preferred (and required later
-#' for scoring multiple samples at the same time using the 
-#' "calcMIRAScore" function in a MIRA workflow).
 
 #' @param GRList A GRangesList object containing region sets, each set 
 #' corresponding to a type of regulatory element. 
-#' Each regionSet in the list should
+#' Each region set in the list should
 #' be named. A named list of data.tables also works. 
 #' @param binNum How many bins each region should be split into for aggregation 
 #' of the DNA methylation data.
-#' @param minBaseCovPerBin Filter out bins with fewer than minBaseCovPerBin reads. Only
-#' used if there is a "coverage" column
+#' @param minBaseCovPerBin Screen out region sets that have any bins in the
+#' final methylation profile with 'sumCoverage' below the 'minBaseCovPerBin'
+#' threshold. 'sumCoverage' is an output column: during aggregation, 
+#' the 'coverage' values for each base in a bin are added, then these sums
+#' are added for corresponding bins from all regions, producing a 
+#' 'sumCoverage' value for each bin. 'minBaseCovPerBin' is only 
+#' used if there is a "coverage" column in the input methylation data.table.
+#' 'sumCoverage' is greater than or equal to the number of separate reads
+#' that contributed to a given bin.
 #' 
 #' @return a data.table with binNum rows for each region set containing
 #' aggregated methylation data. If the input was a BSseq object
@@ -89,10 +93,15 @@ if (getRversion() >= "2.15.1") {
 #' Output contains sum of the all corresponding bins for the regions of each 
 #' region set, ie for all regions in each region set: first bins summed, second 
 #' bins summed, etc. Columns of the output should be "bin", "methylProp", 
-#' "sumCoverage" (if coverage was an input column), "featureID", 
-#' and possibly "sampleName".
+#' "sumCoverage" (only if coverage was an input column, described below),
+#' "featureID" (ID for 
+#' the region set).
 #' For information on symmetry of bins and output when a region set has
 #' strand info, see ?BSBinAggregate.
+#' 'sumCoverage' is calculated as follows: during aggregation, 
+#' the 'coverage' values for each base in a bin are added, then these sums
+#' are added for corresponding bins from all regions, producing a 
+#' 'sumCoverage' value for each bin.
 #' 
 #' @export
 #' @examples
@@ -244,49 +253,56 @@ aggregateMethylInt <- function(BSDT, GRList, binNum = 11, minBaseCovPerBin = 500
 }
 
 
-#' Get MIRA score for each sample/region set combination
-#' 
-#' Takes methylation data and sets of regions then aggregates
-#' methylation for each region set and scores the resulting profile.
-#' A wrapper for aggregateMethyl and calcMIRAScore but it does not return
-#' the summary methylation profiles, just the scores. This function is 
-#' given only for convenience in working with small numbers of samples/region
-#' sets. For large analyses, "aggregateMethyl" and "calcMIRAScore" are recommended.
-#' See vignettes for recommended use of MIRA.
-#'
-#' @param BSDT A single data table that has DNA methylation data on individual 
-#' sites. #' Alternatively a BSseq object may be input which will be converted 
-#' internally to data.table/s (sample names must be in BSseq object). 
-#' For the data.table input, it should 
-#' include a "chr" column with chromosome, a "start" column with the 
-#' coordinate number for the cytosine, a "methylProp" column with proportion of 
-#' methylation (0 to 1), optionally a "methylCount" column with 
-#' number of methylated reads 
-#' for each site, optionally a "coverage" column with 
-#' total number of reads for each 
-#' site, and a "sampleName" column with a sample identifier/name (required). 
+# Get MIRA score for each sample/region set combination
+# 
+# Takes methylation data and sets of regions then aggregates
+# methylation for each region set and scores the resulting profile.
+# A wrapper for aggregateMethyl and calcMIRAScore but it does not return
+# the summary methylation profiles, just the scores. This function is 
+# given only for convenience in working with small numbers of samples/region
+# sets. For large analyses, "aggregateMethyl" and "calcMIRAScore" are recommended.
+# See vignettes for recommended use of MIRA.
+#
+# @param BSDT A single data table that has DNA methylation data on individual 
+# sites. Alternatively a BSseq object may be input which will be converted 
+# internally to data.table/s (sample names must be in BSseq object). 
+# For the data.table input, it should 
+# include a "chr" column with chromosome, a "start" column with the 
+# coordinate number for the cytosine, a "methylProp" column with proportion of 
+# methylation (0 to 1), optionally a "methylCount" column with 
+# number of methylated reads 
+# for each site, and optionally a "coverage" column with 
+# total number of reads for each 
+# site.
 
-#' @param GRList A GRangesList object containing region sets, each set 
-#' corresponding to a regulatory element (or having regions with the 
-#' same biological annotation).
-#' Each regionSet in the list should be named. 
-#' @param binNum How many bins each region should be split into for aggregation 
-#' of the DNA methylation data.
-#' @param scoringMethod Method to calculate MIRA score after binning. 
-#' "logRatio" is currently the only option. See calcMIRAScore function.
-#' @param minBaseCovPerBin Filter out bins with fewer than minBaseCovPerBin reads. Only used
-#' if there is a 'coverage' column in BSDT
-#' 
-#' @return A data.table with a MIRA score for each region set in GRList. 
-#' See ?calcMIRAScore. 
-#' If input for "BSDT" is a BSseq object, output will be a list of 
-#' data.tables if there were multiple samples in the BSseq object. 
-#' @examples 
-#' data("exampleBSDT", package = "MIRA") 
-#' data("exampleRegionSet", package = "MIRA") 
-#' MIRAScore(BSDT = exampleBSDT, GRList = exampleRegionSet)
-#' 
-#' @export
+# @param GRList A GRangesList object containing region sets, each set 
+# corresponding to a regulatory element (or having regions with the 
+# same biological annotation).
+# Each region set in the list should be named. 
+# @param binNum How many bins each region should be split into for aggregation 
+# of the DNA methylation data.
+# @param scoringMethod Method to calculate MIRA score after binning. 
+# "logRatio" is currently the only option. See calcMIRAScore function.
+# @param minBaseCovPerBin Screen out region sets that have any bins in the
+# final methylation profile with 'sumCoverage' below the 'minBaseCovPerBin'
+# threshold. 'sumCoverage' is an output column: during aggregation, 
+# the 'coverage' values for each base in a bin are added, then these sums
+# are added for corresponding bins from all regions, producing a 
+# 'sumCoverage' value for each bin. 'minBaseCovPerBin' is only 
+# used if there is a "coverage" column in the input methylation data.table.
+# 'sumCoverage' is greater than or equal to the number of separate reads
+# that contributed to a given bin.
+# @return A data.table with a MIRA score for each region set in GRList. 
+# See ?calcMIRAScore. 
+# If input for "BSDT" is a BSseq object, output will be a list of 
+# data.tables if there were multiple samples in the BSseq object (named
+# list if sample names were in BSseq object). 
+# @examples 
+# data("exampleBSDT", package = "MIRA") 
+# data("exampleRegionSet", package = "MIRA") 
+# MIRAScore(BSDT = exampleBSDT, GRList = exampleRegionSet)
+# 
+#
 MIRAScore <- function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio", 
                      minBaseCovPerBin = 500){
 
@@ -345,9 +361,10 @@ MIRAScore <- function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
 
 #' Score methylation profile based on its shape
 #' 
-#' The dip scoring function for MIRA scores. This will take a data.table
+#' This will take a data.table
 #' that has the methylation level in each bin in the MIRA profile and
-#' return a single score summarizing how large the 'dip' 
+#' return a single score. For the "logRatio" method, this score summarizes 
+#' how large the 'dip' 
 #' in methylation is at the center of that methylation profile.
 #' A column for sample ID/name and a column for region set ID/name
 #' should be included in the data.table because a separate score will be given 
@@ -753,7 +770,6 @@ addMethPropCol <- function(BSDTList){
 #' A list of named character vectors, 
 #' each with length equal to the number of items in files. 
 #' These will translate into column names in the final table.
-#' @param sampleNames   a vector of length length(files), name for each file. 
 #' @param cores number of processors.
 #' @param returnAsList Whether to return the output as a list 
 #' or as one big data.table.
@@ -766,7 +782,6 @@ addMethPropCol <- function(BSDTList){
 #'
 #' @export
 BSreadBiSeq <- function(files, contrastList = NULL, 
-                       sampleNames = tools::file_path_sans_ext(basename(files)), 
                        cores = 4, returnAsList = FALSE) {
     
     cores <- min(length(files), cores); # not more cores than files!
@@ -790,19 +805,19 @@ BSreadBiSeq <- function(files, contrastList = NULL,
     message("Parsing complete, building final tables and cleaning up...")
     numberOfFiles <- length(freadListParsed);
     for (i in 1:numberOfFiles) {
-        if (numberOfFiles > 1) {
-            message(i, ": ", sampleNames[i], "; ", appendLF = FALSE)
-        }
-        if (numberOfFiles > 1 && i == numberOfFiles) {
-            message("", appendLF = TRUE)
-        }
+        # if (numberOfFiles > 1) {
+        #     message(i, ": ", sampleNames[i], "; ", appendLF = FALSE)
+        # }
+        # if (numberOfFiles > 1 && i == numberOfFiles) {
+        #     message("", appendLF = TRUE)
+        # }
         DT <- freadListParsed[[i]]; # convenience alias.
         if (!is.null(contrastList)) {
             DT[, get("colNames") := as.list(sapply(contrastList, "[[", i))]
         }
-        if (!is.null(sampleNames)) {
-            DT[, sampleName := sampleNames[i]]
-        }
+        # if (!is.null(sampleNames)) {
+        #     DT[, sampleName := sampleNames[i]]
+        # }
         freadListParsed[[i]] <- DT
     }
 

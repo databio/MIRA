@@ -2,7 +2,6 @@
 
 export(BSBinAggregate)
 export(BSreadBiSeq)
-export(MIRAScore)
 export(SummarizedExperimentToDataTable)
 export(addMethPropCol)
 export(aggregateMethyl)

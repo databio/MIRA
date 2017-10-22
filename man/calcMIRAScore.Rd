@@ -63,9 +63,10 @@ the MIRA signature which is an aggregation of methylation
 over all regions in a region set.
 }
 \description{
-The dip scoring function for MIRA scores. This will take a data.table
+This will take a data.table
 that has the methylation level in each bin in the MIRA profile and
-return a single score summarizing how large the 'dip' 
+return a single score. For the "logRatio" method, this score summarizes 
+how large the 'dip' 
 in methylation is at the center of that methylation profile.
 A column for sample ID/name and a column for region set ID/name
 should be included in the data.table because a separate score will be given 
