@@ -12,4 +12,14 @@ Notable changes to this project will be documented in this file.
 
 	- Made "coverage" column optional for the input methylation data ("aggregateMethyl" function)
 	- Made "methylCount" column optional for the input methylation data (to "aggregateMethyl" function)
+    
+## [0.99.91] -- 2017-10-17
+    - scoreDip() function name changed to calcMIRAScore()
+    - output coverage column from aggregateMethyl(): name changed to sumCoverage for clarity
+    - minReads parameter name (parameter for aggregateMethyl) was changed to minBaseCovPerBin for clarity
+    - sampleName column no longer recommended in input for aggregateMethyl, also aggregateMethyl no longer returns a sampleName column. This saves a lot of memory.
+    
+## [0.99.92] -- 2017-10-22
+    - MIRAScore() wrapper function no longer exported
+    - BSReadBiseq no longer adds 'sampleName' column
 
