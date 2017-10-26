@@ -13,9 +13,9 @@ vignette: >
 This vignette gives a broad overview of MIRA. For a more realistic example workflow, see the vignette "Applying MIRA to a Biological Question."
 
 # MIRA Overview
-MIRA (Methylation-based Inference of Regulatory Activity) is an R package that infers regulatory activity from DNA methylation data. It does this by aggregating DNA methylation data from a set of regions across the genome, producing a single summary profile of DNA methylation for those regions. MIRA then uses this profile to produce a score (the MIRA score) that infers the level of regulatory activity on the basis of the shape of the DNA methylation profile. The region set is provided by the user and should contain regions that correspond to a shared feature, such as binding of a particular transcription factor or DNase hypersensitivity sites. The concept of MIRA relies on the observation that methylation tends to be lower in regions where transcription factors are bound. Since methylation will generally be lower in active regions, the shape of the MIRA profile and the associated score can be used as a metric to compare regulatory activity in different samples and conditions. MIRA thus allows one to predict transcription factor activity data given only DNA methylation data as input. MIRA works with genome-scale, single-nucleotide-resolution methylation data, such as reduced representation bisulfite sequencing (RRBS) or whole genome bisulfite sequencing (WGBS) data. MIRA overcomes sparsity in DNA methylation data by aggregating across many regions. Below are examples of methylation profiles and associated MIRA scores for two (contrived) samples. This vignette will demonstrate how to obtain a methylation profile and MIRA score from the starting inputs of DNA methylation data and a region set.
+MIRA (Methylation-based Inference of Regulatory Activity) is an R package that infers regulatory activity from DNA methylation data. It does this by aggregating DNA methylation data from a set of regions across the genome, producing a single summary profile of DNA methylation for those regions. MIRA then uses this profile to produce a score (the MIRA score) that infers the level of regulatory activity on the basis of the shape of the DNA methylation profile. The region set is provided by the user and should contain regions that correspond to a shared feature, such as binding of a particular transcription factor or DNase hypersensitivity sites. The concept of MIRA relies on the observation that DNA methylation tends to be lower in regions where transcription factors are bound. Since DNA methylation will generally be lower in active regions, the shape of the MIRA profile and the associated score can be used as a metric to compare regulatory activity in different samples and conditions. MIRA thus allows one to predict transcription factor activity data given only DNA methylation data as input. MIRA works with genome-scale, single-nucleotide-resolution methylation data, such as reduced representation bisulfite sequencing (RRBS) or whole genome bisulfite sequencing (WGBS) data. MIRA overcomes sparsity in DNA methylation data by aggregating across many regions. Below are examples of methylation profiles and associated MIRA scores for two (contrived) samples. This vignette will demonstrate how to obtain a methylation profile and MIRA score from the starting inputs of DNA methylation data and a region set.
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, warning=FALSE}
 library(MIRA)
 data(exampleBins)
 plotMIRAProfiles(exampleBins)
@@ -33,14 +33,14 @@ exScores
 
 You need 2 things to run MIRA:
 
-1. Nucleotide-resolution DNA methylation data (in a table with counts methylated and total reads)
-2. A set of regions
+1. Nucleotide-resolution DNA methylation data
+2. A set of genomic regions
 
 Let's describe each one in more detail:
 
 ## DNA Methylation Data
 
-MIRA requires DNA methylation data after methylation calling. For a given genomic coordinate (the location of the C in a CpG), MIRA needs the methylation level (0 to 1) and optionally the total number of reads covering that coordinate which can be used for screening purposes. This data should be represented as a `data.table` for each sample, which we call a BSDT (Bisulfite data.table). The BSDT will have these columns: `chr`, `start` (the coordinate of the C of the CpG) and the `methylProp` column with methylation level at each cytosine. Alternatively, the `methylProp` column may be generated from `methylCount` (number of methylated reads) and `coverage` (total number of reads covering this site) columns where `methylProp` = `methylCount`/`coverage` and these columns may be included in the `data.table` addition to the `methylProp` column. A `sampleName` (sample identifier) column is optional if there is only one sample but required if you have multiple samples. Since some existing R packages for DNA methylation use different formats, we include a format conversion function that can be used to convert `SummarizedExperiment`-based objects like you would obtain from the `bsseq`, `methylPipe`, and `BiSeq` packages to the necessary format for MIRA (`SummarizedExperimentToDataTable` function). A `BSseq` object is an acceptable input to MIRA and will be converted to the right format internally but for the sake of parallelization it is recommended that `BSseq` objects be converted to the right format outside the MIRA function so that MIRA can be run on each sample in parallel. Here is an example of a `data.table` in the right format for input to MIRA:
+MIRA requires DNA methylation data after methylation calling. For a given genomic coordinate (the location of the C in a CpG), MIRA needs the methylation level (0 to 1) or data that can be used to calculate this: counts of methylated reads and total reads. The total number of reads can be used for screening purposes. This data should be represented as a `data.table` for each sample, which we call a BSDT (Bisulfite data.table). The BSDT will have these columns: `chr`, `start` (the coordinate of the C of the CpG) and the `methylProp` column with methylation level at each cytosine. Alternatively, the `methylProp` column may be generated from `methylCount` (number of methylated reads) and `coverage` (total number of reads covering this site) columns where `methylProp` = `methylCount`/`coverage` and these columns may be included in the `data.table` in addition to the `methylProp` column. When running MIRA on multiple samples, it is recommended to make each sample an item of a named list, with sample names as the names for the list. Since some existing R packages for DNA methylation use different formats, we include a format conversion function that can be used to convert `SummarizedExperiment`-based objects like you would obtain from the `bsseq`, `methylPipe`, and `BiSeq` packages to the necessary format for MIRA (`SummarizedExperimentToDataTable` function). A `BSseq` object is an acceptable input to MIRA and will be converted to the right format internally but for the sake of parallelization it is recommended that `BSseq` objects be converted to the right format outside the MIRA function so that MIRA can be run on each sample in parallel. Here is an example of a `data.table` in the right format for input to MIRA:
 
 ```{r}
 data("exampleBSDT", package="MIRA")
@@ -58,18 +58,23 @@ head(exampleRegionSet)
 # Analysis Workflow
 The general workflow is as follows:  
 1. Data inputs: start with single-nucleotide resolution methylation data and one or more sets of genomic regions, as described above.
-2. Expand the regions sizes so that MIRA will be able to get a broad methylation profile surrounding your feature of interest.
+2. Expand the regions sizes so that MIRA will be able to get a broad methylation profile surrounding your feature of interest. All regions should be expanded to the same final size.
 3. Aggregate methylation data across regions to get a MIRA profile.
 4. Calculate MIRA score based on shape of MIRA profile.
 
 ## The Input
-First let's load the necessary libraries and example data. `exampleBSDT` is a data.table containing genomic location, methylation hit number, and read number from bisulfite sequencing of a lymphoblastoid cell line. `exampleRegionSet` is a GRanges object with regions that share a biological annotation, in this case Nrf1 binding in a different lymphoblastoid cell line.
+First let's load the necessary libraries and example data. `exampleBSDT` is a data.table containing genomic location, number of reads methylated (`methylCount`), and total read number (`coverage`) from bisulfite sequencing of a lymphoblastoid cell line. `exampleRegionSet` is a GRanges object with regions that share a biological annotation, in this case Nrf1 binding in a different lymphoblastoid cell line.
 
 ```{r, message=FALSE}
 library(MIRA)
 library(GenomicRanges) # for the `resize`, `width` functions
 data("exampleRegionSet", package="MIRA")
 data("exampleBSDT", package="MIRA")
+```
+
+While we only have one sample (`Gm06990_1`) in this example, we would normally want to have our samples in a named list so we will use that format here as well:
+
+```{r}
 BSDTList <- list(exampleBSDT)
 names(BSDTList) <- "Gm06990_1"
 ```
@@ -98,15 +103,15 @@ mean(width(exampleRegionSet))
 Normally, we want to have each region set (only one in our case) be an item in a list, with corresponding names given to the list:
 
 ```{r}
-exampleRegionSet <- GRangesList(exampleRegionSet)
-names(exampleRegionSet) <- "lymphoblastoid_NRF1"
+exampleRegionSetGRL <- GRangesList(exampleRegionSet)
+names(exampleRegionSetGRL) <- "lymphoblastoid_NRF1"
 ```
 
 ## Aggregation of Methylation across Regions
-Next we aggregate the methylation across regions to get a summary methylation profile with the `aggregateMethyl` function. MIRA divides each region into bins, finds methylation that is contained in each bin in each region, and aggregates matching bins over all the regions (all 1st bins together, 2nd bins together, etc.). A couple important parameters: The binNum argument determines how many approximately equally sized bins each region is split into. This could affect the resolution or noisiness of the MIRA profile because using more bins will result in smaller bin sizes (potentially increasing resolution) but also less reads per bin (potentially increasing noise). The minBaseCovPerBin argument in aggregateMethyl is used to screen out region sets that have any bins with fewer than a minimum number of reads. Here we use the default (500). Let's aggregate the methylation and then view the MIRA profile.
+Next we aggregate methylation across regions to get a summary methylation profile with the `aggregateMethyl` function. MIRA divides each region into bins, aggregates methylation levels for cytosines within a given bin for each region individually, and then aggregates matching bins over all the regions (all 1st bins together, 2nd bins together, etc.). A couple important parameters: The binNum argument determines how many approximately equally sized bins each region is split into. This could affect the resolution or noisiness of the MIRA profile because using more bins will result in smaller bin sizes (potentially increasing resolution) but also less reads per bin (potentially increasing noise). The minBaseCovPerBin argument in aggregateMethyl is used to screen out region sets that have any bins with less than a minimum coverage. Here we use the default (500). Let's aggregate the methylation and then view the MIRA profile.
 
 ```{r Aggregate_methylation, message=FALSE, warning=FALSE}
-bigBin <- lapply(X=BSDTList, FUN=aggregateMethyl, GRList=exampleRegionSet, 
+bigBin <- lapply(X=BSDTList, FUN=aggregateMethyl, GRList=exampleRegionSetGRL, 
                 binNum=11)
 bigBinDT <- bigBin[[1]]
 ```
@@ -120,7 +125,7 @@ plotMIRAProfiles(binnedRegDT=bigBinDT)
 ```
 
 ## Calculating the MIRA Score
-To calculate MIRA scores based on the MIRA profiles, we will apply the scoring function, `calcMIRAScore`, to the `data.table` that contains the methylation aggregated in bins. `calcMIRAScore` calculates a score for each group of bins corresponding to a sample and region set, based on the degree of the dip in the profile. With MIRA's default scoring method (`logratio`), `calcMIRAScore` will take the log of the ratio of the outside edges of the dip to the center of the dip. Higher MIRA scores are associated with deeper dips. A flat MIRA profile would have a score of 0.
+To calculate MIRA scores based on the MIRA profiles, we will apply the scoring function, `calcMIRAScore`, to the `data.table` that contains the methylation aggregated in bins. `calcMIRAScore` calculates a score for each group of bins corresponding to a sample and region set, based on the degree of the dip in the profile. With MIRA's default scoring method (`logratio`), `calcMIRAScore` will take the log of the ratio of the outside edges of the dip (identified by `calcMIRAScore`) to the center of the dip. Higher MIRA scores are associated with deeper dips. A flat MIRA profile would have a score of 0.
 
 ```{r Scoring, warning=FALSE}
 sampleScores <- calcMIRAScore(bigBinDT,
@@ -130,7 +135,7 @@ head(sampleScores)
 ```
 
 ## A Note on Annotation
-For real uses of MIRA, samples and region sets should be annotated. The `data.table` for each sample should include a `sampleName` column while region sets should be given to MIRA in a named list/GRangesList. An annotation file that matches sample name with sample type (`sampleType` column) can be used to add sample type information to the data.table after aggregating methylation. A sampleType column is not required for the main functions but is used for the plotting functions. See "Applying MIRA to a Biological Question" vignette for a workflow including annotation.
+For real uses of MIRA, samples and region sets should be annotated. In order to save memory, it is not recommended that sample name or sample type be included as columns in the BSDT before the aggregation step. An annotation file that matches sample name with sample type (`sampleType` column) can be used to add sample type information to the data.table after aggregating methylation. A sampleType column is not required for the main functions but is used for the plotting functions. See "Applying MIRA to a Biological Question" vignette for a workflow including annotation.
 
 # Interpreting the Results
-Regulatory information can be inferred from the MIRA scores and profiles but interpretation depends on the type of region set and samples used. The basic assumption is that deeper dips and higher MIRA scores would be associated with generally higher activity at the regions that were tested, which might also inform you about the activity of the regulatory feature that defines the region set (eg the activity of a transcription factor if using ChIP-seq regions). However, MIRA does not directly tell you the activity of the regulatory feature and, in some cases, higher MIRA scores will not be associated with higher activity of the regulatory feature. For example, samples with higher MIRA scores for a transcription factor binding region set could have more activity of that transcription factor but there could be other causes like increased activity of a different transcription factor that binds to many of the same regions or the fact that the samples with higher scores generally had more similar chromatin states to the samples from which the region set was derived than samples with lower scores did (eg when using MIRA on samples from multiple tissue/cell types and the region set was derived from the same tissue/cell type as some but not all of the samples). The general interpretation rule though is a higher MIRA score means more activity (although what kind of activity depends on the context). For more on interpreting the results, see the "Applying MIRA to a Biological Question" vignette.
+Regulatory information can be inferred from the MIRA scores and profiles but interpretation depends on the type of region set and samples used. The basic assumption is that deeper dips and higher MIRA scores would be associated with generally higher activity at the regions that were tested, which might also inform you about the activity of the regulatory feature that defines the region set (eg the activity of a transcription factor if using ChIP-seq regions). However, MIRA does not directly tell you the activity of the regulatory feature and, in some cases, higher MIRA scores will not be associated with higher activity of the regulatory feature. For example, samples with higher MIRA scores for a transcription factor binding region set could have more activity of that transcription factor but there could be other causes like increased activity of a different transcription factor that binds to many of the same regions. Additionally, it is possible that the samples with higher scores generally had more similar chromatin states to the samples from which the region set was derived than samples with lower scores did (eg when using MIRA on samples from multiple tissue/cell types and the region set was derived from the same tissue/cell type as some but not all of the samples). The general interpretation rule is that a higher MIRA score means more activity but we encourage the user to think carefully about what biological question they are actually addressing based on the region sets and samples used. For more on interpreting the results, see the "Applying MIRA to a Biological Question" vignette.
