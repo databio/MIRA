@@ -96,7 +96,7 @@ xAxisForRegionPlots <- function(binNum) {
 #' there are too many (more than 9) region sets ('featureID's).
 #' 
 #' @param scoreDT A datatable with the following columns: 
-#' score, featureID (names of regions), ideally include 'sampleType'.
+#' score, featureID (names of region sets), ideally include 'sampleType'.
 #' @param featID Region set name/names in a single string or vector of strings.
 #' @param colBlindOption If TRUE, function will plot with a color blind
 #' friendly palette which could be helpful when plotting multiple colors. 

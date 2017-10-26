@@ -23,7 +23,8 @@ affect the output. See "Value" section.}
 
 \item{binNum}{Number of bins across the region.}
 
-\item{minBaseCovPerBin}{Filter out bins with fewer than X reads before returning.}
+\item{minBaseCovPerBin}{Filter out bins where the sum of coverage values is
+less than X before returning.}
 
 \item{byRegionGroup}{Default TRUE will aggregate methylation over 
 corresponding bins for each region (all bin1's aggregated, all bin2's, etc).
@@ -42,7 +43,8 @@ Each region was split into bins; methylation was put in these bins;
 Output contains sum of the all corresponding bins 
 for the regions of each region set ie for all regions in each region set: 
 first bins summed, second bins summed, etc.
-Columns of the output should be "bin", "methylProp", and "coverage"
+Columns of the output should be "bin", "methylProp", and, if
+coverage was included as input col, "coverage"
 ###########################################################################
 Info about how strand of rangeDT affects output:
 The MIRA signature will be symmetrical if no strand information is given for 

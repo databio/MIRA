@@ -125,12 +125,13 @@ cleanws <- function(string) {
 #' (data.table::rbindlist)
 #' but also added a column (default, newColName="sampleName") to each one to
 #' keep track of which rows were from which sample
-# @examples 
-# # this example works but sample names should not be added before 
-# # running aggregateMethyl() in order to save memory
-# data(exampleBSseqObj)
-# multiSampleList <- bsseqToDataTable(exampleBSseqObj)
-# combinedDT <- rbindNamedList(multiSampleList)
+#' @examples 
+#' # NOTE: generally sample names should be added after running aggregateMethyl() 
+#' # rather than before in order to save memory (since data.table has less rows
+#' # after aggregation)
+#' data(exampleBSseqObj)
+#' multiSampleList <- bsseqToDataTable(exampleBSseqObj)
+#' combinedDT <- rbindNamedList(multiSampleList)
 #' @export
 rbindNamedList <- function(namedList, newColName="sampleName") {
     # making a copy so original object will not be changed by reference

@@ -9,7 +9,7 @@ plotMIRAScores(scoreDT, featID = unique(scoreDT[, featureID]),
 }
 \arguments{
 \item{scoreDT}{A datatable with the following columns: 
-score, featureID (names of regions), ideally include 'sampleType'.}
+score, featureID (names of region sets), ideally include 'sampleType'.}
 
 \item{featID}{Region set name/names in a single string or vector of strings.}
 

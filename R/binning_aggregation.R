@@ -31,7 +31,8 @@
 #' @param byRegionGroup Default TRUE will aggregate methylation over 
 #' corresponding bins for each region (all bin1's aggregated, all bin2's, etc).
 #' byRegionGroup = FALSE is deprecated.
-#' @param minBaseCovPerBin Filter out bins with fewer than X reads before returning.
+#' @param minBaseCovPerBin Filter out bins where the sum of coverage values is
+#' less than X before returning.
 #' @param splitFactor With default NULL, aggregation will be done 
 #' separately/individually for each sample.
 #' @param hasCoverage Default TRUE. Whether there is a coverage column
@@ -43,7 +44,8 @@
 #' Output contains sum of the all corresponding bins 
 #' for the regions of each region set ie for all regions in each region set: 
 #' first bins summed, second bins summed, etc.
-#' Columns of the output should be "bin", "methylProp", and "coverage"
+#' Columns of the output should be "bin", "methylProp", and, if
+#' coverage was included as input col, "coverage"
 #' ###########################################################################
 #' Info about how strand of rangeDT affects output:
 #' The MIRA signature will be symmetrical if no strand information is given for 

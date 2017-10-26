@@ -7,7 +7,7 @@
 BSreadBiSeq(files, contrastList = NULL, cores = 4, returnAsList = FALSE)
 }
 \arguments{
-\item{files}{a list of filenames (use parseInputArg if necessary)}
+\item{files}{a vector of file paths}
 
 \item{contrastList}{Generally not needed for MIRA. 
 A list of named character vectors, 
