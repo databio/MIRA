@@ -415,7 +415,7 @@ MIRAScore <- function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
 #' only scoring method currently but more methods may be added in the future.
 #' @param usedStrand If strand information is included as part of an
 #' input region set when aggregating methylation, 
-#' the MIRA signature will probably not be 
+#' the MIRA profile will probably not be 
 #' symmetrical. In this case, the automatic 
 #' shoulderShift sensing (done when shoulderShift="auto") needs to
 #' be done for both sides of the dip instead of just one side so set
@@ -431,7 +431,7 @@ MIRAScore <- function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
 #' and MIRA score (with name "score"). There will
 #' be one row and MIRA score for each sample/region set combination.
 #' The MIRA score quantifies the "dip" of 
-#' the MIRA signature which is an aggregation of methylation 
+#' the MIRA profile which is an aggregation of methylation 
 #' over all regions in a region set. 
 #' 
 #' @export
@@ -495,7 +495,7 @@ calcMIRAScore <- function(binnedDT,
 # @param values A vector with proportion of methylation values for each bin. 
 # Between 0 and 1.
 # @return A MIRA score. The MIRA score quantifies the "dip" of 
-# the MIRA signature which is an aggregation of methylation 
+# the MIRA profile which is an aggregation of methylation 
 # over all regions in a region set. 
 # @examples
 # data("exampleBins")
@@ -513,7 +513,7 @@ scoreDip <- function(values,
     # determining number of bins
     binNum <- length(values)
     
-    # determining whether signature is concave up or down in general
+    # determining whether profile is concave up or down in general
     # because values for finding shoulder need to be altered if concave
     # down ('logratio scoring') 
     # also it matters for getting middle value for 'logratio' scoring
@@ -565,7 +565,7 @@ scoreDip <- function(values,
                             + values[centerSpot - 1] ) / 3
             }
         }
-        # automatically figuring out shoulderShift based on each signature
+        # automatically figuring out shoulderShift based on each profile
         if (shoulderShift == "auto") {
             
             
@@ -581,14 +581,14 @@ scoreDip <- function(values,
             
             
             
-            # signature will probably not be symmetrical if strand was used
+            # profile will probably not be symmetrical if strand was used
             if (usedStrand) { # probably not common but still an option
                 shoulderShiftL <- findShoulder(values2, binNum, centerSpot,
                                              whichSide = "left")
                 shoulderShiftR <- findShoulder(values2, binNum, centerSpot, 
                                              whichSide = "right")
             } else { # most common use case, strand was not used
-                # either side would work since signature is symmetrical
+                # either side would work since profile is symmetrical
                 shoulderShift <- findShoulder(values2, binNum, centerSpot, 
                                              whichSide = "right")
             }
@@ -635,7 +635,7 @@ scoreDip <- function(values,
     return(score)
 }
 
-# helper function for determining concavity of MIRA signature
+# helper function for determining concavity of MIRA profile
 # fits a parabola to the values then looks at the x^2 coefficient to 
 # determine concavity (+ is concave up, - is concave down)
 # if number of bins is high enough, a wide parabola is fit using all the data
@@ -678,14 +678,14 @@ isProfileConcaveUp <- function(values, binNum) {
 }
 
 # helper function for automatic shoulder sensing
-# for unsymmetrical signatures this function should be run twice, once
+# for unsymmetrical profiles this function should be run twice, once
 # with whichSide="right" and once with whichSide="left"
 # only finds the right shoulder so to find the left shoulder, flip the 
 # input values "values", then take length(values)-shoulderShift
 # used in scoreDip
-# @param whichSide the side of the signature to find the shoulder for
+# @param whichSide the side of the profile to find the shoulder for
 # @param for other params see ?scoreDip
-# @return shoulderShift The distance from the center of the signature to the shoulder.
+# @return shoulderShift The distance from the center of the profile to the shoulder.
 #         It may be X.0 (ie an integer) if centerSpot is an integer or 
 #         X.5 if centerSpot was X.5
 

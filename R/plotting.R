@@ -1,5 +1,5 @@
 # Plotting functions to visualize outputs of MIRA
-# Visualize MIRA signatures and MIRA scores
+# Visualize MIRA profiles and MIRA scores
 
 
 
@@ -22,7 +22,7 @@
 #' @param colBlindOption If TRUE, function will plot with a color blind
 #' friendly palette which could be helpful when plotting multiple colors. 
 #' 
-#' @return A plot of class "gg"/ "ggplot" that shows MIRA signatures
+#' @return A plot of class "gg"/ "ggplot" that shows MIRA profiles
 #' @examples
 #' data("exampleBins", package = "MIRA")
 #' MIRAplot <- plotMIRAProfiles(binnedRegDT = exampleBins)

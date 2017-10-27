@@ -196,8 +196,30 @@ plotMIRAScores(sampleScores)
 ```
 
 # Interpreting the Results
-As expected, we found that the Ewing sarcoma samples had higher MIRA scores for the Ewing-specific DHSs, which implies more activity in Ewing-specific regions. The muscle-specific DHSs require more interpretation. The muscle samples on average had higher MIRA scores but there was not complete separation between the groups. This suggests that the Ewing samples still have some activity in muscle-specific regions. 
+As expected, we found that the Ewing sarcoma samples had higher MIRA scores for the Ewing-specific DHSs, which implies more activity in Ewing-specific regions. The muscle-specific DHSs require more interpretation. The muscle samples on average had higher MIRA scores but there was not complete separation between the groups. This suggests that the Ewing samples still have some activity in muscle-specific regions. If we want to see whether differences between the groups are statistically significant, we can use, for example, the Wilcoxon rank sum test (a nonparametric parallel of the t test). First, we do this for the Ewing-specific region set.
 
+```{r}
+EwingSampleEwingRegions <- sampleScores[sampleScores$sampleType == "Ewing" &
+                                           sampleScores$featureID ==
+                                           "Ewing_Specific", ]
+myoSampleEwingRegions <- sampleScores[sampleScores$sampleType == "Muscle-related" &
+                                           sampleScores$featureID ==
+                                           "Ewing_Specific", ]
+wilcox.test(EwingSampleEwingRegions$score, myoSampleEwingRegions$score)
+```
+
+Next, we do it for the muscle-specific region set.
+
+```{r}
+EwingSampleMyoRegions <- sampleScores[sampleScores$sampleType == "Ewing" &
+                                           sampleScores$featureID ==
+                                           "Muscle_Specific", ]
+myoSampleMyoRegions <- sampleScores[sampleScores$sampleType == "Muscle-related" &
+                                           sampleScores$featureID ==
+                                           "Muscle_Specific", ]
+wilcox.test(EwingSampleMyoRegions$score, myoSampleMyoRegions$score)
+```
+We can see that the sample groups were significantly different for one region set (Ewing regions) but not the other (muscle regions). 
 
 # General Interpretation Tips and Caveats
 In general, interpretation will depend on the samples and region sets being used. While we have found MIRA useful for inferring regulatory activity of transcription factors, we must also remember that the MIRA score is only an indirect inference of activity of the TF. The methylation profile could be affected by other TFs aside from the TF of interest. Thus, it is possible that a sample could have a higher MIRA score for TF-binding regions than another sample yet still have less activity for that TF (but perhaps more activity for other regulatory elements that happen to also be in the same regions). With TF-binding region sets, what we are really measuring is simply that the regions where the TF binds have altered activity in one sample relative to another sample. The main thing to remember is that MIRA infers the general regulatory activity of the regions you give it and the biological interpretation depends on the samples and type of regions (biological annotation as well as the source tissue/cell type) you use.
