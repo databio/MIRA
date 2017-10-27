@@ -47,13 +47,13 @@ Columns of the output should be "bin", "methylProp", and, if
 coverage was included as input col, "coverage"
 ###########################################################################
 Info about how strand of rangeDT affects output:
-The MIRA signature will be symmetrical if no strand information is given for 
-the regions (produced by averaging the signature with the reverse of the 
-signature), because the orientation of the regions is arbitrary with respect 
+The MIRA profile will be symmetrical if no strand information is given for 
+the regions (produced by averaging the profile with the reverse of the 
+profile), because the orientation of the regions is arbitrary with respect 
 to biological features (like a promoter for instance) that could be 
 oriented directionally (e.g. 5' to 3'). If strand information is given, 
 regions on the minus strand will be flipped before being aggregated 
-with plus strand regions so the MIRA signature will be in 
+with plus strand regions so the MIRA profile will be in 
 5' to 3' orientation.
 ###########################################################################
 }

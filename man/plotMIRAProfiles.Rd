@@ -23,7 +23,7 @@ sample name (sampleName column).}
 friendly palette which could be helpful when plotting multiple colors.}
 }
 \value{
-A plot of class "gg"/ "ggplot" that shows MIRA signatures
+A plot of class "gg"/ "ggplot" that shows MIRA profiles
 }
 \description{
 Plot one or multiple methylation profiles. Displays each region set

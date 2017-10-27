@@ -55,7 +55,7 @@ only scoring method currently but more methods may be added in the future.}
 
 \item{usedStrand}{If strand information is included as part of an
 input region set when aggregating methylation, 
-the MIRA signature will probably not be 
+the MIRA profile will probably not be 
 symmetrical. In this case, the automatic 
 shoulderShift sensing (done when shoulderShift="auto") needs to
 be done for both sides of the dip instead of just one side so set
@@ -74,7 +74,7 @@ A data.table with a column for region set ID
 and MIRA score (with name "score"). There will
 be one row and MIRA score for each sample/region set combination.
 The MIRA score quantifies the "dip" of 
-the MIRA signature which is an aggregation of methylation 
+the MIRA profile which is an aggregation of methylation 
 over all regions in a region set.
 }
 \description{
