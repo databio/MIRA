@@ -9,7 +9,7 @@ plotMIRAScores(scoreDT, featID = unique(scoreDT[, featureID]),
 }
 \arguments{
 \item{scoreDT}{A datatable with the following columns: 
-score, featureID (names of regions), ideally include 'sampleType'.}
+score, featureID (names of region sets), ideally include 'sampleType'.}
 
 \item{featID}{Region set name/names in a single string or vector of strings.}
 
@@ -34,9 +34,7 @@ there are too many (more than 9) region sets ('featureID's).
 }
 \examples{
 data(bigBinDT2)
-exScores <- bigBinDT2[, .(score=calcMIRAScore(methylProp,
-                                       shoulderShift = 5)), 
-                    by = .(featureID, sampleName)]
+exScores <- calcMIRAScore(bigBinDT2)
 # adding annotation
 sampleType <- rep(c("Ewing", "Muscle-related"), each = 24)
 exScores <- cbind(exScores, sampleType)

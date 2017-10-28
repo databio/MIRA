@@ -387,9 +387,24 @@ MIRAScore <- function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
 #' outside edges of the dip. shoulderShift may be manually set as an integer
 #' that will be used for all sample/region set combinations. "auto" does not 
 #' currently work with region sets that include strand info.
+#' 
+#' Brief description/example of the algorithm for "auto": for concave up MIRA
+#' profiles with an odd number of bins, the first potential shoulder 
+#' will be the 2nd bin from the center (if the center was 0). This is
+#' the first bin that could not be included in center methylation value for 
+#' scoring. From there, the shoulder will be changed to the next bin towards
+#' the outside of the profile if the next bin over has a higher methylation
+#' value or if the average methylation value of the next two bins are 
+#' higher than the methylation value of the current shoulder bin. The 
+#' potential shoulder bin keeps moving outward toward the edges of the MIRA
+#' profile until neither of these conditions are met and whatever
+#' bin it stops on is used for the shoulder in the MIRA
+#' score calculation. For symmetrical MIRA profiles (the general use case),
+#' the shoulders picked on both sides of the center will be the same number of 
+#' bins away from the center bin (symmetrical shoulders). 
 #' @param method The scoring method. "logRatio" is the log of the ratio of outer
 #' edges to the middle. This ratio is the average of outside values 
-#' of the dip (shoulders) divided by the center value if 
+#' of the dip (shoulders) divided by either the center value if 
 #' it is lower than the two surrounding values (lower for concave up profiles or
 #' higher for concave down profiles) or if it is not lower (higher for
 #' concave down profiles), an 
@@ -400,7 +415,7 @@ MIRAScore <- function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
 #' only scoring method currently but more methods may be added in the future.
 #' @param usedStrand If strand information is included as part of an
 #' input region set when aggregating methylation, 
-#' the MIRA signature will probably not be 
+#' the MIRA profile will probably not be 
 #' symmetrical. In this case, the automatic 
 #' shoulderShift sensing (done when shoulderShift="auto") needs to
 #' be done for both sides of the dip instead of just one side so set
@@ -416,7 +431,7 @@ MIRAScore <- function(BSDT, GRList, binNum = 11, scoringMethod = "logRatio",
 #' and MIRA score (with name "score"). There will
 #' be one row and MIRA score for each sample/region set combination.
 #' The MIRA score quantifies the "dip" of 
-#' the MIRA signature which is an aggregation of methylation 
+#' the MIRA profile which is an aggregation of methylation 
 #' over all regions in a region set. 
 #' 
 #' @export
@@ -480,7 +495,7 @@ calcMIRAScore <- function(binnedDT,
 # @param values A vector with proportion of methylation values for each bin. 
 # Between 0 and 1.
 # @return A MIRA score. The MIRA score quantifies the "dip" of 
-# the MIRA signature which is an aggregation of methylation 
+# the MIRA profile which is an aggregation of methylation 
 # over all regions in a region set. 
 # @examples
 # data("exampleBins")
@@ -498,7 +513,7 @@ scoreDip <- function(values,
     # determining number of bins
     binNum <- length(values)
     
-    # determining whether signature is concave up or down in general
+    # determining whether profile is concave up or down in general
     # because values for finding shoulder need to be altered if concave
     # down ('logratio scoring') 
     # also it matters for getting middle value for 'logratio' scoring
@@ -550,7 +565,7 @@ scoreDip <- function(values,
                             + values[centerSpot - 1] ) / 3
             }
         }
-        # automatically figuring out shoulderShift based on each signature
+        # automatically figuring out shoulderShift based on each profile
         if (shoulderShift == "auto") {
             
             
@@ -566,14 +581,14 @@ scoreDip <- function(values,
             
             
             
-            # signature will probably not be symmetrical if strand was used
+            # profile will probably not be symmetrical if strand was used
             if (usedStrand) { # probably not common but still an option
                 shoulderShiftL <- findShoulder(values2, binNum, centerSpot,
                                              whichSide = "left")
                 shoulderShiftR <- findShoulder(values2, binNum, centerSpot, 
                                              whichSide = "right")
             } else { # most common use case, strand was not used
-                # either side would work since signature is symmetrical
+                # either side would work since profile is symmetrical
                 shoulderShift <- findShoulder(values2, binNum, centerSpot, 
                                              whichSide = "right")
             }
@@ -620,7 +635,7 @@ scoreDip <- function(values,
     return(score)
 }
 
-# helper function for determining concavity of MIRA signature
+# helper function for determining concavity of MIRA profile
 # fits a parabola to the values then looks at the x^2 coefficient to 
 # determine concavity (+ is concave up, - is concave down)
 # if number of bins is high enough, a wide parabola is fit using all the data
@@ -663,14 +678,14 @@ isProfileConcaveUp <- function(values, binNum) {
 }
 
 # helper function for automatic shoulder sensing
-# for unsymmetrical signatures this function should be run twice, once
+# for unsymmetrical profiles this function should be run twice, once
 # with whichSide="right" and once with whichSide="left"
 # only finds the right shoulder so to find the left shoulder, flip the 
 # input values "values", then take length(values)-shoulderShift
 # used in scoreDip
-# @param whichSide the side of the signature to find the shoulder for
+# @param whichSide the side of the profile to find the shoulder for
 # @param for other params see ?scoreDip
-# @return shoulderShift The distance from the center of the signature to the shoulder.
+# @return shoulderShift The distance from the center of the profile to the shoulder.
 #         It may be X.0 (ie an integer) if centerSpot is an integer or 
 #         X.5 if centerSpot was X.5
 
@@ -765,7 +780,7 @@ addMethPropCol <- function(BSDTList){
 #' to just use a single core; or to pass mc.preschedule = FALSE; This
 #' makes it so that each file is processed as a separate job. Much better.
 #' 
-#' @param files a list of filenames (use parseInputArg if necessary)
+#' @param files a vector of file paths 
 #' @param contrastList Generally not needed for MIRA. 
 #' A list of named character vectors, 
 #' each with length equal to the number of items in files. 

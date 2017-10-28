@@ -31,7 +31,8 @@
 #' @param byRegionGroup Default TRUE will aggregate methylation over 
 #' corresponding bins for each region (all bin1's aggregated, all bin2's, etc).
 #' byRegionGroup = FALSE is deprecated.
-#' @param minBaseCovPerBin Filter out bins with fewer than X reads before returning.
+#' @param minBaseCovPerBin Filter out bins where the sum of coverage values is
+#' less than X before returning.
 #' @param splitFactor With default NULL, aggregation will be done 
 #' separately/individually for each sample.
 #' @param hasCoverage Default TRUE. Whether there is a coverage column
@@ -43,18 +44,18 @@
 #' Output contains sum of the all corresponding bins 
 #' for the regions of each region set ie for all regions in each region set: 
 #' first bins summed, second bins summed, etc.
-#' Columns of the output should be "bin", "methylProp", and "coverage"
-#' ###########################################################################
+#' Columns of the output should be "bin", "methylProp", and, if
+#' coverage was included as input col, "coverage"
+#' 
 #' Info about how strand of rangeDT affects output:
-#' The MIRA signature will be symmetrical if no strand information is given for 
-#' the regions (produced by averaging the signature with the reverse of the 
-#' signature), because the orientation of the regions is arbitrary with respect 
+#' The MIRA profile will be symmetrical if no strand information is given for 
+#' the regions (produced by averaging the profile with the reverse of the 
+#' profile), because the orientation of the regions is arbitrary with respect 
 #' to biological features (like a promoter for instance) that could be 
 #' oriented directionally (e.g. 5' to 3'). If strand information is given, 
 #' regions on the minus strand will be flipped before being aggregated 
-#' with plus strand regions so the MIRA signature will be in 
+#' with plus strand regions so the MIRA profile will be in 
 #' 5' to 3' orientation.
-#' ###########################################################################
 #' @examples
 #' data("exampleBSDT") # exampleBSDT
 #' data("exampleRegionSet") # exampleRegionSet
@@ -337,7 +338,7 @@ BSAggregate <- function(BSDT, regionsGRL, excludeGR = NULL,
         bsCombined <- bsCombined[, eval(parse(text = jCommand)), 
                                 by = eval(parse(text = byStringGroup))]
         
-        # if any strand information was not given, averaging the signatures 
+        # if any strand information was not given, averaging the profiles 
         # about the center to account for unknown strand orientation, 
         # also averaging coverage about center
         # ie if any "*" are present then average

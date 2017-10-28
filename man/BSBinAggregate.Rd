@@ -23,7 +23,8 @@ affect the output. See "Value" section.}
 
 \item{binNum}{Number of bins across the region.}
 
-\item{minBaseCovPerBin}{Filter out bins with fewer than X reads before returning.}
+\item{minBaseCovPerBin}{Filter out bins where the sum of coverage values is
+less than X before returning.}
 
 \item{byRegionGroup}{Default TRUE will aggregate methylation over 
 corresponding bins for each region (all bin1's aggregated, all bin2's, etc).
@@ -42,18 +43,18 @@ Each region was split into bins; methylation was put in these bins;
 Output contains sum of the all corresponding bins 
 for the regions of each region set ie for all regions in each region set: 
 first bins summed, second bins summed, etc.
-Columns of the output should be "bin", "methylProp", and "coverage"
-###########################################################################
+Columns of the output should be "bin", "methylProp", and, if
+coverage was included as input col, "coverage"
+
 Info about how strand of rangeDT affects output:
-The MIRA signature will be symmetrical if no strand information is given for 
-the regions (produced by averaging the signature with the reverse of the 
-signature), because the orientation of the regions is arbitrary with respect 
+The MIRA profile will be symmetrical if no strand information is given for 
+the regions (produced by averaging the profile with the reverse of the 
+profile), because the orientation of the regions is arbitrary with respect 
 to biological features (like a promoter for instance) that could be 
 oriented directionally (e.g. 5' to 3'). If strand information is given, 
 regions on the minus strand will be flipped before being aggregated 
-with plus strand regions so the MIRA signature will be in 
+with plus strand regions so the MIRA profile will be in 
 5' to 3' orientation.
-###########################################################################
 }
 \description{
 First bins regions and averages the proportion of methylation for

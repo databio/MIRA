@@ -1,5 +1,5 @@
 # Plotting functions to visualize outputs of MIRA
-# Visualize MIRA signatures and MIRA scores
+# Visualize MIRA profiles and MIRA scores
 
 
 
@@ -22,7 +22,7 @@
 #' @param colBlindOption If TRUE, function will plot with a color blind
 #' friendly palette which could be helpful when plotting multiple colors. 
 #' 
-#' @return A plot of class "gg"/ "ggplot" that shows MIRA signatures
+#' @return A plot of class "gg"/ "ggplot" that shows MIRA profiles
 #' @examples
 #' data("exampleBins", package = "MIRA")
 #' MIRAplot <- plotMIRAProfiles(binnedRegDT = exampleBins)
@@ -96,7 +96,7 @@ xAxisForRegionPlots <- function(binNum) {
 #' there are too many (more than 9) region sets ('featureID's).
 #' 
 #' @param scoreDT A datatable with the following columns: 
-#' score, featureID (names of regions), ideally include 'sampleType'.
+#' score, featureID (names of region sets), ideally include 'sampleType'.
 #' @param featID Region set name/names in a single string or vector of strings.
 #' @param colBlindOption If TRUE, function will plot with a color blind
 #' friendly palette which could be helpful when plotting multiple colors. 
@@ -106,9 +106,7 @@ xAxisForRegionPlots <- function(binNum) {
 #' @export
 #' @examples
 #' data(bigBinDT2)
-#' exScores <- bigBinDT2[, .(score=calcMIRAScore(methylProp,
-#'                                        shoulderShift = 5)), 
-#'                     by = .(featureID, sampleName)]
+#' exScores <- calcMIRAScore(bigBinDT2)
 #' # adding annotation
 #' sampleType <- rep(c("Ewing", "Muscle-related"), each = 24)
 #' exScores <- cbind(exScores, sampleType)

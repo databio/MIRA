@@ -30,3 +30,11 @@ correspond to the names of the samples. Now all samples can
 be combined into one data.table but which sample the information
 came from can be kept.
 }
+\examples{
+# NOTE: generally sample names should be added after running aggregateMethyl() 
+# rather than before in order to save memory (since data.table has less rows
+# after aggregation)
+data(exampleBSseqObj)
+multiSampleList <- bsseqToDataTable(exampleBSseqObj)
+combinedDT <- rbindNamedList(multiSampleList)
+}
