@@ -87,7 +87,7 @@ BSDTList <- addMethPropCol(BSDTList)
 
 ## Expand Your Regions
 
-A short but important step. MIRA scores are based on the difference between methylation surrounding the regions versus the methylation at the region itself, so we need to expand our regions to include surrounding bases. Let's use the `resize` function from the `GenomicRanges` package to increase the size of our regions. The average size of our regions is about 500:
+A short but important step. MIRA scores are based on the difference between methylation surrounding the regions versus the methylation at the region itself, so we need to expand our regions to include surrounding bases. Let's use the `resize` function from the `GenomicRanges` package to increase the size of our regions and make them all the same size. It is recommended to make all regions the same size so the final methylation profile will be easier to interpret. The average size of our regions is currently about 500:
 
 ```{r}
 mean(width(exampleRegionSet))

@@ -79,7 +79,7 @@ regionSets <- lapply(X=regionSets, FUN=
                                               ranges=IRanges(x$start, x$end)))
 ```
 
-We also need to pick initial region sizes. To get the methylation profile around our sites of interest, we are resizing the regions to 5000 bp. This is a wide initial guess compared to the average region sizes for the region sets (around 151 bp for both region sets), but we will adjust this later on.
+We also need to pick initial region sizes. To get the methylation profile around our sites of interest, we are resizing the regions to 5000 bp. Also, using the same region size for all regions in a set will make the final methylation profile easier to interpret. This is a wide initial guess compared to the average region sizes for the region sets (around 151 bp for both region sets), but we will adjust this later on.
 
 ```{r, eval=FALSE}
 regionSets[[1]] <- resize(regionSets[[1]], 5000, fix="center")

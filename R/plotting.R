@@ -106,9 +106,7 @@ xAxisForRegionPlots <- function(binNum) {
 #' @export
 #' @examples
 #' data(bigBinDT2)
-#' exScores <- bigBinDT2[, .(score=calcMIRAScore(methylProp,
-#'                                        shoulderShift = 5)), 
-#'                     by = .(featureID, sampleName)]
+#' exScores <- calcMIRAScore(bigBinDT2)
 #' # adding annotation
 #' sampleType <- rep(c("Ewing", "Muscle-related"), each = 24)
 #' exScores <- cbind(exScores, sampleType)
