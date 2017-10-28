@@ -45,7 +45,7 @@ for the regions of each region set ie for all regions in each region set:
 first bins summed, second bins summed, etc.
 Columns of the output should be "bin", "methylProp", and, if
 coverage was included as input col, "coverage"
-###########################################################################
+
 Info about how strand of rangeDT affects output:
 The MIRA profile will be symmetrical if no strand information is given for 
 the regions (produced by averaging the profile with the reverse of the 
@@ -55,7 +55,6 @@ oriented directionally (e.g. 5' to 3'). If strand information is given,
 regions on the minus strand will be flipped before being aggregated 
 with plus strand regions so the MIRA profile will be in 
 5' to 3' orientation.
-###########################################################################
 }
 \description{
 First bins regions and averages the proportion of methylation for
