@@ -202,6 +202,21 @@ aggregateMethylInt <- function(BSDT, GRList, binNum = 11, minBaseCovPerBin = 500
         stop("GRList should be a GRangesList or a list of data.tables")
     }
     
+    # warning user if not all regions in a region set are the same length
+    # which could make the resulting MIRA profile hard to interpret
+    hasUniformRegionSizes = all(sapply(GRDTList, function(x) 
+                                    diff(range(x$end - x$start)) < 0.000001)) 
+    if (!hasUniformRegionSizes) {
+        warning(cleanws("For at least one of the region sets, not all regions
+                        in the set were the same length. It is recommended 
+                        that all regions in a given region
+                        set be the same length so the final profile will be 
+                        easier to interpret. Regions can be resized outside MIRA
+                        to meet this recommendation."))
+    }
+    
+    
+    
     
     # adding a methylProp column if it is not already in the BSDT
     if (!("methylProp" %in% names(BSDT))) {
