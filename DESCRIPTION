@@ -1,6 +1,6 @@
 Package: MIRA
-Version: 1.0.1
-Date: 2017-28-17
+Version: 1.1.01
+Date: 2017-11-02
 Title: Methylation-Based Inference of Regulatory Activity
 Description: MIRA measures the degree of "dip" in methylation
     level surrounding a regulatory site of interest, such as a
