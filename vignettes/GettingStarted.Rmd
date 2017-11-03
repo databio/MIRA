@@ -48,7 +48,7 @@ head(exampleBSDT)
 ```
 
 ## Region Sets
-A region set is a GRanges object containing genomic regions that share a biological annotation. For example, it could be ChIP peaks for a transcription factor. Many types of region sets may be used with MIRA, including ChIP regions for transcription factors or histone modifications, promoters for a set of related genes, sites of motif matches, or DNase hypersensitivity sites. Many such region sets may be found in online repositories and we have pulled together some major sources at http://databio.org/regiondb. You may also want to check out [the `AnnotationHub` Bioconductor package](https://www.bioconductor.org/packages/release/bioc/html/AnnotationHub.html) which gives access to many region sets in an R-friendly format. For use in MIRA, each region set should be a GRanges object and multiple region sets may be passed to MIRA as a GRangesList with each list element being a region set. Here is an example of a region set, which we will use in this vignette:
+A region set is a GRanges object containing genomic regions that share a biological annotation. For example, it could be ChIP peaks for a transcription factor. Many types of region sets may be used with MIRA, including ChIP regions for transcription factors or histone modifications, promoters for a set of related genes, sites of motif matches, or DNase hypersensitivity sites. Many such region sets may be found in online repositories and we have pulled together some major sources at http://databio.org/regiondb. At the end of this vignette, we show how to load a database of regions with a few lines of code using the `LOLA` package. You may also want to check out [the `AnnotationHub` Bioconductor package](https://www.bioconductor.org/packages/release/bioc/html/AnnotationHub.html) which gives access to many region sets in an R-friendly format. For use in MIRA, each region set should be a GRanges object and multiple region sets may be passed to MIRA as a GRangesList with each list element being a region set. Here is an example of a region set, which we will use in this vignette:
 
 ```{r, message=FALSE}
 data("exampleRegionSet", package="MIRA")
@@ -139,3 +139,16 @@ For real uses of MIRA, samples and region sets should be annotated. In order to 
 
 # Interpreting the Results
 Regulatory information can be inferred from the MIRA scores and profiles but interpretation depends on the type of region set and samples used. The basic assumption is that deeper dips and higher MIRA scores would be associated with generally higher activity at the regions that were tested, which might also inform you about the activity of the regulatory feature that defines the region set (eg the activity of a transcription factor if using ChIP-seq regions). However, MIRA does not directly tell you the activity of the regulatory feature and, in some cases, higher MIRA scores will not be associated with higher activity of the regulatory feature. For example, samples with higher MIRA scores for a transcription factor binding region set could have more activity of that transcription factor but there could be other causes like increased activity of a different transcription factor that binds to many of the same regions. Additionally, it is possible that the samples with higher scores generally had more similar chromatin states to the samples from which the region set was derived than samples with lower scores did (eg when using MIRA on samples from multiple tissue/cell types and the region set was derived from the same tissue/cell type as some but not all of the samples). The general interpretation rule is that a higher MIRA score means more activity but we encourage the user to think carefully about what biological question they are actually addressing based on the region sets and samples used. For more on interpreting the results, see the "Applying MIRA to a Biological Question" vignette.
+
+# Bonus: Loading Region Sets with LOLA
+Here is one simple way to get region sets to use with MIRA. First, download the LOLA Core Database (actual files, not the cached version) from [here](http://cloud.databio.org/regiondb/) (this might take a while). 
+Next, let's load the `LOLA` package and use it to load some of the region sets into R!
+
+The following code will not be evaluated because of the large files involved and long loading time but shows the general process (loading the almost 3,000 region sets could take 10-30 minutes). Alternatively to avoid the long loading process, you can just download the database and load region sets into R one by one with `data.table::fread` or another such function.
+```{r, eval=FALSE}
+library(LOLA)
+pathToDB <- "path/to/LOLACore/hg38"
+regionDB <- loadRegionDB(pathToDB)
+```
+
+The `regionDB` is a list that includes some annotation and a `GRangesList` of region sets that can be accessed with `regionDB$regionGRL`. Check out the `LOLA` docs [here](http://bioconductor.org/packages/release/bioc/html/LOLA.html) if you want some more information. Now you have plenty of region sets to use with MIRA!
