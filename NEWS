@@ -23,3 +23,5 @@ Notable changes to this project will be documented in this file.
     - MIRAScore() wrapper function no longer exported
     - BSReadBiseq no longer adds 'sampleName' column
 
+## [1.2.02] -- 2018-04-10
+    - Bug fix: aggregateMethyl should not break now when a region set is given that has no overlap with the methylation data for the sample. A warning is given that tells the name of that region set. 
