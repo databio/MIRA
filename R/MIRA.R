@@ -39,7 +39,7 @@ if (getRversion() >= "2.15.1") {
     ".", "bin", "binID", "chr", "element_blank", "featureID", 
     "geom_violin", "methylCount", "id", "meth", 
     "methylProp", "coverage", "sumCoverage", "regionGroupID", "regionID", 
-    "sampleName", "sampleType", "theme", "ubinID", "V1"))
+    "sampleName", "sampleType", "theme", "V1"))
 }
 
 ##########################################################################

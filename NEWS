@@ -1,27 +1,27 @@
 # Change log
 Notable changes to this project will be documented in this file.
 
-## Unreleased
+## [1.2.02] -- 2018-04-10
 
-
+    - Bug fix: aggregateMethyl should not break now when a region set is given that has no overlap with the methylation data for the sample. A warning is given that tells the name of that region set. 
 	
-## [0.99.7] -- 2017-08-21
+## [0.99.92] -- 2017-10-22
 
-    	- Removed the binCount argument from scoreDip(). Now scoreDip just gets this from length of the input values. Inclusion of "binCount" argument in the function call will now cause an error.
-	- Major change: changed user interface of scoreDip() so that input is now a data.table of binned methylation values rather than a vector of binned methylation values. The function can now be called without using data.table syntax (e.g. the old sytax: binnedDT[, scoreDip(methylProp), by= .(sampleName, featureID). As a result of this change the name of the first parameter has been changed from "values" to "binnedDT". If existing code has the "values" parameter, an error will result. Code may need to be modified to reflect syntax change although the old syntax still works for now (but is not the preferred syntax and support for that syntax may be deprecated in the future).
-
-	- Made "coverage" column optional for the input methylation data ("aggregateMethyl" function)
-	- Made "methylCount" column optional for the input methylation data (to "aggregateMethyl" function)
+    - MIRAScore() wrapper function no longer exported
+    - BSReadBiseq no longer adds 'sampleName' column
     
 ## [0.99.91] -- 2017-10-17
+
     - scoreDip() function name changed to calcMIRAScore()
     - output coverage column from aggregateMethyl(): name changed to sumCoverage for clarity
     - minReads parameter name (parameter for aggregateMethyl) was changed to minBaseCovPerBin for clarity
     - sampleName column no longer recommended in input for aggregateMethyl, also aggregateMethyl no longer returns a sampleName column. This saves a lot of memory.
     
-## [0.99.92] -- 2017-10-22
-    - MIRAScore() wrapper function no longer exported
-    - BSReadBiseq no longer adds 'sampleName' column
+## [0.99.7] -- 2017-08-21
 
-## [1.2.02] -- 2018-04-10
-    - Bug fix: aggregateMethyl should not break now when a region set is given that has no overlap with the methylation data for the sample. A warning is given that tells the name of that region set. 
+	- Removed the binCount argument from scoreDip(). Now scoreDip just gets this from length of the input values. Inclusion of "binCount" argument in the function call will now cause an error.
+	- Major change: changed user interface of scoreDip() so that input is now a data.table of binned methylation values rather than a vector of binned methylation values. The function can now be called without using data.table syntax (e.g. the old sytax: binnedDT[, scoreDip(methylProp), by= .(sampleName, featureID). As a result of this change the name of the first parameter has been changed from "values" to "binnedDT". If existing code has the "values" parameter, an error will result. Code may need to be modified to reflect syntax change although the old syntax still works for now (but is not the preferred syntax and support for that syntax may be deprecated in the future).0
+	- Made "coverage" column optional for the input methylation data ("aggregateMethyl" function)
+	- Made "methylCount" column optional for the input methylation data (to "aggregateMethyl" function)
+
+
