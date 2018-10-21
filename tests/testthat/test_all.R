@@ -214,7 +214,21 @@ test_that("aggregateMethyl and MIRAScore", {
                                     binNum = numBins, minBaseCovPerBin = 0)
     names(binnedBSDTbsseq) <- NULL # taking off name for the following comparison
     expect_equal(binnedBSDTbsseq, list(binnedBSDT))
+    # test whether aggregateMethyl deals with cases where BSDT doesn't overlap 
+    # with region set/s or minBaseCovPerBin causes region set to be screened out
+    # screened out
+    screenedBSDT = suppressWarnings(aggregateMethyl(BSDT = testBSDT, GRList = testGR,
+                                    binNum = numBins, minBaseCovPerBin = 1000000))
+    expect_equal(nrow(screenedBSDT), 0)
+    # for no overlap
+    noOLGR <- GRanges(seqnames = c("chrN", "chrN"), 
+                      ranges = IRanges(c(1, 100), c(10, 110)), 
+                      strand = c("*", "*"))
+    noOLBinnedBSDT= suppressWarnings(aggregateMethyl(BSDT = testBSDT, GRList = noOLGR,
+                                     binNum = numBins, minBaseCovPerBin = 0))
+    expect_equal(nrow(noOLBinnedBSDT), 0)
 
+    
     
     # testing MIRAScore, warning about names is expected
     # ignore warning about needing a named list/GrangesList

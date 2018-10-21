@@ -126,25 +126,33 @@ BSBinAggregate <- function(BSDT, rangeDT, binNum, minBaseCovPerBin = 500,
                              byRegionGroup = byRegionGroup, 
                              splitFactor = splitFactor,
                              hasCoverage = hasCoverage)
-    # If we aren't aggregating by bin, then don't restrict to min reads!
-    if (byRegionGroup) {
-        if (hasCoverage) {
-            # only keep rows (bins) with coverage >= minBaseCovPerBin
-            binnedBSDT <- binnedBSDT[coverage >= minBaseCovPerBin, ]
-        }
-        if (nrow(binnedBSDT) < binNum) {
-            # telling user what sample failed if sample name is in BSDT
-            if ("sampleName" %in% names(BSDT)) {
-                thisSample <- BSDT[1, sampleName]
-            } else {
-                thisSample <- "this sample"
+    
+    # binnedBSDT will be NULL if there was absolutely no overlap between
+    # region set and BSDT
+    # don't do some of the following steps if there is no overlap/binnedBSDT is NULL
+    if (is.null(binnedBSDT)) {
+        warning(cleanws("No overlap between sample (BSDT) and region set. 
+                    Returning NULL for this sample, region set combination."))
+    } else {
+        # If we aren't aggregating by bin, then don't restrict to min reads!
+        if (byRegionGroup) {
+            if (hasCoverage) {
+                # only keep rows (bins) with coverage >= minBaseCovPerBin
+                binnedBSDT <- binnedBSDT[coverage >= minBaseCovPerBin, ]
             }
-            
-            warning(paste0("Less than minBaseCovPerBin. Unable to return bins for ", 
-                            thisSample, " for this region set."))
+            if (NROW(binnedBSDT) < binNum) {
+                # telling user what sample failed if sample name is in BSDT
+                if ("sampleName" %in% names(BSDT)) {
+                    thisSample <- BSDT[1, sampleName]
+                } else {
+                    thisSample <- "this sample"
+                }
+                
+                warning(paste0("Less than minBaseCovPerBin. Unable to return bins for ", 
+                               thisSample, " for this region set."))
+            }
         }
     }
-    
     
     return(binnedBSDT)
 }
@@ -274,8 +282,8 @@ BSAggregate <- function(BSDT, regionsGRL, excludeGR = NULL,
     BSDT <- BSDT[queryHits(fo), ] # restrict the table to CpGs in any region.
     
     if (NROW(BSDT) < 1) {
-        warning("No BSDT sites in the given region list. 
-                Please expand your regionsGRL")
+        # warning("No BSDT sites in the given region list. 
+        #         Please expand your regionsGRL")
         return(NULL)
     }
     

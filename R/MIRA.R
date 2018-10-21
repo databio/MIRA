@@ -2,7 +2,7 @@
 #' Methylation-based Inference of Regulatory Activity (MIRA)
 #' 
 #' MIRA is a score that infers regulatory activity of genomic elements
-#' based on DNA methylation data. It assess the degree of dip in methylation
+#' based on DNA methylation data. It assesses the degree of dip in methylation
 #' level surrounding a regulatory site of interest, such as 
 #' transcription factor binding sites.
 #' This package provides functions for aggregating methylation 
@@ -22,7 +22,7 @@
 #'             scale_color_brewer
 #' @import BiocGenerics S4Vectors IRanges
 #' @importFrom data.table ":=" setDT data.table setkey fread setnames 
-#'             setcolorder rbindlist setattr setorder copy
+#'             setcolorder rbindlist setattr setorder copy is.data.table
 #' @importFrom Biobase sampleNames
 #' @importFrom stats lm coefficients poly
 #' @importFrom bsseq getCoverage getMeth
@@ -215,7 +215,7 @@ aggregateMethylInt <- function(BSDT, GRList, binNum = 11, minBaseCovPerBin = 500
     
     ######## aggregateMethyl:Binning and processing output####################
     
-    
+    # list of data.tables but some list items could be NULL
     methylByBin <- lapply(X = GRDTList, 
                          FUN = function(x) BSBinAggregate(BSDT = BSDT, 
                                                           rangeDT = x, 
@@ -227,13 +227,27 @@ aggregateMethylInt <- function(BSDT, GRList, binNum = 11, minBaseCovPerBin = 500
     # adding a feature ID column to each data.table that 
     # should identify what region set was used
     for (i in seq_along(methylByBin)) {
-        methylByBin[[i]][, featureID := rep(names(methylByBin)[i], 
+        # if it wasn't a data.table, this would give an error
+        if (is.data.table(methylByBin[[i]])) {
+            methylByBin[[i]][, featureID := rep(names(methylByBin)[i], 
                                             nrow(methylByBin[[i]]))][]
+        }
     }
     # screening out region sets that had incomplete binning
-    binNumScreen <- sapply(X = methylByBin, FUN = nrow)
+    binNumScreen <- sapply(X = methylByBin, FUN = NROW) # NROW gives 0 for NULL
     # taking out incomplete region sets
-    methylByBin <- methylByBin[!(binNumScreen < binNum)]
+    removeInd = binNumScreen < binNum
+    # tell user what region sets had no overlap with BSDT and were screened out
+    if (any(removeInd)) {
+        # will cause an error later on if length(removeInd) = 0
+        methylByBin <- methylByBin[!removeInd] 
+        # names of removed sets
+        removedRS = paste0(names(GRList)[removeInd], collapse = ", ")
+        warning(c( cleanws("The following region sets were screened out for 
+                        this sample. Reasons include no overlap between region set and BSDT
+                        or at least one bin being below minBaseCovPerBin. Region sets: "),
+                   removedRS, "."))
+    }
     
     bigMethylByBin <- rbindlist(methylByBin)
     ## letting user take care of sampleName stuff outside aggregateMethyl()
@@ -243,9 +257,13 @@ aggregateMethylInt <- function(BSDT, GRList, binNum = 11, minBaseCovPerBin = 500
     #     bigMethylByBin[, sampleName := rep(BSDT[1, sampleName])][] 
     # }
     
-    # changing coverage col name to be more clear that it is a different type
-    # of coverage than input coverage
-    if (hasCoverage) {
+    
+    # not using hasCoverage since if all region sets didn't overlap 
+    # with BSDT then bigMethylByBin
+    # will be a null data.table with no column names (hasCoverage only applies to BSDT)
+    if ("coverage" %in% colnames(bigMethylByBin)) {
+        # changing coverage col name to be more clear that it is a different type
+        # of coverage than input coverage
         setnames(bigMethylByBin, "coverage", "sumCoverage")
     }
     
