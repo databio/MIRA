@@ -1,12 +1,12 @@
-year <- sub("-.*", "", meta$Date)
 note <- sprintf("R package version %s", meta$Version)
 
-bibentry(bibtype = "Manual",
-         title = "MIRA: An R package for DNA methylation-based inference of regulatory activity",
-         author = c(person("John", "Lawson"),
+bibentry(bibtype = "article",
+         title = "{MIRA}: An R package for DNA methylation-based inference of regulatory activity",
+         author = c(person("John", "Lawson", middle="T"),
          person("Eleni", "Tomazou", middle="M"),
          person("Christoph", "Bock"),
          person("Nathan", "Sheffield", middle="C")),
-         year = year,
+         journal = "Bioinformatics",
+         year = 2018,
          note = note,
-         url = "http://databio.org/mira")
+         url = "http://code.databio.org/MIRA")

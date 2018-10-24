@@ -56,17 +56,31 @@ plotMIRAProfiles <- function(binnedRegDT,
         # if no sampleType column then all lines/points will be black
         warning(cleanws("sampleType column is required to split up 
                         sample types by color"))
+        
+        # no color given if no sampleType
+        if (plotType == "line") {
+            binPlot <- binPlot + 
+                geom_line(aes(group = sampleName)) + 
+                facet_wrap(~featureID)
+        } else if (plotType == "jitter") {
+            binPlot <- binPlot + geom_jitter(alpha = .4) + 
+                facet_wrap(~featureID)
+        } else {
+            stop('The only supported values for plotType are "line" and "jitter"')
+        }
+    } else {
+        if (plotType == "line") {
+            binPlot <- binPlot + 
+                geom_line(aes(col = sampleType, group = sampleName)) + 
+                facet_wrap(~featureID)
+        } else if (plotType == "jitter") {
+            binPlot <- binPlot + geom_jitter(aes(col = sampleType), alpha = .4) + 
+                facet_wrap(~featureID)
+        } else {
+            stop('The only supported values for plotType are "line" and "jitter"')
+        }   
     }
-    if (plotType == "line") {
-        binPlot <- binPlot + 
-            geom_line(aes(col = sampleType, group = sampleName)) + 
-            facet_wrap(~featureID)
-    }else if (plotType == "jitter") {
-        binPlot <- binPlot + geom_jitter(aes(col = sampleType), alpha = .4) + 
-            facet_wrap(~featureID)
-    }else {
-        stop('The only supported values for plotType are "line" and "jitter"')
-    }
+    
     return(binPlot)
 }
 
