@@ -4,7 +4,8 @@
 \alias{BSreadBiSeq}
 \title{Read in files from biseq meth caller}
 \usage{
-BSreadBiSeq(files, contrastList = NULL, cores = 4, returnAsList = FALSE)
+BSreadBiSeq(files, contrastList = NULL, cores = 4,
+  returnAsList = FALSE)
 }
 \arguments{
 \item{files}{a vector of file paths}

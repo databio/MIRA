@@ -20,7 +20,11 @@
 #' @param featID Region set names in a single string or vector of strings.
 #' @param plotType Line or jitter (ggplot2). 
 #' @param colBlindOption If TRUE, function will plot with a color blind
-#' friendly palette which could be helpful when plotting multiple colors. 
+#' friendly palette which could be helpful when plotting multiple colors.
+#' @param sampleTypeColName character object. The name of the column that
+#' contains sample type or condition information (eg case vs control).
+#' Line color will be assigned based on this if it is present and there are
+#' more than two unique sample types.
 #' 
 #' @return A plot of class "gg"/ "ggplot" that shows MIRA profiles
 #' @examples
@@ -31,7 +35,8 @@
 plotMIRAProfiles <- function(binnedRegDT, 
                             featID = unique(binnedRegDT[, featureID]), 
                             plotType = "line",
-                            colBlindOption = FALSE){
+                            colBlindOption = FALSE,
+                            sampleTypeColName="sampleType"){
     binNum <- max(binnedRegDT[, bin])
     setkey(binnedRegDT, featureID)
     binPlot <- ggplot(data = binnedRegDT[featID], 
@@ -51,11 +56,10 @@ plotMIRAProfiles <- function(binnedRegDT,
     }
         
     
-    if (!("sampleType" %in% names(binnedRegDT))) {
-        sampleType <- "All samples" 
+    if (!(sampleTypeColName %in% names(binnedRegDT))) {
         # if no sampleType column then all lines/points will be black
-        warning(cleanws("sampleType column is required to split up 
-                        sample types by color"))
+        warning(cleanws("If you want to split up sample types by 
+                        color use sampleTypeColName parameter."))
         
         # no color given if no sampleType
         if (plotType == "line") {
@@ -71,10 +75,10 @@ plotMIRAProfiles <- function(binnedRegDT,
     } else {
         if (plotType == "line") {
             binPlot <- binPlot + 
-                geom_line(aes(col = sampleType, group = sampleName)) + 
+                geom_line(aes(col = get(sampleTypeColName), group = sampleName)) + 
                 facet_wrap(~featureID)
         } else if (plotType == "jitter") {
-            binPlot <- binPlot + geom_jitter(aes(col = sampleType), alpha = .4) + 
+            binPlot <- binPlot + geom_jitter(aes(col = get(sampleTypeColName)), alpha = .4) + 
                 facet_wrap(~featureID)
         } else {
             stop('The only supported values for plotType are "line" and "jitter"')

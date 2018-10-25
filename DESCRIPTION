@@ -41,4 +41,4 @@ biocViews: DNAMethylation, GeneRegulation, GenomeAnnotation,
            MethylSeq, Sequencing, Epigenetics, Coverage
 URL: http://databio.org/mira
 BugReports: https://github.com/databio/MIRA
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0

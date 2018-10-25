@@ -5,7 +5,8 @@
 \title{Plot summary methylation profile}
 \usage{
 plotMIRAProfiles(binnedRegDT, featID = unique(binnedRegDT[, featureID]),
-  plotType = "line", colBlindOption = FALSE)
+  plotType = "line", colBlindOption = FALSE,
+  sampleTypeColName = "sampleType")
 }
 \arguments{
 \item{binnedRegDT}{A datatable with specific column names containing:
@@ -21,6 +22,11 @@ sample name (sampleName column).}
 
 \item{colBlindOption}{If TRUE, function will plot with a color blind
 friendly palette which could be helpful when plotting multiple colors.}
+
+\item{sampleTypeColName}{character object. The name of the column that
+contains sample type or condition information (eg case vs control).
+Line color will be assigned based on this if it is present and there are
+more than two unique sample types.}
 }
 \value{
 A plot of class "gg"/ "ggplot" that shows MIRA profiles
