@@ -14,7 +14,7 @@ Author: Nathan Sheffield <http://www.databio.org> [aut],
     Christoph Bock [ctb],
     John Lawson [aut, cre]
 Maintainer: John Lawson <jtl2hk@virginia.edu>
-Depends: R (>= 3.4)
+Depends: R (>= 3.5)
 Imports:
     BiocGenerics,
     S4Vectors,
