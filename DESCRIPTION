@@ -1,5 +1,5 @@
 Package: MIRA
-Version: 1.5.0
+Version: 1.5.1
 Date: 2018-10-24
 Title: Methylation-Based Inference of Regulatory Activity
 Description: MIRA measures the degree of "dip" in methylation
@@ -36,7 +36,7 @@ Suggests:
     LOLA
 VignetteBuilder: knitr
 License: GPL-3
-biocViews: DNAMethylation, GeneRegulation, GenomeAnnotation, 
+biocViews: ImmunoOncology, DNAMethylation, GeneRegulation, GenomeAnnotation, 
 	   SystemsBiology, FunctionalGenomics, ChIPSeq, 
            MethylSeq, Sequencing, Epigenetics, Coverage
 URL: http://databio.org/mira
